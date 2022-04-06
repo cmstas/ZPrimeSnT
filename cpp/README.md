@@ -4,13 +4,13 @@ In this folder, there is a "standard" C++ looper that is hooked up to NanoCORE a
 
 ### Example instructions
 
-Edit `doAll_ss.C` with an appropriate file (or hopefully the default one still exists).
+Edit `doAll_Zprime.C` with an appropriate file (or hopefully the default one still exists).
 
 ```bash
-root -b -q -l -n doAll_ss.C
+root -b -q -l -n doAll_Zprime.C
 ```
 
-This loops and creates `output.root`, which contains a handful of histograms.
+This loops and creates `output_"process"_"year".root`, which contains a handful of histograms.
 
 ### Making a standalone executable
 
