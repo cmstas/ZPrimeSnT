@@ -10,7 +10,14 @@ Edit `doAll_Zprime.C` with an appropriate file (or hopefully the default one sti
 root -b -q -l -n doAll_Zprime.C
 ```
 
-This loops and creates `output_"process"_"year".root`, which contains a handful of histograms.
+This loops and creates a number of output files of the form `output_"process"_"year".root`, which contains a handful of histograms. 
+Currently this script produces 5 output files corresponding to the main backgrounds for this analysis:
+
+output_DY_2018.root
+output_ttbar_2018.root
+output_WW_2018.root
+output_WZ_2018.root
+output_ZZ_2018.root
 
 ### Making a standalone executable
 
