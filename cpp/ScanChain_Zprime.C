@@ -106,6 +106,12 @@ int ScanChain(TChain *ch, TString year, TString process) {
 
             nEvents_c0++;
 
+            // Number of good primary vertices
+            if ( nt.PV_npvsGood > 0 ) continue;
+
+            nEvents_c7++;            
+
+
 	    // Single muon selection loop
 	    int nEvents_pt = 0;
             int nEvents_iso = 0;
@@ -185,8 +191,8 @@ int ScanChain(TChain *ch, TString year, TString process) {
 	    // If we have 2 candidate muons
 	    if ( cand_muons_pf.size() == 2 && two_cand_lep ){
                     nEvents_c6++;
-		 if ( nt.PV_npvsGood() > 0 ){
-		    nEvents_c7++;
+		 //if ( nt.PV_npvsGood() > 0 ){
+		 //   nEvents_c7++;
                  //Muons should be opposite sign
                  bool opp_sign = ( nt.Muon_pdgId().at(cand_muons_pf[0]) + nt.Muon_pdgId().at(cand_muons_pf[1]) == 0 );
 
@@ -209,7 +215,7 @@ int ScanChain(TChain *ch, TString year, TString process) {
 			   }
                       }
 		 }  	  
-		 }
+		// }
             }
             
             // Same as above, but for tuneP pT
@@ -244,18 +250,18 @@ int ScanChain(TChain *ch, TString year, TString process) {
         } // Event loop
 
         // Fill the cutflow histogram
-        h_cutflow->SetBinContent(0,nEventsTotal);
-        h_cutflow->SetBinContent(1,nEvents_c0);
-        h_cutflow->SetBinContent(2,nEvents_c1);
-        h_cutflow->SetBinContent(3,nEvents_c2);
-        h_cutflow->SetBinContent(4,nEvents_c3);
-        h_cutflow->SetBinContent(5,nEvents_c4);
-        h_cutflow->SetBinContent(6,nEvents_c5);
-        h_cutflow->SetBinContent(7,nEvents_c6);
-        h_cutflow->SetBinContent(8,nEvents_c7);
-        h_cutflow->SetBinContent(9,nEvents_c8);
-        h_cutflow->SetBinContent(10,nEvents_c9);
-        h_cutflow->SetBinContent(11,nEvents_c10);
+        h_cutflow->SetBinContent(1,nEventsTotal);
+        h_cutflow->SetBinContent(2,nEvents_c0);
+        h_cutflow->SetBinContent(3,nEvents_c7);
+        h_cutflow->SetBinContent(4,nEvents_c1);
+        h_cutflow->SetBinContent(5,nEvents_c2);
+        h_cutflow->SetBinContent(6,nEvents_c3);
+        h_cutflow->SetBinContent(7,nEvents_c4);
+        h_cutflow->SetBinContent(8,nEvents_c5);
+        h_cutflow->SetBinContent(9,nEvents_c6);
+        h_cutflow->SetBinContent(10,nEvents_c8);
+        h_cutflow->SetBinContent(11,nEvents_c9);
+        h_cutflow->SetBinContent(12,nEvents_c10);
 
         delete file;
 
