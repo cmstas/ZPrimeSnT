@@ -6,6 +6,12 @@ This only requires CMSSW. Additional Python usage can be found in the unit tests
 For trendier folk, a conda environment is the recommended way to get the latest/greatest
 Python packages.
 
+## Python Plotting Scripts
+The sripts `stack_plots.C` and `compare_plots.C` are used for stacking and comparing histograms from different root files, respectively. 
+These scripts are executed via the command:
+
+
+
 ## Conda environment
 
 You only have to do the initial setup once. Afterwards, 
