@@ -8,7 +8,7 @@ Python packages.
 
 ## Python Plotting Scripts
 The sripts `stack_plots.C` and `compare_plots.C` are used for stacking and comparing histograms from different root files, respectively. 
-These scripts are executed via the command:
+These scripts are executed via the commands:
 ```
 python stack_plots.C
 python compare_plots.C
