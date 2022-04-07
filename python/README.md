@@ -7,11 +7,11 @@ For trendier folk, a conda environment is the recommended way to get the latest/
 Python packages.
 
 ## Python Plotting Scripts
-The sripts `stack_plots.C` and `compare_plots.C` are used for stacking and comparing histograms from different root files, respectively. 
+The sripts `stack_plots.py` and `compare_plots.py` are used for stacking and comparing histograms from different root files, respectively. 
 These scripts are executed via the commands:
 ```
-python stack_plots.C
-python compare_plots.C
+python stack_plots.py
+python compare_plots.py
 
 ```
 
