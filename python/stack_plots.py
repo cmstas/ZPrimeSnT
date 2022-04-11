@@ -4,20 +4,29 @@ from numbers import Integral
 from tkinter.tix import Tree
 import ROOT
 import copy
+import argparse
+
+parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("--inDir", default="/ceph/cms/store/user/kdownham/Zprime/background/", help="Choose input directory. Default: '/ceph/cms/store/user/kdownham/Zprime/background/'.")
+parser.add_argument("--outDir", default="../plots", help="Choose output directory. Default: '../plots'.")
+parser.add_argument("--data", action="store_true", default=False, help="Include data")
+args = parser.parse_args()
+
+args.inDir = args.inDir.rstrip("/")+"/"
+args.outDir = args.outDir.rstrip("/")+"/"
 
 def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_data=False, DoRatio=True):
     #open file
-#    signalfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_DY_2018.root")
-    DYfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_DY_2018.root")
-    WWfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_WW_2018.root")
-    WZfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_WZ_2018.root")
-    ZZfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_ZZ_2018.root")
-    ttbarfile = ROOT.TFile("/ceph/cms/store/user/kdownham/Zprime/background/output_ttbar_2018.root")
-    if compare_data:
-        datafile = ROOT.TFile("../outfiles/data_2018_2_selected.root")
+    signalfile = ROOT.TFile(args.inDir+"output_signal_2018.root")
+    DYfile =     ROOT.TFile(args.inDir+"output_DY_2018.root")
+    WWfile =     ROOT.TFile(args.inDir+"output_WW_2018.root")
+    WZfile =     ROOT.TFile(args.inDir+"output_WZ_2018.root")
+    ZZfile =     ROOT.TFile(args.inDir+"output_ZZ_2018.root")
+    ttbarfile =  ROOT.TFile(args.inDir+"output_ttbar_2018.root")
+    if compare_data: datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
 
     #get historam
-#    signalplot = signalfile.Get(plotname)
+    signalplot = signalfile.Get(plotname)
     if compare_data:
         dataplot = datafile.Get(plotname)
         dataplot.Rebin(4)
@@ -35,8 +44,8 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
 #    ttbarplot.Rebin(4)
 
     #draw overflow
-#    signalplot.SetBinContent(1, signalplot.GetBinContent(1) + signalplot.GetBinContent(0))
-#    signalplot.SetBinContent(signalplot.GetNbinsX(), signalplot.GetBinContent(signalplot.GetNbinsX() + 1) + signalplot.GetBinContent(signalplot.GetNbinsX()))
+    signalplot.SetBinContent(1, signalplot.GetBinContent(1) + signalplot.GetBinContent(0))
+    signalplot.SetBinContent(signalplot.GetNbinsX(), signalplot.GetBinContent(signalplot.GetNbinsX() + 1) + signalplot.GetBinContent(signalplot.GetNbinsX()))
     if compare_data:
         dataplot.SetBinContent(1, dataplot.GetBinContent(1) + dataplot.GetBinContent(0))
         dataplot.SetBinContent(dataplot.GetNbinsX(), dataplot.GetBinContent(dataplot.GetNbinsX() + 1) + dataplot.GetBinContent(dataplot.GetNbinsX()))
@@ -51,17 +60,22 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     ttbarplot.SetBinContent(1, ttbarplot.GetBinContent(1) + ttbarplot.GetBinContent(0))
     ttbarplot.SetBinContent(ttbarplot.GetNbinsX(), ttbarplot.GetBinContent(ttbarplot.GetNbinsX() + 1) + ttbarplot.GetBinContent(ttbarplot.GetNbinsX()))
 
-    #buid stack
+    #build stack
     stack = ROOT.THStack("stack","")
     ZZplot.SetFillColor(ROOT.kOrange+3)
+    ZZplot.SetLineWidth(0)
     stack.Add(ZZplot)
     ttbarplot.SetFillColor(ROOT.kOrange+4)
+    ttbarplot.SetLineWidth(0)
     stack.Add(ttbarplot)
     WWplot.SetFillColor(ROOT.kOrange+1)
+    WWplot.SetLineWidth(0)
     stack.Add(WWplot)
     WZplot.SetFillColor(ROOT.kOrange+2)
+    WZplot.SetLineWidth(0)
     stack.Add(WZplot)
     DYplot.SetFillColor(ROOT.kOrange)
+    DYplot.SetLineWidth(0)
     stack.Add(DYplot)
     stack.SetTitle(title)
 
@@ -69,24 +83,13 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     legend = ROOT.TLegend(0.7,0.83,0.95,0.97)
     legend.SetTextFont(60)
     legend.SetTextSize(0.02)
-#    legend.AddEntry(signalplot,"signal %.2f"%(signalplot.Integral()))
-    if compare_data:
-        legend.AddEntry(dataplot,"data %.2f"%(dataplot.Integral()))
+    legend.AddEntry(signalplot,"signal %.2f"%(signalplot.Integral()))
+    if compare_data: legend.AddEntry(dataplot,"data %.2f"%(dataplot.Integral()))
     legend.AddEntry(DYplot, "DY %.2f"%(DYplot.Integral()))
     legend.AddEntry(WWplot, "WW %.2f"%(WWplot.Integral()))
     legend.AddEntry(WZplot, "WZ %.2f"%(WZplot.Integral()))
     legend.AddEntry(ZZplot,"ZZ %.2f"%(ZZplot.Integral()))
     legend.AddEntry(ttbarplot,"ttbar %.2f"%(ttbarplot.Integral()))
-
-    if log==True:
-        DYplot.GetYaxis().SetRangeUser(10e-2,10e8)
-        WWplot.GetYaxis().SetRangeUser(10e-2,10e8)
-        WZplot.GetYaxis().SetRangeUser(10e-2,10e8)
-        ZZplot.GetYaxis().SetRangeUser(10e-2,10e8)
-        ttbarplot.GetYaxis().SetRangeUser(10e-2,10e8)
-#        signalplot.GetYaxis().SetRangeUser(10e-2,10e8)
-        if compare_data:
-            dataplot.GetYaxis().SetRangeUser(10e-2,10e8)
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
@@ -117,40 +120,46 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         #ROOT.gPad.SetLogy(1)
 
     #plot data,stack, signal, data  
+    signalplot.SetLineColor(ROOT.kRed)
+    signalplot.SetLineWidth(3)
     if log==True:
 #        signalplot.Draw("Hist")
-        stack.Draw("Hist")
-#        signalplot.Draw("H same")
-        if compare_data:
-            dataplot.Draw("E0 same")
+        stack.Draw("HIST")
+        signalplot.Draw("HIST same")
+        if compare_data: dataplot.Draw("E0 same")
+
+        stack.SetMinimum(10e-2)
+        stack.SetMaximum(10e8)
+        #stack.Draw("Hist")
 
     if log==False:
-        stack.Draw("Hist")
-#        signalplot.Draw("H same")
-        if compare_data:
-            dataplot.Draw("E0 same")
+        stack.Draw("HIST")
+        signalplot.Draw("HIST same")
+        if compare_data: dataplot.Draw("E0 same")
     legend.Draw()
 
     #print and save
     if log==True:
         if compare_data==False:
-            canvas.SaveAs("../plots/" + plotname + "_s+b_log.png")
+            canvas.SaveAs(args.outDir + plotname + "_s+b_log.png")
         if compare_data==True:
-            canvas.SaveAs("../plots/" + plotname + "_mc+data_log.png")
+            canvas.SaveAs(args.outDir + plotname + "_mc+data_log.png")
     if log==False:
         if compare_data==False:
-            canvas.SaveAs("../plots/" + plotname + "_s+b_linear.png")
+            canvas.SaveAs(args.outDir + plotname + "_s+b_linear.png")
         if compare_data==True:
-            canvas.SaveAs("../plots/" + plotname + "_mc+data_linear.png")
+            canvas.SaveAs(args.outDir + plotname + "_mc+data_linear.png")
 
 ROOT.gStyle.SetOptStat(0000)
+ROOT.gROOT.SetBatch(1)
 
-listofplots1=["mu1_pt", "mu1_pt_pre", "mu1_pt_post", "mu2_pt", "mu2_pt_pre", "mu2_pt_post",
-                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
-                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
-                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
+#listofplots1=["mu1_pt", "mu1_pt_pre", "mu1_pt_post", "mu2_pt", "mu2_pt_pre", "mu2_pt_post",
+#                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
+#                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
+#                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
+listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB"]
 
 for plot in listofplots1:
     title=plot
-    draw_plot(plot, title, False, False, False)
-    draw_plot(plot, title, True, False, False)
+    draw_plot(plot, title, False, args.data, False)
+    draw_plot(plot, title, True, args.data, False)
