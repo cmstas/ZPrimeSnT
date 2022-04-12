@@ -157,7 +157,7 @@ ROOT.gROOT.SetBatch(1)
 #                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
 #                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
 #                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
-listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB"]
+listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB", "btagDeepFlavB"]
 
 for plot in listofplots1:
     title=plot

@@ -81,6 +81,7 @@ int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
     H1(mu2_trkRelIso_post,10,0,1);
     H1(nCand_Muons,5,0,5);
     H1(nbtagDeepFlavB,5,0,5);
+    H1(btagDeepFlavB,50,0,1);
 
     int nEventsTotal = 0;
     int nEvents_more_leps = 0;
@@ -240,13 +241,23 @@ int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
             }
             if ( selectedPair_M < 0.0 ) continue;
             if ( Zboson ) continue;
+            h_cutflow->Fill(icutflow,weight*factor);
+            icutflow++;
 
             unsigned int nbtagDeepFlavB = 0;
             for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
-                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) nbtagDeepFlavB++; // Medium DeepJet WP
+                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.0490 )
+//                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) 
+//                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.7100 )
+                {
+                    nbtagDeepFlavB++; // Medium DeepJet WP
+                    h_btagDeepFlavB->Fill(nt.Jet_btagDeepFlavB().at(jet),weight*factor);
+                }
             }
             h_nbtagDeepFlavB->Fill(nbtagDeepFlavB,weight*factor);
             if ( nbtagDeepFlavB < 1 ) continue;
+            h_cutflow->Fill(icutflow,weight*factor);
+            icutflow++;
 
             h_mll_pf->Fill(selectedPair_M,weight*factor); 	 
             h_mu1_pt->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
