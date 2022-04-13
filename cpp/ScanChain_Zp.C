@@ -38,29 +38,30 @@ struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<
 using namespace std;
 using namespace tas;
 
-int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
     float factor = 1.0;
     float lumi = 1.0;
     float xsec = 1.0;
  
-    if ( process == "ttbar" )   xsec = 87310.0; // fb
-    if ( process == "DY" )      xsec = 5765400.0; // fb
-    if ( process == "WW" )      xsec = 118700.0; // fb 
-    if ( process == "WZ" )      xsec = 47130.0; // fb
-    if ( process == "ZZ" )      xsec = 16523.0; // fb
-    if ( process == "signal" )  xsec = 0.01597959*1000; // fb // M200, Y3, 2018
+    if ( process == "ttbar" )       xsec = 87310.0; // fb
+    if ( process == "DY" )          xsec = 5765400.0; // fb
+    if ( process == "WW" )          xsec = 118700.0; // fb 
+    if ( process == "WZ" )          xsec = 47130.0; // fb
+    if ( process == "ZZ" )          xsec = 16523.0; // fb
+    if ( process == "tW" )          xsec = 19550; // fb
+    if ( process == "tbarW" )       xsec = 19550; // fb
+    if ( process == "TTW" )         xsec = 204.3; // fb
+    if ( process == "TTZ" )         xsec = 252.9; // fb
+    if ( process == "TTHToNonbb" )  xsec = 507.5*(1-0.575); // fb
+    if ( process == "TTHTobb" )     xsec = 507.5*0.575; // fb
+    if ( process == "signal" )      xsec = 0.01597959*1000; // fb // M200, Y3, 2018
 
     
     if ( year == "2018" )       lumi = 59.83; // fb-1
     if ( year == "2017" )       lumi = 41.48; // fb-1
     if ( year == "2016APV" )    lumi = 19.5; // fb-1
     if ( year == "2016" )       lumi = 16.8; // fb-1
-
-    // Get genEventSumw
-    double genEventSumw;
-    chaux->SetBranchAddress("genEventSumw",&genEventSumw);
-    chaux->GetEntry(0);
 
     factor = xsec*lumi/genEventSumw;
 
@@ -100,8 +101,6 @@ int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
     TObjArray *listOfFiles = ch->GetListOfFiles();
     TIter fileIter(listOfFiles);
     tqdm bar;
-
-    float sumOfWeights;
 
     // set configuration parameters
     //gconf.year = 2017;
