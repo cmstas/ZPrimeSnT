@@ -18,7 +18,7 @@ import ROOT
 def make_table(samplename1, samplename2, samplename3, samplename4, samplename5, samplename6, outname, table_name):
     
     for i in range(6):
-        exec ("signal_samplename%s = '../outfiles/medium_btag/output_' +  samplename%s + '_2018.root'"%(i+1,i+1))
+        exec ("signal_samplename%s = '../cpp/temp_data/output_' +  samplename%s + '_2018.root'"%(i+1,i+1))
         exec ("signal_sample%s =  ROOT.TFile(signal_samplename%s)"%(i+1,i+1))
         exec ("temp%s = signal_sample%s.Get('cutflow')"%(i+1,i+1))
 
@@ -46,7 +46,9 @@ def make_table(samplename1, samplename2, samplename3, samplename4, samplename5, 
     print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('muon_id',round(signal1_7,2),round(signal2_7,2),round(signal3_7,2),round(signal4_7,2),round(signal5_7,2),round(signal6_7,2)))
     print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('Mu_matchedToTrig',round(signal1_8,2),round(signal2_8,2),round(signal3_8,2),round(signal4_8,2),round(signal5_8,2),round(signal6_8,2)))
     print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('muon pair',round(signal1_9,2),round(signal2_9,2),round(signal3_9,2),round(signal4_9,2),round(signal5_9,2),round(signal6_9,2)))
-    print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('b tag medium',round(signal1_10,2),round(signal2_10,2),round(signal3_10,2),round(signal4_10,2),round(signal5_10,2),round(signal6_10,2)))
+    print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('1 or more b tag medium',round(signal1_10,2),round(signal2_10,2),round(signal3_10,2),round(signal4_10,2),round(signal5_10,2),round(signal6_10,2)))
+    print("%-30s%-15s%-15s%-15s%-15s%-15s%-15s"%('m_ll > 150 GeV',round(signal1_11,2),round(signal2_11,2),round(signal3_11,2),round(signal4_11,2),round(signal5_11,2),round(signal6_11,2)))
+ 
 
     fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('Cut',samplename1,samplename2,samplename3,samplename4,samplename5,samplename6,r'\\'))
     fout_script.write('\hline\n')
@@ -60,7 +62,8 @@ def make_table(samplename1, samplename2, samplename3, samplename4, samplename5, 
     fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('muon_id',round(signal1_7,2),round(signal2_7,2),round(signal3_7,2),round(signal4_7,2),round(signal5_7,2),round(signal6_7,2),r'\\'))
     fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('Mu_matchedToTrig',round(signal1_8,2),round(signal2_8,2),round(signal3_8,2),round(signal4_8,2),round(signal5_8,2),round(signal6_8,2),r'\\'))
     fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('muon pair',round(signal1_9,2),round(signal2_9,2),round(signal3_9,2),round(signal4_9,2),round(signal5_9,2),round(signal6_9,2),r'\\'))
-    fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('b tag medium',round(signal1_10,2),round(signal2_10,2),round(signal3_10,2),round(signal4_10,2),round(signal5_10,2),round(signal6_10,2),r'\\'))
+    fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('1 or more b tag medium',round(signal1_10,2),round(signal2_10,2),round(signal3_10,2),round(signal4_10,2),round(signal5_10,2),round(signal6_10,2),r'\\'))
+    fout_script.write('%-30s&%-15s&%-15s&%-15s&%-15s&%-15s&%-15s%-5s\n'%('m_ll > 150 GeV',round(signal1_11,2),round(signal2_11,2),round(signal3_11,2),round(signal4_11,2),round(signal5_11,2),round(signal6_11,2),r'\\'))
 
     fout_script.write('\\end{tabular}\n')
     fout_script.write('\\caption{'+table_name+'}\n')

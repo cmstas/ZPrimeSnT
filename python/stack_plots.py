@@ -7,8 +7,8 @@ import copy
 import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--inDir", default="/ceph/cms/store/user/kdownham/Zprime/background/", help="Choose input directory. Default: '/ceph/cms/store/user/kdownham/Zprime/background/'.")
-parser.add_argument("--outDir", default="../plots", help="Choose output directory. Default: '../plots'.")
+parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/'.")
+parser.add_argument("--outDir", default="/home/users/kdownham/public_html/ZPrime", help="Choose output directory. Default: '../plots'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 args = parser.parse_args()
 
@@ -157,7 +157,7 @@ ROOT.gROOT.SetBatch(1)
 #                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
 #                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
 #                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
-listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB", "btagDeepFlavB"]
+listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB", "btagDeepFlavB", "mll_pf_pre", "bjet1_pt", "bjet2_pt", "max_mlb", "min_mlb", "mu1_pt", "mu2_pt", "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post" , "mll_pf_btag", "mu1_trkRelIso", "mu2_trkRelIso"]
 
 for plot in listofplots1:
     title=plot

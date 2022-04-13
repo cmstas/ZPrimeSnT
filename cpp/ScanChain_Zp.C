@@ -68,20 +68,30 @@ int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
     TFile* f1 = new TFile("output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
-    H1(mll_pf,30,0,1000);
-    H1(mu1_pt,30,0,1000);
-    H1(mu2_pt,30,0,1000);
+    H1(mll_pf,100,150,2000);
+    H1(mll_pf_btag,100,150,2000);
+    H1(mll_pf_pre,100,150,2000);
+    H1(mu1_pt,50,50,800);
+    H1(mu2_pt,50,50,800);
     H1(mu1_pt_pre,30,0,1000);
     H1(mu1_pt_post,30,0,1000);
     H1(mu2_pt_pre,30,0,1000);
     H1(mu2_pt_post,30,0,1000);
-    H1(mu1_trkRelIso_pre,10,0,1);
-    H1(mu1_trkRelIso_post,10,0,1);
-    H1(mu2_trkRelIso_pre,10,0,1);
-    H1(mu2_trkRelIso_post,10,0,1);
+    H1(mu1_trkRelIso_pre,50,0,0.5);
+    H1(mu1_trkRelIso_post,50,0,0.5);
+    H1(mu2_trkRelIso_pre,50,0,0.5);
+    H1(mu2_trkRelIso_post,50,0,0.5);
+    H1(mu1_trkRelIso,50,0,0.1);
+    H1(mu2_trkRelIso,50,0,0.1);
     H1(nCand_Muons,5,0,5);
     H1(nbtagDeepFlavB,5,0,5);
     H1(btagDeepFlavB,50,0,1);
+    H1(bjet1_pt,50,0,1000);
+    H1(bjet2_pt,50,0,1000);
+    H1(min_mlb,50,50,250);
+    H1(max_mlb,50,0,1000);
+    //H1(ll_pt,50,0,1000);
+    //H1(ll_eta,50,-5,5);
 
     int nEventsTotal = 0;
     int nEvents_more_leps = 0;
@@ -244,24 +254,79 @@ int ScanChain(TChain *ch, TChain *chaux, TString year, TString process) {
             h_cutflow->Fill(icutflow,weight*factor);
             icutflow++;
 
+            vector<int> cand_bJets;
             unsigned int nbtagDeepFlavB = 0;
+            //bool mu_jet_sep = true;
             for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
-                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.0490 )
-//                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) 
-//                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.7100 )
+                float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
+                float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - nt.Jet_eta().at(jet);
+                float d_phi_1 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(leadingMu_idx) - nt.Jet_phi().at(jet));
+                float d_phi_2 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(subleadingMu_idx) - nt.Jet_phi().at(jet));
+                float dr_jmu1 = TMath::Sqrt( d_eta_1*d_eta_1+d_phi_1*d_phi_1 );
+                float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
+                // Reject jets if they are within dR = 0.4 of the candidate leptons
+                if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
+                if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) // 0.0490 for loose, 0.7100 for tight
                 {
-                    nbtagDeepFlavB++; // Medium DeepJet WP
+                    //nbtagDeepFlavB++; // Medium DeepJet WP
+                    cand_bJets.push_back(jet);
                     h_btagDeepFlavB->Fill(nt.Jet_btagDeepFlavB().at(jet),weight*factor);
                 }
             }
-            h_nbtagDeepFlavB->Fill(nbtagDeepFlavB,weight*factor);
-            if ( nbtagDeepFlavB < 1 ) continue;
+            h_nbtagDeepFlavB->Fill(cand_bJets.size(),weight*factor);
+            h_mll_pf_pre->Fill(selectedPair_M,weight*factor);
+            //if ( nbtagDeepFlavB < 1 ) continue;
+            if ( cand_bJets.size() < 1 ) continue;
+            h_cutflow->Fill(icutflow,weight*factor);
+            icutflow++;
+            h_mll_pf_btag->Fill(selectedPair_M,weight*factor);
+            if ( selectedPair_M < 150 ) continue;
             h_cutflow->Fill(icutflow,weight*factor);
             icutflow++;
 
+            //Fill pT distributions for the bjets....
+            if ( cand_bJets.size() == 1 ){
+                 h_bjet1_pt->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
+            }
+
+            if ( cand_bJets.size() > 1 ){
+                 h_bjet1_pt->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
+ 		 h_bjet2_pt->Fill(nt.Jet_pt().at(cand_bJets[1]),weight*factor);
+            }
+
+
+            //Construct mlb pairs from selected muon pair and candidate b jets
+            //float m_lb = 0;
+            vector<float> m_lb_vec;
+            for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
+                  if ( bjet > 2 ) continue;
+		  float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+                  float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+		  m_lb_vec.push_back(m_mu1_b);
+		  m_lb_vec.push_back(m_mu2_b);		  
+	    }
+             
+            float m_lb = 0;
+            for ( int i = 0; i < m_lb_vec.size(); i++ ){
+                  if ( m_lb_vec[i] > m_lb ){
+		       m_lb = m_lb_vec[i];
+		  }
+            }
+
+            float min_mlb = 10000000000000.;
+            for ( int k = 0; k < m_lb_vec.size(); k++ ){
+                  if ( m_lb_vec[k] < min_mlb ){
+                       min_mlb = m_lb_vec[k];
+                  }
+            }
+            
+            h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
+            h_mu2_trkRelIso->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
             h_mll_pf->Fill(selectedPair_M,weight*factor); 	 
             h_mu1_pt->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
             h_mu2_pt->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
+            h_max_mlb->Fill(m_lb,weight*factor);
+            h_min_mlb->Fill(min_mlb,weight*factor);
 
         } // Event loop
 
