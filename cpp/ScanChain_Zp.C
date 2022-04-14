@@ -318,6 +318,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                        min_mlb = m_lb_vec[k];
                   }
             }
+
+            if (m_lb == 0) continue;
             
             h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
             h_mu2_trkRelIso->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
