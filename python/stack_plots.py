@@ -7,7 +7,7 @@ import copy
 import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/'.")
+parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/'.")
 parser.add_argument("--outDir", default="/home/users/kdownham/public_html/ZPrime", help="Choose output directory. Default: '../plots'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 args = parser.parse_args()
@@ -138,7 +138,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     legend.AddEntry(TTWplot,"ttW %.2f"%(TTWplot.Integral()))
     legend.AddEntry(TTZplot,"ttZ %.2f"%(TTZplot.Integral()))
     legend.AddEntry(TTHNobbplot,"ttHNobb %.2f"%(TTHNobbplot.Integral()))
-    legend.AddEntry(TTHbbplot,"ttHbb %.2f"%(TTHbbplot.Integral())) 
+    #legend.AddEntry(TTHbbplot,"ttHbb %.2f"%(TTHbbplot.Integral())) 
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
