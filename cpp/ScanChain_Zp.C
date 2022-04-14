@@ -331,7 +331,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
                 {
                     // nbtagDeepFlavB++; // Medium DeepJet WP
                     cand_bJets.push_back(jet);
-                     h_btagDeepFlavB->Fill(nt.Jet_btagDeepFlavB().at(jet), weight * factor);
+                    h_btagDeepFlavB->Fill(nt.Jet_btagDeepFlavB().at(jet), weight * factor);
                 }
             }
             h_nbtagDeepFlavB->Fill(cand_bJets.size(), weight * factor);
