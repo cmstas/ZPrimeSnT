@@ -309,12 +309,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 		  m_lb_vec.push_back(m_mu2_b);		  
 	    }
              
-            float m_lb = 0;
-            for ( int i = 0; i < m_lb_vec.size(); i++ ){
-                  if ( m_lb_vec[i] > m_lb ){
-		       m_lb = m_lb_vec[i];
-		  }
-            }
 
             float min_mlb = 10000000000000.;
             for ( int k = 0; k < m_lb_vec.size(); k++ ){
@@ -323,12 +317,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                   }
             }
 
-            if (m_lb == 0) continue;
-
             h_met_pre_mlb_cut->Fill(nt.MET_pt());
             h_met_phi_pre_mlb->Fill(nt.MET_phi());
             
-            if (m_lb > 180){
+            if (min_mlb > 180){
                 h_met_post_mlb_cut->Fill(nt.MET_pt());
                 h_met_phi_post_mlb->Fill(nt.MET_phi());   
             }
@@ -338,7 +330,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             h_mll_pf->Fill(selectedPair_M,weight*factor); 	 
             h_mu1_pt->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
             h_mu2_pt->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
-            h_max_mlb->Fill(m_lb,weight*factor);
+            //h_max_mlb->Fill(m_lb,weight*factor);
             h_min_mlb->Fill(min_mlb,weight*factor);
 
         } // Event loop
