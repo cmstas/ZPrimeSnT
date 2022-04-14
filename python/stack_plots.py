@@ -206,7 +206,7 @@ ROOT.gROOT.SetBatch(1)
 #                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
 #                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
 #                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
-listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB", "btagDeepFlavB", "mll_pf_pre", "bjet1_pt", "bjet2_pt", "max_mlb", "min_mlb", "mu1_pt", "mu2_pt", "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post" , "mll_pf_btag", "mu1_trkRelIso", "mu2_trkRelIso"]
+listofplots1 = ["nCand_Muons", "mll_pf", "mll_pf_btag","mll_pf_pre", "bjet1_pt", "bjet2_pt",  "min_mlb", "mu1_pt", "mu2_pt", "met_pre_mlb_cut", "met_post_mlb_cut", "met_phi_pre_mlb", "met_phi_post_mlb"]
 
 for plot in listofplots1:
     title=plot

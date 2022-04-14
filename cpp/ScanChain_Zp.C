@@ -69,9 +69,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
     TFile* f1 = new TFile("output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
-    H1(mll_pf,100,150,2000);
-    H1(mll_pf_btag,100,150,2000);
-    H1(mll_pf_pre,100,150,2000);
+    H1(mll_pf,150,0,1500);
+    H1(mll_pf_btag,150,0,1500);
+    H1(mll_pf_pre,150,0,1500);
     H1(mu1_pt,50,50,800);
     H1(mu2_pt,50,50,800);
     H1(mu1_pt_pre,30,0,1000);
@@ -89,8 +89,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(btagDeepFlavB,50,0,1);
     H1(bjet1_pt,50,0,1000);
     H1(bjet2_pt,50,0,1000);
-    H1(min_mlb,0,50,250);
+    H1(min_mlb,50,0,250);
     H1(max_mlb,50,0,1000);
+    H1(met_pre_mlb_cut,50,0,1000);
+    H1(met_post_mlb_cut,50,0,1000);
+    H1(met_phi_pre_mlb,50,-4,4);
+    H1(met_phi_post_mlb,50,-4,4);
     //H1(ll_pt,50,0,1000);
     //H1(ll_eta,50,-5,5);
 
@@ -320,6 +324,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             }
 
             if (m_lb == 0) continue;
+
+            h_met_pre_mlb_cut->Fill(nt.MET_pt());
+            h_met_phi_pre_mlb->Fill(nt.MET_phi());
+            
+            if (m_lb > 180){
+                h_met_post_mlb_cut->Fill(nt.MET_pt());
+                h_met_phi_post_mlb->Fill(nt.MET_phi());   
+            }
             
             h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
             h_mu2_trkRelIso->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
