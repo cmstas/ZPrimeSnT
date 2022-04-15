@@ -66,16 +66,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     if ( process == "TTHToNonbb" )          xsec = 507.5*(1-0.575); // fb
     if ( process == "TTHTobb" )             xsec = 507.5*0.575; // fb
 
-    if ( process == "Y3_2018_M100" )     xsec = 0.0211369709127*1000; // fb
-    if ( process == "Y3_2018_M200" )     xsec = 0.01597959*1000; // fb
-    if ( process == "Y3_2018_M400" )     xsec = 0.00290934734735*1000; // fb
-    if ( process == "Y3_2018_M700" )     xsec = 0.000614377054108*1000; // fb
-    if ( process == "Y3_2018_M1000" )    xsec = 0.000192622380952*1000; // fb
-    if ( process == "Y3_2018_M1500" )    xsec = 3.636946e-05*1000; // fb
-    if ( process == "Y3_2018_M2000" )    xsec = 8.253412e-06*1000; // fb
-
     
-    if ( year == "2018" )       lumi = 59.83; // fb-1
+    if ( year == "2018" )
+    {
+        lumi = 59.83; // fb-1
+        if ( process == "Y3_M100" )     xsec = 0.0211369709127*1000; // fb
+        if ( process == "Y3_M200" )     xsec = 0.01597959*1000; // fb
+        if ( process == "Y3_M400" )     xsec = 0.00290934734735*1000; // fb
+        if ( process == "Y3_M700" )     xsec = 0.000614377054108*1000; // fb
+        if ( process == "Y3_M1000" )    xsec = 0.000192622380952*1000; // fb
+        if ( process == "Y3_M1500" )    xsec = 3.636946e-05*1000; // fb
+        if ( process == "Y3_M2000" )    xsec = 8.253412e-06*1000; // fb
+    }
     if ( year == "2017" )       lumi = 41.48; // fb-1
     if ( year == "2016APV" )    lumi = 19.5; // fb-1
     if ( year == "2016" )       lumi = 16.8; // fb-1
@@ -86,9 +88,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
     TFile* f1 = new TFile("output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
-    H1(mll_pf,150,0,1500);
-    H1(mll_pf_btag,150,0,1500);
-    H1(mll_pf_pre,150,0,1500);
+    H1(mll_pf,150,0,2500);
+    H1(mll_pf_btag,150,0,2500);
+    H1(mll_pf_pre,150,0,2500);
     H1(mu1_pt,50,50,800);
     H1(mu2_pt,50,50,800);
     H1(mu1_pt_pre,30,0,1000);
