@@ -86,7 +86,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
 
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-    TFile* f1 = new TFile("output_"+process+"_"+year+".root", "RECREATE");
+    TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
     H1(mll_pf,150,0,2500);
     H1(mll_pf_btag,150,0,2500);
@@ -108,7 +108,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(btagDeepFlavB,50,0,1);
     H1(bjet1_pt,50,0,1000);
     H1(bjet2_pt,50,0,1000);
-    H1(min_mlb,50,0,250);
+    H1(min_mlb,200,0,2000);
     H1(max_mlb,50,0,1000);
     H1(met_pre_mlb_cut,50,0,1000);
     H1(met_post_mlb_cut,50,0,1000);
