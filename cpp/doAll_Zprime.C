@@ -13,6 +13,18 @@
     TChain *ch4aux = new TChain("Runs");
     TChain *ch5 = new TChain("Events");
     TChain *ch5aux = new TChain("Runs");
+    TChain *ch6 = new TChain("Events");
+    TChain *ch6aux = new TChain("Runs");
+    TChain *ch7 = new TChain("Events");
+    TChain *ch7aux = new TChain("Runs");
+    TChain *ch8 = new TChain("Events");
+    TChain *ch8aux = new TChain("Runs");
+    TChain *ch9 = new TChain("Events");
+    TChain *ch9aux = new TChain("Runs");
+    TChain *ch10 = new TChain("Events");
+    TChain *ch10aux = new TChain("Runs");
+    //TChain *ch11 = new TChain("Events");
+    //TChain *ch11aux = new TChain("Runs");
 
     // Files to be looped over
     ch->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
@@ -39,6 +51,31 @@
     ch5->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100_PrivSignal/ZPrimeToMuMuSB_M200_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts_RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private_NANOAODSIM_skim2mu_1muPt50_1Mll100_PrivSignal/merged/merged.root");
     ch5aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100_PrivSignal/ZPrimeToMuMuSB_M200_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts_RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private_NANOAODSIM_skim2mu_1muPt50_1Mll100_PrivSignal/merged/merged.root");
     ScanChain(ch5,getSumOfGenEventSumw(ch5aux),"2018","signal");
+
+    ch6->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ch6aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ScanChain(ch6,getSumOfGenEventSumw(ch6aux),"2018","tW");
+
+    ch7->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ch7aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ScanChain(ch7,getSumOfGenEventSumw(ch7aux),"2018","tbarW");
+    
+    ch8->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ch8aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ScanChain(ch8,getSumOfGenEventSumw(ch8aux),"2018","TTW");
+
+    ch9->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ch9aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ScanChain(ch9,getSumOfGenEventSumw(ch9aux),"2018","TTZ");
+    
+    ch10->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ttHJetToNonbb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ch10aux->Add("/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100/ttHJetToNonbb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100/merged/merged.root");
+    ScanChain(ch10,getSumOfGenEventSumw(ch10aux),"2018","TTHToNonbb");
+    
+    //ch11->Add("");
+    //ch11aux->Add("");
+    //ScanChain(ch11,getSumOfGenEventSumw(ch11aux),"2018","TTHTobb");
+ 
 }
 
 double getSumOfGenEventSumw(TChain *chaux)
