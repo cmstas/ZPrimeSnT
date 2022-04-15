@@ -336,12 +336,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                   }
             }
 
-            h_met_pre_mlb_cut->Fill(nt.MET_pt());
-            h_met_phi_pre_mlb->Fill(nt.MET_phi());
+            h_met_pre_mlb_cut->Fill(nt.MET_pt(),weight*factor);
+            h_met_phi_pre_mlb->Fill(nt.MET_phi(),weight*factor);
             
             if (min_mlb > 180){
-                h_met_post_mlb_cut->Fill(nt.MET_pt());
-                h_met_phi_post_mlb->Fill(nt.MET_phi());   
+                h_met_post_mlb_cut->Fill(nt.MET_pt(),weight*factor);
+                h_met_phi_post_mlb->Fill(nt.MET_phi(),weight*factor);
             }
             
             h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
