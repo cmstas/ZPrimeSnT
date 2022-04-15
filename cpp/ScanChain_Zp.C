@@ -110,8 +110,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(bjet2_pt,50,0,1000);
     H1(min_mlb,200,0,2000);
     H1(max_mlb,50,0,1000);
-    H1(met_pre_mlb_cut,50,0,1000);
-    H1(met_post_mlb_cut,50,0,1000);
+    H1(met_pre_mlb_cut,100,0,600);
+    H1(met_post_mlb_cut,100,0,600);
     H1(met_phi_pre_mlb,50,-4,4);
     H1(met_phi_post_mlb,50,-4,4);
     //H1(ll_pt,50,0,1000);
