@@ -17,6 +17,7 @@ args = parser.parse_args()
 args.inDir = args.inDir.rstrip("/")+"/"
 args.outDir = args.outDir.rstrip("/")+"/"
 if len(args.signalMass)==0: args.signalMass = [200,400,700,1000,1500,2000]
+signalXSecScale = { "200": 1.0, "400": 50, "700": 25.0, "1000": 80.0, "1500": 450.0, "2000": 2000.0}
 
 def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
     plot = plotFile.Get(plotname)
@@ -96,26 +97,26 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     stack.SetTitle(title)
 
     #plot legends, ranges
-    legend = ROOT.TLegend(0.7,0.65,0.95,0.97)
+    legend = ROOT.TLegend(0.65,0.65,0.97,0.97)
     legend.SetTextFont(60)
     legend.SetTextSize(0.02)
 
-    for i,mass in enumerate(args.signalMass): legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %.2f"%(signalplots[i].Integral())+("*"+args.signalScale if args.signalScale else ""))
-    if compare_data: legend.AddEntry(dataplot,"data %.2f"%(dataplot.Integral()))
-    legend.AddEntry(ZToMuMuplot, "ZToMuMu %.2f"%(ZToMuMuplot.Integral()))
-    #legend.AddEntry(DYplot, "DY %.2f"%(DYplot.Integral()))
-    legend.AddEntry(ttbarplot,"ttbar %.2f"%(ttbarplot.Integral()))
-    legend.AddEntry(tWplot,"tW+tbarW %.2f"%(ST_tWplot.Integral()))
-    #legend.AddEntry(tWplot,"tW %.2f"%(tWplot.Integral()))
-    #legend.AddEntry(tbarWplot,"tbarW %.2f"%(tbarWplot.Integral()))
-    legend.AddEntry(TTXplot,"ttX %.2f"%(TTXplot.Integral()))
-    #legend.AddEntry(TTWplot,"ttW %.2f"%(TTWplot.Integral()))
-    #legend.AddEntry(TTZplot,"ttZ %.2f"%(TTZplot.Integral()))
-    #legend.AddEntry(TTHNobbplot,"ttHNobb %.2f"%(TTHNobbplot.Integral()))
-    #legend.AddEntry(TTHbbplot,"ttHbb %.2f"%(TTHbbplot.Integral())) 
-    legend.AddEntry(WWplot, "WW %.2f"%(WWplot.Integral()))
-    legend.AddEntry(WZplot, "WZ %.2f"%(WZplot.Integral()))
-    legend.AddEntry(ZZplot,"ZZ %.2f"%(ZZplot.Integral()))
+    for i,mass in enumerate(args.signalMass): legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral())+("* %3.0f"%(float(args.signalScale)*float(signalXSecScale[mass])) if log==False and args.signalScale else ""))
+    if compare_data: legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral()))
+    legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral()))
+    #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral()))
+    legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral()))
+    legend.AddEntry(tWplot,"tW+tbarW %1.2E"%(ST_tWplot.Integral()))
+    #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral()))
+    #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral()))
+    legend.AddEntry(TTXplot,"ttX %1.2E"%(TTXplot.Integral()))
+    #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral()))
+    #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral()))
+    #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral()))
+    #legend.AddEntry(TTHbbplot,"ttHbb %1.2E"%(TTHbbplot.Integral())) 
+    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral()))
+    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral()))
+    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral()))
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
@@ -150,14 +151,18 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
 
     #plot data,stack, signal, data  
     stack.Draw("HIST")
-    for i in range(len(args.signalMass)):
-        if args.signalScale: signalplots[i].Scale(float(args.signalScale))
+    histMax = 0.0
+    for i,mass in enumerate(args.signalMass):
+        if log==False:
+            if args.signalScale: signalplots[i].Scale(float(args.signalScale)*float(signalXSecScale[mass]))
+        if histMax < signalplots[i].GetMaximum(): histMax = signalplots[i].GetMaximum()
         signalplots[i].Draw("HIST same")
     if compare_data: dataplot.Draw("E0 same")
 
+    if histMax < stack.GetMaximum(): histMax = stack.GetMaximum()
+    stack.SetMaximum(1.1*histMax)
     if log==True:
         stack.SetMinimum(10e-2)
-        stack.SetMaximum(10e7)
         #stack.Draw("Hist")
 
     legend.Draw()
