@@ -86,7 +86,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
 
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-    TFile* f1 = new TFile("output_"+process+"_"+year+".root", "RECREATE");
+    TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
     H1(mll_pf,150,0,2500);
     H1(mll_pf_btag,150,0,2500);
@@ -108,12 +108,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(btagDeepFlavB,50,0,1);
     H1(bjet1_pt,50,0,1000);
     H1(bjet2_pt,50,0,1000);
-    H1(min_mlb,50,0,250);
+    H1(min_mlb,200,0,2000);
     H1(max_mlb,50,0,1000);
-    H1(met_pre_mlb_cut,50,0,1000);
-    H1(met_post_mlb_cut,50,0,1000);
+    H1(met_pre_mlb_cut,100,0,600);
+    H1(met_post_mlb_cut,100,0,600);
     H1(met_phi_pre_mlb,50,-4,4);
     H1(met_phi_post_mlb,50,-4,4);
+    H1(nExtra_muons,6,0,6);
+    H1(nExtra_electrons,6,0,6);
+    H1(third_mu_pt,50,20,500);
+    H1(fourth_mu_pt,50,20,500);
+    H1(first_el_pt,50,20,500);
+    H1(second_el_pt,50,20,500);
     //H1(ll_pt,50,0,1000);
     //H1(ll_eta,50,-5,5);
 
@@ -273,6 +279,43 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             }
             if ( selectedPair_M < 0.0 ) continue;
             if ( Zboson ) continue;
+            h_cutflow->Fill(icutflow,weight*factor);
+            icutflow++;
+
+            // Look for a third isolated lepton and then veto the event if it is found
+            // Muons
+            vector<int> extra_muons;
+            for ( int i = 0; i < nt.nMuon(); i++ ){
+                  if ( nt.Muon_pt().at(i) > 20 && nt.Muon_highPtId().at(i) == 2 && !( i == leadingMu_idx || i == subleadingMu_idx)){
+                       extra_muons.push_back(i);
+                  }
+            }
+
+            // Electrons
+            vector<int> extra_electrons;
+            for ( int k = 0; k < nt.nElectron(); k++ ){
+                  if ( nt.Electron_pt().at(k) > 20 && nt.Electron_mvaFall17V2Iso_WP90().at(k) ){
+                       extra_electrons.push_back(k);
+		  }
+            }
+
+            //Fill relevant histograms for extra electrons, muons
+            h_nExtra_muons->Fill(extra_muons.size(),weight*factor);
+            h_nExtra_electrons->Fill(extra_electrons.size(),weight*factor);
+
+            if ( extra_muons.size() == 1 ) h_third_mu_pt->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+            if ( extra_electrons.size() == 1 ) h_first_el_pt->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+            if ( extra_muons.size() > 1 ){
+                 h_third_mu_pt->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+		 h_fourth_mu_pt->Fill(nt.Muon_pt().at(extra_muons[1]),weight*factor); 
+            }
+            if ( extra_electrons.size() > 1 ){
+                 h_first_el_pt->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+                 h_second_el_pt->Fill(nt.Electron_pt().at(extra_electrons[1]),weight*factor);
+            }
+ 
+
+            if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
             h_cutflow->Fill(icutflow,weight*factor);
             icutflow++;
 
