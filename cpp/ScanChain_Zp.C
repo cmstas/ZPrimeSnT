@@ -126,10 +126,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(met_phi_sel9,65,-3.25,3.25);
     H1(nExtra_muons_sel5,6,0,6);
     H1(nExtra_electrons_sel5,6,0,6);
-    H1(third_mu_pt_sel5,100,0,500);
-    H1(fourth_mu_pt_sel5,100,0,500);
-    H1(first_el_pt_sel5,100,0,500);
-    H1(second_el_pt_sel5,100,0,500);
+    H1(nExtra_lepIsoTracks_sel5,6,0,6);
+    H1(nExtra_chhIsoTracks_sel5,6,0,6);
+    //H1(third_mu_pt_sel5,100,0,500);
+    //H1(fourth_mu_pt_sel5,100,0,500);
+    //H1(first_el_pt_sel5,100,0,500);
+    //H1(second_el_pt_sel5,100,0,500);
+    //H1(dr_trigobj_sel3,50,0,0.5);
 
     int nEventsTotal = 0;
     int nEvents_more_leps = 0;
@@ -210,7 +213,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
 	      bool mu_id = ( nt.Muon_highPtId().at(mu) == 2 );
 	      bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-	      bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
+	      bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.02 );
 	      
 	      if ( mu_trk_and_global && mu_id ){
 		nMu_id++;
@@ -266,7 +269,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                     float deta = nt.TrigObj_eta().at(n) - nt.Muon_eta().at(i_cand_muons_pf);
                     float dphi = TVector2::Phi_mpi_pi(nt.TrigObj_phi().at(n) - nt.Muon_phi().at(i_cand_muons_pf));
                     float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-                    if ( dr < 0.1 ){
+		    //h_dr_trigobj_sel3->Fill(dr,weight*factor);
+                    if ( dr < 0.02 ){
                         muMatchedToTrigObj.push_back(true);
                         atLeastSelectedMu_matchedToTrigObj = true;
                     }
@@ -313,47 +317,95 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             // Muons
             vector<int> extra_muons;
             for ( int i = 0; i < nt.nMuon(); i++ ){
-                  if ( nt.Muon_pt().at(i) > 10. && 
-		       fabs(nt.Muon_eta().at(i)) < 2.4 &&
-		       nt.Muon_looseId().at(i) > 0 && 
-		       nt.Muon_dxy().at(i) < 0.2 && nt.Muon_dz().at(i) < 0.5 &&
-		       nt.Muon_miniPFRelIso_all().at(i) < 0.2 &&
-		       !( i == leadingMu_idx || i == subleadingMu_idx)){
-		    extra_muons.push_back(i);
-                  }
+	      if ( nt.Muon_pt().at(i) > 10. && 
+		   fabs(nt.Muon_eta().at(i)) < 2.4 &&
+		   nt.Muon_looseId().at(i) > 0 && 
+		   fabs(nt.Muon_dxy().at(i)) < 0.2 && fabs(nt.Muon_dz().at(i)) < 0.5 &&
+		   nt.Muon_miniPFRelIso_all().at(i) < 0.2 &&
+		   !( i == leadingMu_idx || i == subleadingMu_idx)){
+		extra_muons.push_back(i);
+	      }
             }
 
             // Electrons
             vector<int> extra_electrons;
-            for ( int k = 0; k < nt.nElectron(); k++ ){
-                  if ( nt.Electron_pt().at(k) > 10. &&
-		       fabs(nt.Electron_eta().at(k)) < 2.4 &&
-		       nt.Electron_cutBased().at(k) > 0 && 
-		       nt.Electron_miniPFRelIso_all().at(k) < 0.1){
-		    extra_electrons.push_back(k);
-		  }
+            for ( int i = 0; i < nt.nElectron(); i++ ){
+	      if ( nt.Electron_pt().at(i) > 10. &&
+		   fabs(nt.Electron_eta().at(i)) < 2.4 &&
+		   nt.Electron_cutBased().at(i) > 0 && 
+		   nt.Electron_miniPFRelIso_all().at(i) < 0.1){
+		extra_electrons.push_back(i);
+	      }
             }
+
+            //// IsoTracks
+            //vector<int> extra_isotracks_lep;
+            //for ( int i = 0; i < nt.nIsoTrack(); i++ ){
+	    //  if ( nt.IsoTrack_isPFcand().at(i) && 
+	    //	   nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
+	    //	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+	    //	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	    //	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
+	    //	float mindr=1e9;
+            //    for ( auto i_cand_muons_pf : cand_muons_pf ){
+	    //	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+	    //	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+	    //	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+	    //	  if ( dr < mindr ){
+	    //	    mindr = dr;
+	    //	  }
+	    //	}
+	    //	if ( mindr > 0.02)
+	    //	  extra_isotracks_lep.push_back(i);
+	    //  }
+	    //}
+            //vector<int> extra_isotracks_chh;
+            //for ( int i = 0; i < nt.nIsoTrack(); i++ ){
+	    //  if ( nt.IsoTrack_isPFcand().at(i) && 
+	    //	   nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
+	    //	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+	    //	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	    //	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
+	    //	float mindr=1e9;
+            //    for ( auto i_cand_muons_pf : cand_muons_pf ){
+	    //	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+	    //	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+	    //	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+	    //	  if ( dr < mindr ){
+	    //	    mindr = dr;
+	    //	  }
+	    //	}
+	    //	if ( mindr > 0.02)
+	    //	  extra_isotracks_chh.push_back(i);
+	    //  }
+            //}
 
             //Fill relevant histograms for extra electrons, muons
             h_nExtra_muons_sel5->Fill(extra_muons.size(),weight*factor);
             h_nExtra_electrons_sel5->Fill(extra_electrons.size(),weight*factor);
+            //h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
+            //h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
 
-            if ( extra_muons.size() == 1 ) h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
-            if ( extra_electrons.size() == 1 ) h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
-            if ( extra_muons.size() > 1 ){
-                 h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
-		 h_fourth_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[1]),weight*factor); 
-            }
-            if ( extra_electrons.size() > 1 ){
-                 h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
-                 h_second_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[1]),weight*factor);
-            }
+            //if ( extra_muons.size() == 1 ) h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+            //if ( extra_electrons.size() == 1 ) h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+            //if ( extra_muons.size() > 1 ){
+            //     h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+	    //	 h_fourth_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[1]),weight*factor); 
+            //}
+            //if ( extra_electrons.size() > 1 ){
+            //     h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+            //     h_second_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[1]),weight*factor);
+            //}
  
-
             if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
             h_cutflow->Fill(icutflow,weight*factor);
 	    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
             icutflow++;
+
+            //if ( extra_lepIsoTracks.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
+            //h_cutflow->Fill(icutflow,weight*factor);
+	    //h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
+            //icutflow++;
 
             vector<int> cand_bJets;
             unsigned int nbtagDeepFlavB = 0;
