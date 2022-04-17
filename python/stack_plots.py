@@ -16,15 +16,15 @@ parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input di
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
-parser.add_argument("--signalScale", default=None, help="Number to scale the signal by.")
+parser.add_argument("--signalScale", default=1.0, help="Number to scale the signal by.")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
 args.outDir = args.outDir.rstrip("/")+"/"
 
 if not os.path.exists(args.outDir):
-    os.makedirs(args.outDir,mode=755)
-os.system('cp ./utils/index.php '+args.outDir)
+    os.makedirs(args.outDir)
+os.system('cp '+args.inDir+'../../utils/index.php '+args.outDir)
 
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
@@ -120,23 +120,27 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     legend.SetTextSize(0.02)
 
     for i,mass in enumerate(args.signalMass): 
-        legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral())+("* %3.0f"%(float(args.signalScale)*float(signalXSecScale[mass])) if log==False and args.signalScale else ""))
+        if log==False and args.signalScale:
+            legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))))
+        else:
+            legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral(0,-1)))
+            
     if compare_data: 
-        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral()))
-    legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral()))
-    #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral()))
-    legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral()))
-    legend.AddEntry(tWplot,"tW+tbarW %1.2E"%(ST_tWplot.Integral()))
-    #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral()))
-    #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral()))
-    legend.AddEntry(TTXplot,"ttX %1.2E"%(TTXplot.Integral()))
-    #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral()))
-    #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral()))
-    #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral()))
-    #legend.AddEntry(TTHbbplot,"ttHbb %1.2E"%(TTHbbplot.Integral())) 
-    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral()))
-    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral()))
-    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral()))
+        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)))
+    legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral(0,-1)))
+    #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral(0,-1)))
+    legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral(0,-1)))
+    legend.AddEntry(tWplot,"tW+tbarW %1.2E"%(ST_tWplot.Integral(0,-1)))
+    #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral(0,-1)))
+    #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral(0,-1)))
+    legend.AddEntry(TTXplot,"ttX %1.2E"%(TTXplot.Integral(0,-1)))
+    #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral(0,-1)))
+    #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral(0,-1)))
+    #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral(0,-1)))
+    #legend.AddEntry(TTHbbplot,"ttHbb %1.2E"%(TTHbbplot.Integral(0,-1))) 
+    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)))
+    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)))
+    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)))
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
@@ -174,8 +178,10 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     histMax = 0.0
     for i,mass in enumerate(args.signalMass):
         if log==False:
-            if args.signalScale: signalplots[i].Scale(float(args.signalScale)*float(signalXSecScale[mass]))
-        if histMax < signalplots[i].GetMaximum(): histMax = signalplots[i].GetMaximum()
+            if args.signalScale: 
+                signalplots[i].Scale((float(args.signalScale))*(float(signalXSecScale[str(mass)])))
+        if histMax < signalplots[i].GetMaximum(): 
+            histMax = signalplots[i].GetMaximum()
         signalplots[i].Draw("HIST same")
     if compare_data: dataplot.Draw("E0 same")
 
@@ -215,4 +221,4 @@ for plot in listofplots:
         continue
     title=plot
     draw_plot(plot, title, False, args.data, False)
-    draw_plot(plot, title, True, args.data, False)
+    draw_plot(plot, title, True , args.data, False)
