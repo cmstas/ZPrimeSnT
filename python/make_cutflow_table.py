@@ -2,6 +2,12 @@ import sys,os,copy
 import math
 import ROOT 
 
+### This script returns a cutflow table in tex format.
+### Then:
+### pdflatex <filename>.tex
+### pdfcrop --margins '0 0' <filename>.pdf
+### mv <filename-crop>.pdf <filename>.pdf 
+
 def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="tables/"):
     
     if not os.path.exists(outdir):
@@ -62,8 +68,9 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
 
     fout = open(outdir+"/cutflow_"+year+".tex",'w')
     
-    fout.write('\\documentclass{article}\n')
+    fout.write('\\documentclass{article}\n')  
     fout.write('\\usepackage{adjustbox}\n')
+    fout.write('\\thispagestyle{empty}\n')
     fout.write('\\begin{document}\n')
     fout.write('\\begin{table*}[h]\n')
     fout.write('\\footnotesize\n')
