@@ -58,6 +58,46 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
     float factor = 1.0;
     float lumi = 1.0;
     float xsec = 1.0;
+ 
+    if ( process == "ttbar" )               xsec = 87310.0; // fb
+    if ( process == "DY" )                  xsec = 5765400.0; // fb
+    if ( process == "ZToMuMu_50_120" )      xsec = 2112904.0; // fb
+    if ( process == "ZToMuMu_120_200" )     xsec = 20553.0; // fb
+    if ( process == "ZToMuMu_200_400" )     xsec = 2886.0; // fb
+    if ( process == "ZToMuMu_400_800" )     xsec = 251.7; // fb
+    if ( process == "ZToMuMu_800_1400" )    xsec = 17.07; // fb
+    if ( process == "ZToMuMu_1400_2300" )   xsec = 1.366; // fb
+    if ( process == "ZToMuMu_2300_3500" )   xsec = 0.08178; // fb
+    if ( process == "ZToMuMu_3500_4500" )   xsec = 0.003191; // fb
+    if ( process == "ZToMuMu_4500_6000" )   xsec = 0.0002787; // fb
+    if ( process == "ZToMuMu_6000_Inf" )    xsec = 0.000009569; // fb
+    if ( process == "WW" )                  xsec = 118700.0; // fb 
+    if ( process == "WZ" )                  xsec = 47130.0; // fb
+    if ( process == "ZZ" )                  xsec = 16523.0; // fb
+    if ( process == "tW" )                  xsec = 19550; // fb
+    if ( process == "tbarW" )               xsec = 19550; // fb
+    if ( process == "TTW" )                 xsec = 204.3; // fb
+    if ( process == "TTZ" )                 xsec = 252.9; // fb
+    if ( process == "TTHToNonbb" )          xsec = 507.5*(1-0.575); // fb
+    if ( process == "TTHTobb" )             xsec = 507.5*0.575; // fb
+
+    
+    if ( year == "2018" )
+    {
+        lumi = 59.83; // fb-1
+        if ( process == "Y3_M100" )     xsec = 0.0211369709127*1000; // fb
+        if ( process == "Y3_M200" )     xsec = 0.01597959*1000; // fb
+        if ( process == "Y3_M400" )     xsec = 0.00290934734735*1000; // fb
+        if ( process == "Y3_M700" )     xsec = 0.000614377054108*1000; // fb
+        if ( process == "Y3_M1000" )    xsec = 0.000192622380952*1000; // fb
+        if ( process == "Y3_M1500" )    xsec = 3.636946e-05*1000; // fb
+        if ( process == "Y3_M2000" )    xsec = 8.253412e-06*1000; // fb
+    }
+    if ( year == "2017" )       lumi = 41.48; // fb-1
+    if ( year == "2016APV" )    lumi = 19.5; // fb-1
+    if ( year == "2016" )       lumi = 16.8; // fb-1
+
+    factor = xsec*lumi/genEventSumw;
 
     if (process == "ttbar")
         xsec = 87310.0; // fb
@@ -96,6 +136,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
     factor = xsec * lumi / genEventSumw;
 
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
+<<<<<<< HEAD
     TFile *f1 = new TFile("output_" + process + "_" + year + ".root", "RECREATE");
     H1(cutflow, 20, 0, 20);
     H1(mll_pf, 100, 150, 2000);
@@ -122,6 +163,44 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
     H1(max_mlb, 50, 0, 1000);
     // H1(ll_pt,50,0,1000);
     // H1(ll_eta,50,-5,5);
+=======
+    TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
+    H1(cutflow,20,0,20);
+    H1(mll_pf,150,0,2500);
+    H1(mll_pf_btag,150,0,2500);
+    H1(mll_pf_pre,150,0,2500);
+    H1(mu1_pt,50,50,800);
+    H1(mu2_pt,50,50,800);
+    H1(mu1_pt_pre,30,0,1000);
+    H1(mu1_pt_post,30,0,1000);
+    H1(mu2_pt_pre,30,0,1000);
+    H1(mu2_pt_post,30,0,1000);
+    H1(mu1_trkRelIso_pre,50,0,0.5);
+    H1(mu1_trkRelIso_post,50,0,0.5);
+    H1(mu2_trkRelIso_pre,50,0,0.5);
+    H1(mu2_trkRelIso_post,50,0,0.5);
+    H1(mu1_trkRelIso,50,0,0.1);
+    H1(mu2_trkRelIso,50,0,0.1);
+    H1(nCand_Muons,5,0,5);
+    H1(nbtagDeepFlavB,5,0,5);
+    H1(btagDeepFlavB,50,0,1);
+    H1(bjet1_pt,50,0,1000);
+    H1(bjet2_pt,50,0,1000);
+    H1(min_mlb,200,0,2000);
+    H1(max_mlb,50,0,1000);
+    H1(met_pre_mlb_cut,100,0,600);
+    H1(met_post_mlb_cut,100,0,600);
+    H1(met_phi_pre_mlb,50,-4,4);
+    H1(met_phi_post_mlb,50,-4,4);
+    H1(nExtra_muons,6,0,6);
+    H1(nExtra_electrons,6,0,6);
+    H1(third_mu_pt,50,20,500);
+    H1(fourth_mu_pt,50,20,500);
+    H1(first_el_pt,50,20,500);
+    H1(second_el_pt,50,20,500);
+    //H1(ll_pt,50,0,1000);
+    //H1(ll_eta,50,-5,5);
+>>>>>>> 21c729ffb886eb46e2b01dce775dfdd867378cd1
 
     int nEventsTotal = 0;
     int nEvents_more_leps = 0;
@@ -313,6 +392,43 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
             h_cutflow->Fill(icutflow, weight * factor);
             icutflow++;
 
+            // Look for a third isolated lepton and then veto the event if it is found
+            // Muons
+            vector<int> extra_muons;
+            for ( int i = 0; i < nt.nMuon(); i++ ){
+                  if ( nt.Muon_pt().at(i) > 20 && nt.Muon_highPtId().at(i) == 2 && !( i == leadingMu_idx || i == subleadingMu_idx)){
+                       extra_muons.push_back(i);
+                  }
+            }
+
+            // Electrons
+            vector<int> extra_electrons;
+            for ( int k = 0; k < nt.nElectron(); k++ ){
+                  if ( nt.Electron_pt().at(k) > 20 && nt.Electron_mvaFall17V2Iso_WP90().at(k) ){
+                       extra_electrons.push_back(k);
+		  }
+            }
+
+            //Fill relevant histograms for extra electrons, muons
+            h_nExtra_muons->Fill(extra_muons.size(),weight*factor);
+            h_nExtra_electrons->Fill(extra_electrons.size(),weight*factor);
+
+            if ( extra_muons.size() == 1 ) h_third_mu_pt->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+            if ( extra_electrons.size() == 1 ) h_first_el_pt->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+            if ( extra_muons.size() > 1 ){
+                 h_third_mu_pt->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
+		 h_fourth_mu_pt->Fill(nt.Muon_pt().at(extra_muons[1]),weight*factor); 
+            }
+            if ( extra_electrons.size() > 1 ){
+                 h_first_el_pt->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
+                 h_second_el_pt->Fill(nt.Electron_pt().at(extra_electrons[1]),weight*factor);
+            }
+ 
+
+            if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
+            h_cutflow->Fill(icutflow,weight*factor);
+            icutflow++;
+
             vector<int> cand_bJets;
             unsigned int nbtagDeepFlavB = 0;
             // bool mu_jet_sep = true;
@@ -364,6 +480,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
             // Construct mlb pairs from selected muon pair and candidate b jets
             // float m_lb = 0;
             vector<float> m_lb_vec;
+<<<<<<< HEAD
             for (int bjet = 0; bjet < cand_bJets.size(); bjet++)
             {
                 if (bjet > 2)
@@ -382,6 +499,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
                     m_lb = m_lb_vec[i];
                 }
             }
+=======
+            for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
+                  if ( bjet > 2 ) continue;
+		  float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+                  float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+		  m_lb_vec.push_back(m_mu1_b);
+		  m_lb_vec.push_back(m_mu2_b);		  
+	    }
+             
+>>>>>>> 21c729ffb886eb46e2b01dce775dfdd867378cd1
 
             float min_mlb = 10000000000000.;
             for (int k = 0; k < m_lb_vec.size(); k++)
@@ -392,6 +519,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
                 }
             }
 
+<<<<<<< HEAD
             h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx), weight * factor);
             h_mu2_trkRelIso->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx), weight * factor);
             h_mll_pf->Fill(selectedPair_M, weight * factor);
@@ -399,6 +527,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process)
             h_mu2_pt->Fill(nt.Muon_pt().at(subleadingMu_idx), weight * factor);
             h_max_mlb->Fill(m_lb, weight * factor);
             h_min_mlb->Fill(min_mlb, weight * factor);
+=======
+            h_met_pre_mlb_cut->Fill(nt.MET_pt(),weight*factor);
+            h_met_phi_pre_mlb->Fill(nt.MET_phi(),weight*factor);
+            
+            if (min_mlb > 180){
+                h_met_post_mlb_cut->Fill(nt.MET_pt(),weight*factor);
+                h_met_phi_post_mlb->Fill(nt.MET_phi(),weight*factor);
+            }
+            
+            h_mu1_trkRelIso->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
+            h_mu2_trkRelIso->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
+            h_mll_pf->Fill(selectedPair_M,weight*factor); 	 
+            h_mu1_pt->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
+            h_mu2_pt->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
+            //h_max_mlb->Fill(m_lb,weight*factor);
+            h_min_mlb->Fill(min_mlb,weight*factor);
+>>>>>>> 21c729ffb886eb46e2b01dce775dfdd867378cd1
 
         } // Event loop
 

@@ -7,99 +7,129 @@ import copy
 import argparse
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeAnalysis/cpp/temp_data/'.")
+parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/'.")
 parser.add_argument("--outDir", default="/home/users/kdownham/public_html/ZPrime", help="Choose output directory. Default: '../plots'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
+parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
+parser.add_argument("--signalScale", default=None, help="Number to scale the signal by.")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
 args.outDir = args.outDir.rstrip("/")+"/"
+if len(args.signalMass)==0: args.signalMass = [200,400,700,1000,1500,2000]
+signalXSecScale = { "200": 1.0, "400": 50, "700": 25.0, "1000": 80.0, "1500": 450.0, "2000": 2000.0}
+
+def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
+    plot = plotFile.Get(plotname)
+
+    plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
+    plot.SetBinContent(plot.GetNbinsX(), plot.GetBinContent(plot.GetNbinsX() + 1) + plot.GetBinContent(plot.GetNbinsX()))
+
+    if fillColor: plot.SetFillColor(fillColor)
+    if lineColor: plot.SetLineColor(lineColor)
+    plot.SetLineWidth(lineWidth)
+    #plot.Sumw2()
+
+    return plot
 
 def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_data=False, DoRatio=True):
     #open file
-    signalfile = ROOT.TFile(args.inDir+"output_signal_2018.root")
-    DYfile =     ROOT.TFile(args.inDir+"output_DY_2018.root")
+    signalfiles = []
+    ZToMuMufiles = []
+    for mass in args.signalMass: signalfiles.append(ROOT.TFile(args.inDir+"output_Y3_M"+str(mass)+"_2018.root"))
+    for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): ZToMuMufiles.append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_2018.root"))
+    #DYfile =     ROOT.TFile(args.inDir+"output_DY_2018.root")
     WWfile =     ROOT.TFile(args.inDir+"output_WW_2018.root")
     WZfile =     ROOT.TFile(args.inDir+"output_WZ_2018.root")
     ZZfile =     ROOT.TFile(args.inDir+"output_ZZ_2018.root")
     ttbarfile =  ROOT.TFile(args.inDir+"output_ttbar_2018.root")
+    tWfile =     ROOT.TFile(args.inDir+"output_tW_2018.root")
+    tbarWfile =  ROOT.TFile(args.inDir+"output_tbarW_2018.root")
+    TTWfile =    ROOT.TFile(args.inDir+"output_TTW_2018.root")
+    TTZfile =    ROOT.TFile(args.inDir+"output_TTZ_2018.root")
+    TTHNobbfile= ROOT.TFile(args.inDir+"output_TTHToNonbb_2018.root")
+   #TTHbbfile =  ROOT.TFile(args.inDir+"output_TTHTobb_2018.root")
     if compare_data: datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
 
     #get historam
-    signalplot = signalfile.Get(plotname)
-    if compare_data:
-        dataplot = datafile.Get(plotname)
-        dataplot.Rebin(4)
-    DYplot = DYfile.Get(plotname)
-    WWplot = WWfile.Get(plotname)
-    WZplot = WZfile.Get(plotname)
-    ZZplot = ZZfile.Get(plotname)
-    ttbarplot = ttbarfile.Get(plotname)
+    signalplots = []
+    ZToMuMuplots = []
+    for i in range(len(args.signalMass)): signalplots.append(get_plot(signalfiles[i],plotname,lineColor=ROOT.kPink+i,lineWidth=2))
+    for i in range(len(ZToMuMufiles)): ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
+    if compare_data: dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
+    #DYplot = get_plot(DYfile,plotname,fillColor=ROOT.kOrange)
+    WWplot = get_plot(WWfile,plotname,fillColor=ROOT.kOrange+1)
+    WZplot = get_plot(WZfile,plotname,fillColor=ROOT.kOrange+2)
+    ZZplot = get_plot(ZZfile,plotname,fillColor=ROOT.kOrange+3)
+    ttbarplot = get_plot(ttbarfile,plotname,fillColor=ROOT.kOrange+4)
+    tWplot = get_plot(tWfile,plotname,fillColor=ROOT.kOrange+5)
+    tbarWplot = get_plot(tbarWfile,plotname,fillColor=ROOT.kOrange+5)
+    TTWplot = get_plot(TTWfile,plotname,fillColor=ROOT.kOrange+6)
+    TTZplot = get_plot(TTZfile,plotname,fillColor=ROOT.kOrange+6)
+    TTHNobbplot = get_plot(TTHNobbfile,plotname,fillColor=ROOT.kOrange+6)
+   #TTHbbplot = TTHbbfile.Get(plotname)
 
-#    signalplot.Rebin(4)
-#    DYplot.Rebin(4)
-#    WWplot.Rebin(4)
-#    WZplot.Rebin(4)
-#    ZZplot.Rebin(4)
-#    ttbarplot.Rebin(4)
-
-    #draw overflow
-    signalplot.SetBinContent(1, signalplot.GetBinContent(1) + signalplot.GetBinContent(0))
-    signalplot.SetBinContent(signalplot.GetNbinsX(), signalplot.GetBinContent(signalplot.GetNbinsX() + 1) + signalplot.GetBinContent(signalplot.GetNbinsX()))
-    if compare_data:
-        dataplot.SetBinContent(1, dataplot.GetBinContent(1) + dataplot.GetBinContent(0))
-        dataplot.SetBinContent(dataplot.GetNbinsX(), dataplot.GetBinContent(dataplot.GetNbinsX() + 1) + dataplot.GetBinContent(dataplot.GetNbinsX()))
-    DYplot.SetBinContent(1, DYplot.GetBinContent(1) + DYplot.GetBinContent(0))
-    DYplot.SetBinContent(DYplot.GetNbinsX(), DYplot.GetBinContent(DYplot.GetNbinsX() + 1) + DYplot.GetBinContent(DYplot.GetNbinsX()))
-    WWplot.SetBinContent(1, WWplot.GetBinContent(1) + WWplot.GetBinContent(0))
-    WWplot.SetBinContent(WWplot.GetNbinsX(), WWplot.GetBinContent(WWplot.GetNbinsX() + 1) + WWplot.GetBinContent(WWplot.GetNbinsX()))
-    WZplot.SetBinContent(1, WZplot.GetBinContent(1) + WZplot.GetBinContent(0))
-    WZplot.SetBinContent(WZplot.GetNbinsX(), WZplot.GetBinContent(WZplot.GetNbinsX() + 1) + WZplot.GetBinContent(WZplot.GetNbinsX()))
-    ZZplot.SetBinContent(1, ZZplot.GetBinContent(1) + ZZplot.GetBinContent(0))
-    ZZplot.SetBinContent(ZZplot.GetNbinsX(), ZZplot.GetBinContent(ZZplot.GetNbinsX() + 1) + ZZplot.GetBinContent(ZZplot.GetNbinsX()))
-    ttbarplot.SetBinContent(1, ttbarplot.GetBinContent(1) + ttbarplot.GetBinContent(0))
-    ttbarplot.SetBinContent(ttbarplot.GetNbinsX(), ttbarplot.GetBinContent(ttbarplot.GetNbinsX() + 1) + ttbarplot.GetBinContent(ttbarplot.GetNbinsX()))
+    #add histos
+    ZToMuMuplot = ZToMuMuplots[0].Clone("ZToMuMu")
+    for i in range(1,len(ZToMuMuplots)): ZToMuMuplot.Add(ZToMuMuplots[i])
+    ST_tWplot = tWplot.Clone("ST_tW")
+    ST_tWplot.Add(tbarWplot)
+    TTXplot = TTWplot.Clone("TTX")
+    TTXplot.Add(TTZplot)
+    TTXplot.Add(TTHNobbplot)
 
     #build stack
     stack = ROOT.THStack("stack","")
-    ZZplot.SetFillColor(ROOT.kOrange+3)
-    ZZplot.SetLineWidth(0)
     stack.Add(ZZplot)
-    ttbarplot.SetFillColor(ROOT.kOrange+4)
-    ttbarplot.SetLineWidth(0)
-    stack.Add(ttbarplot)
-    WWplot.SetFillColor(ROOT.kOrange+1)
-    WWplot.SetLineWidth(0)
-    stack.Add(WWplot)
-    WZplot.SetFillColor(ROOT.kOrange+2)
-    WZplot.SetLineWidth(0)
     stack.Add(WZplot)
-    DYplot.SetFillColor(ROOT.kOrange)
-    DYplot.SetLineWidth(0)
-    stack.Add(DYplot)
+    stack.Add(WWplot)
+    stack.Add(TTXplot)
+    #stack.Add(TTWplot)
+    #stack.Add(TTZplot)
+    #stack.Add(TTHNobbplot)
+    #stack.Add(TTHbbplot)
+    stack.Add(ST_tWplot)
+    #stack.Add(tWplot)
+    #stack.Add(tbarWplot)
+    stack.Add(ttbarplot)
+    stack.Add(ZToMuMuplot)
+    #stack.Add(DYplot)
     stack.SetTitle(title)
 
     #plot legends, ranges
-    legend = ROOT.TLegend(0.7,0.83,0.95,0.97)
+    legend = ROOT.TLegend(0.65,0.65,0.97,0.97)
     legend.SetTextFont(60)
     legend.SetTextSize(0.02)
-    legend.AddEntry(signalplot,"signal %.2f"%(signalplot.Integral()))
-    if compare_data: legend.AddEntry(dataplot,"data %.2f"%(dataplot.Integral()))
-    legend.AddEntry(DYplot, "DY %.2f"%(DYplot.Integral()))
-    legend.AddEntry(WWplot, "WW %.2f"%(WWplot.Integral()))
-    legend.AddEntry(WZplot, "WZ %.2f"%(WZplot.Integral()))
-    legend.AddEntry(ZZplot,"ZZ %.2f"%(ZZplot.Integral()))
-    legend.AddEntry(ttbarplot,"ttbar %.2f"%(ttbarplot.Integral()))
+
+    for i,mass in enumerate(args.signalMass): legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral())+("* %3.0f"%(float(args.signalScale)*float(signalXSecScale[mass])) if log==False and args.signalScale else ""))
+    if compare_data: legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral()))
+    legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral()))
+    #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral()))
+    legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral()))
+    legend.AddEntry(tWplot,"tW+tbarW %1.2E"%(ST_tWplot.Integral()))
+    #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral()))
+    #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral()))
+    legend.AddEntry(TTXplot,"ttX %1.2E"%(TTXplot.Integral()))
+    #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral()))
+    #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral()))
+    #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral()))
+    #legend.AddEntry(TTHbbplot,"ttHbb %1.2E"%(TTHbbplot.Integral())) 
+    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral()))
+    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral()))
+    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral()))
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
 
     if DoRatio==True:
-        MCplot = copy.deepcopy(DYplot)
+        #MCplot = copy.deepcopy(DYplot)
+        MCplot = copy.deepcopy(ZToMuMuplot)
         MCplot.Add(WWplot)
         MCplot.Add(WZplot)
         MCplot.Add(ZZplot)
         MCplot.Add(ttbarplot)
+        MCplot.Add(tWplot)
+        MCplot.Add(TTXplot)
         ratioplot=copy.deepcopy(dataplot)
         ratioplot.Divide(MCplot)
         ratioplot.SetTitle(";"+title+";data / MC")
@@ -120,22 +150,21 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         #ROOT.gPad.SetLogy(1)
 
     #plot data,stack, signal, data  
-    signalplot.SetLineColor(ROOT.kRed)
-    signalplot.SetLineWidth(3)
-    if log==True:
-#        signalplot.Draw("Hist")
-        stack.Draw("HIST")
-        signalplot.Draw("HIST same")
-        if compare_data: dataplot.Draw("E0 same")
+    stack.Draw("HIST")
+    histMax = 0.0
+    for i,mass in enumerate(args.signalMass):
+        if log==False:
+            if args.signalScale: signalplots[i].Scale(float(args.signalScale)*float(signalXSecScale[mass]))
+        if histMax < signalplots[i].GetMaximum(): histMax = signalplots[i].GetMaximum()
+        signalplots[i].Draw("HIST same")
+    if compare_data: dataplot.Draw("E0 same")
 
+    if histMax < stack.GetMaximum(): histMax = stack.GetMaximum()
+    stack.SetMaximum(1.1*histMax)
+    if log==True:
         stack.SetMinimum(10e-2)
-        stack.SetMaximum(10e8)
         #stack.Draw("Hist")
 
-    if log==False:
-        stack.Draw("HIST")
-        signalplot.Draw("HIST same")
-        if compare_data: dataplot.Draw("E0 same")
     legend.Draw()
 
     #print and save
@@ -157,7 +186,7 @@ ROOT.gROOT.SetBatch(1)
 #                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
 #                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
 #                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
-listofplots1 = ["nCand_Muons", "mll_pf", "nbtagDeepFlavB", "btagDeepFlavB", "mll_pf_pre", "bjet1_pt", "bjet2_pt", "max_mlb", "min_mlb", "mu1_pt", "mu2_pt", "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post" , "mll_pf_btag", "mu1_trkRelIso", "mu2_trkRelIso"]
+listofplots1 = ["nCand_Muons", "mll_pf", "mll_pf_btag","mll_pf_pre", "bjet1_pt", "bjet2_pt",  "min_mlb", "mu1_pt", "mu2_pt", "met_pre_mlb_cut", "met_post_mlb_cut", "met_phi_pre_mlb", "met_phi_post_mlb"]
 
 for plot in listofplots1:
     title=plot
