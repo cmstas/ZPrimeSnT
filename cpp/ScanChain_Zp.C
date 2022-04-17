@@ -404,7 +404,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             h_mu2_pt_sel10->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
             h_min_mlb_sel10->Fill(min_mlb,weight*factor);
             
-            if ( min_mlb > 175.0 ) continue;
+            if ( min_mlb < 175.0 ) continue;
             h_cutflow->Fill(icutflow,weight*factor);
             icutflow++;
 	    h_met_pt_sel11->Fill(pfmet_pt,weight*factor);
