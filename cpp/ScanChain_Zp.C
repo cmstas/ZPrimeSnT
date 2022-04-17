@@ -153,7 +153,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	int icutflow = 0;
 	h_cutflow->Fill(icutflow,xsec*lumi);
 	h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (before skim)");
-	icutflow++;
 
         for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
@@ -185,6 +184,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             bar.progress(nEventsTotal, nEventsChain);
 
             // After skim
+	    icutflow = 1;
             h_cutflow->Fill(icutflow,weight*factor);
 	    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (after skim)");
             icutflow++;
