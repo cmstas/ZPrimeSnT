@@ -173,9 +173,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
       double pfmet_pt  = pfmet.first;
       double pfmet_phi = pfmet.second;
-      //std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(nt.PuppiMET_pt(), nt.PuppiMET_phi(), runnb, year, isMC, npv, true, true);
-      //double puppimet_pt  = puppimet.first;
-      //double puppimet_phi = puppimet.second;
+      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(nt.PuppiMET_pt(), nt.PuppiMET_phi(), runnb, year, isMC, npv, true, true);
+      double puppimet_pt  = puppimet.first;
+      double puppimet_phi = puppimet.second;
 
       // Define vector of muon candidate indices here.....
       vector<int> cand_muons_pf_id;
@@ -338,53 +338,53 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
 
-      //// IsoTracks
-      //vector<int> extra_isotracks_lep;
-      //for ( int i = 0; i < nt.nIsoTrack(); i++ ){
-      //  if ( nt.IsoTrack_isPFcand().at(i) && 
-      //	   nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
-      //	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-      //	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-      //	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
-      //	float mindr=1e9;
-      //    for ( auto i_cand_muons_pf : cand_muons_pf ){
-      //	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-      //	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
-      //	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-      //	  if ( dr < mindr ){
-      //	    mindr = dr;
-      //	  }
-      //	}
-      //	if ( mindr > 0.02)
-      //	  extra_isotracks_lep.push_back(i);
-      //  }
-      //}
-      //vector<int> extra_isotracks_chh;
-      //for ( int i = 0; i < nt.nIsoTrack(); i++ ){
-      //  if ( nt.IsoTrack_isPFcand().at(i) && 
-      //	   nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
-      //	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-      //	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-      //	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
-      //	float mindr=1e9;
-      //    for ( auto i_cand_muons_pf : cand_muons_pf ){
-      //	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-      //	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
-      //	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-      //	  if ( dr < mindr ){
-      //	    mindr = dr;
-      //	  }
-      //	}
-      //	if ( mindr > 0.02)
-      //	  extra_isotracks_chh.push_back(i);
-      //  }
-      //}
+      // IsoTracks
+      vector<int> extra_isotracks_lep;
+      for ( int i = 0; i < nt.nIsoTrack(); i++ ){
+        if ( nt.IsoTrack_isPFcand().at(i) && 
+      	   nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
+      	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+      	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+      	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
+      	float mindr=1e9;
+          for ( auto i_cand_muons_pf : cand_muons_pf ){
+      	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+      	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+      	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+      	  if ( dr < mindr ){
+      	    mindr = dr;
+      	  }
+      	}
+      	if ( mindr > 0.02)
+      	  extra_isotracks_lep.push_back(i);
+        }
+      }
+      vector<int> extra_isotracks_chh;
+      for ( int i = 0; i < nt.nIsoTrack(); i++ ){
+        if ( nt.IsoTrack_isPFcand().at(i) && 
+      	   nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
+      	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+      	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+      	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
+      	float mindr=1e9;
+          for ( auto i_cand_muons_pf : cand_muons_pf ){
+      	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+      	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+      	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+      	  if ( dr < mindr ){
+      	    mindr = dr;
+      	  }
+      	}
+      	if ( mindr > 0.02)
+      	  extra_isotracks_chh.push_back(i);
+        }
+      }
 
       //Fill relevant histograms for extra electrons, muons
       h_nExtra_muons_sel5->Fill(extra_muons.size(),weight*factor);
       h_nExtra_electrons_sel5->Fill(extra_electrons.size(),weight*factor);
-      //h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
-      //h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
+      h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
+      h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
 
       //if ( extra_muons.size() == 1 ) h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
       //if ( extra_electrons.size() == 1 ) h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
@@ -402,10 +402,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
       icutflow++;
 
-      //if ( extra_lepIsoTracks.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
-      //h_cutflow->Fill(icutflow,weight*factor);
-      //h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
-      //icutflow++;
+      if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
+      h_cutflow->Fill(icutflow,weight*factor);
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
+      icutflow++;
 
       vector<int> cand_bJets;
       unsigned int nbtagDeepFlavB = 0;
