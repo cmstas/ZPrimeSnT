@@ -72,6 +72,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
     fout.write('\\usepackage{adjustbox}\n')
     fout.write('\\thispagestyle{empty}\n')
     fout.write('\\begin{document}\n')
+    fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 90 GeV.}')
     fout.write('\\begin{table*}[h]\n')
     fout.write('\\footnotesize\n')
     fout.write('\\begin{adjustbox}{width=\\textwidth}\n')
@@ -99,7 +100,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
         tlabel = tlabel.replace("$$","$ $")
         fout.write(tlabel)
         for i in range(len(samples)):
-            fout.write('& %.3E & %.2f'%(yields[i][c],100.0*effs[i][c]))
+            fout.write('& %.3E & %.2E'%(yields[i][c],100.0*effs[i][c]))
         fout.write('\\\\\n')
     
     fout.write('\\end{tabular}\n')

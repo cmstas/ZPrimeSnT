@@ -93,10 +93,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
     TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
-    H1(mll_pf_sel6,240,100,2500);
-    H1(mll_pf_sel7,240,100,2500);
-    H1(mll_pf_sel8,240,100,2500);
-    H1(mll_pf_sel9,240,100,2500);
+    H1(mll_pf_sel6,241,90,2500);
+    H1(mll_pf_sel7,241,90,2500);
+    H1(mll_pf_sel8,241,90,2500);
+    H1(mll_pf_sel9,241,90,2500);
     H1(mu1_pt_sel1,200,0,1000);
     H1(mu2_pt_sel1,200,0,1000);
     H1(mu1_pt_sel2,200,0,1000);
