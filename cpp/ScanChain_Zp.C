@@ -322,7 +322,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 		    extra_muons.push_back(i);
                   }
             }
-	    
+
             // Electrons
             vector<int> extra_electrons;
             for ( int k = 0; k < nt.nElectron(); k++ ){
