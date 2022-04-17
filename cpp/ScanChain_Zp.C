@@ -342,41 +342,43 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       vector<int> extra_isotracks_lep;
       for ( int i = 0; i < nt.nIsoTrack(); i++ ){
         if ( nt.IsoTrack_isPFcand().at(i) && 
-      	   nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
-      	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-      	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-      	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
-      	float mindr=1e9;
+	     nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
+	     fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
+	  float mindr=1e9;
           for ( auto i_cand_muons_pf : cand_muons_pf ){
-      	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-      	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
-      	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-      	  if ( dr < mindr ){
-      	    mindr = dr;
-      	  }
-      	}
-      	if ( mindr > 0.02)
-      	  extra_isotracks_lep.push_back(i);
+	    if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
+	    float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+	    float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+	    float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+	    if ( dr < mindr ){
+	      mindr = dr;
+	    }
+	  }
+	  if ( mindr > 0.02)
+	    extra_isotracks_lep.push_back(i);
         }
       }
       vector<int> extra_isotracks_chh;
       for ( int i = 0; i < nt.nIsoTrack(); i++ ){
         if ( nt.IsoTrack_isPFcand().at(i) && 
-      	   nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
-      	   fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-      	   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-      	   nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
-      	float mindr=1e9;
+	     nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
+	     fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
+	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
+	  float mindr=1e9;
           for ( auto i_cand_muons_pf : cand_muons_pf ){
-      	  float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-      	  float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
-      	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-      	  if ( dr < mindr ){
-      	    mindr = dr;
-      	  }
-      	}
-      	if ( mindr > 0.02)
-      	  extra_isotracks_chh.push_back(i);
+	    if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
+	    float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
+	    float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+	    float dr = TMath::Sqrt( deta*deta+dphi*dphi );
+	    if ( dr < mindr ){
+	      mindr = dr;
+	    }
+	  }
+	  if ( mindr > 0.02)
+	    extra_isotracks_chh.push_back(i);
         }
       }
 
