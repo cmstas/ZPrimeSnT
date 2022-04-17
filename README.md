@@ -10,11 +10,34 @@ make -j12
 popd
 ```
 
-### Analysis codee:
+## Analysis code:
 
-Please, refer to `cpp/README.md`.
+For more dedtails, refer to `cpp/README.md`.
 
-### NanoCORE synchronization:
+### Example instructions
+
+Edit `cpp/doAll_Zp.C` with an appropriate file (or hopefully the default one still exists).
+
+```bash
+pushd cpp/
+root -b -q -l -n doAll_Zp.C
+popd
+```
+
+This loops and creates a number of output files of the form `output_"process"_"year".root`, which contains a handful of histograms. 
+
+To produce plots:
+```bash
+python python/stack_plots.py
+```
+
+To produce cutflow table:
+```bash
+python python/make_cutflow_table.py
+```
+
+
+## NanoCORE synchronization:
 
 The `NanoCORE` subdirectory shall be synchronized often with `git@github.com:cmstas/NanoTools.git`.
 For the first time only:
@@ -46,7 +69,7 @@ git push origin <branchname>
 Then, open pull request to `NanoTools` remote repository.
 
 
-### Style:
+## Style:
 
 We use `clang-format` based on LLVM style to format our code. To format the `ElectronSelections.cc` file in-place, do
 ```bash
