@@ -9,7 +9,7 @@ using namespace tas;
 bool IsMatched(float lep_eta, float lep_phi, std::vector<int> trigObj){
      float dRmin = 0.2;
      bool match = false;
-     for ( int i = 0; i < trigObj.size(); i++){
+     for ( unsigned int i = 0; i < trigObj.size(); i++){
 	   float d_eta = lep_eta - nt.TrigObj_eta().at(i);
            float d_phi = lep_phi - nt.TrigObj_phi().at(i);
            float dR = sqrt(pow(d_eta,2)+pow(d_phi,2));

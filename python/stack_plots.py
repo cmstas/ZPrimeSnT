@@ -5,10 +5,15 @@ from tkinter.tix import Tree
 import ROOT
 import copy
 import argparse
+import os
+from datetime import date    
+
+user = os.environ.get("USER")
+today= date.today().strftime("%b-%d-%Y")
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("--inDir", default="/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/", help="Choose input directory. Default: '/home/users/kdownham/ZPrimeAnalysis/ZPrimeSnT/cpp/temp_data/'.")
-parser.add_argument("--outDir", default="/home/users/kdownham/public_html/ZPrime", help="Choose output directory. Default: '../plots'.")
+parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'.")
+parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
 parser.add_argument("--signalScale", default=None, help="Number to scale the signal by.")
@@ -16,7 +21,13 @@ args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
 args.outDir = args.outDir.rstrip("/")+"/"
-if len(args.signalMass)==0: args.signalMass = [200,400,700,1000,1500,2000]
+
+if not os.path.exists(args.outDir):
+    os.makedirs(args.outDir,mode=755)
+os.system('cp ./utils/index.php '+args.outDir)
+
+if len(args.signalMass)==0: 
+    args.signalMass = [200,400,700,1000,1500,2000]
 signalXSecScale = { "200": 1.0, "400": 50, "700": 25.0, "1000": 80.0, "1500": 450.0, "2000": 2000.0}
 
 def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
@@ -25,8 +36,10 @@ def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
     plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
     plot.SetBinContent(plot.GetNbinsX(), plot.GetBinContent(plot.GetNbinsX() + 1) + plot.GetBinContent(plot.GetNbinsX()))
 
-    if fillColor: plot.SetFillColor(fillColor)
-    if lineColor: plot.SetLineColor(lineColor)
+    if fillColor: 
+        plot.SetFillColor(fillColor)
+    if lineColor: 
+        plot.SetLineColor(lineColor)
     plot.SetLineWidth(lineWidth)
     #plot.Sumw2()
 
@@ -36,8 +49,10 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     #open file
     signalfiles = []
     ZToMuMufiles = []
-    for mass in args.signalMass: signalfiles.append(ROOT.TFile(args.inDir+"output_Y3_M"+str(mass)+"_2018.root"))
-    for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): ZToMuMufiles.append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_2018.root"))
+    for mass in args.signalMass: 
+        signalfiles.append(ROOT.TFile(args.inDir+"output_Y3_M"+str(mass)+"_2018.root"))
+    for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
+        ZToMuMufiles.append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_2018.root"))
     #DYfile =     ROOT.TFile(args.inDir+"output_DY_2018.root")
     WWfile =     ROOT.TFile(args.inDir+"output_WW_2018.root")
     WZfile =     ROOT.TFile(args.inDir+"output_WZ_2018.root")
@@ -48,14 +63,17 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWfile =    ROOT.TFile(args.inDir+"output_TTW_2018.root")
     TTZfile =    ROOT.TFile(args.inDir+"output_TTZ_2018.root")
     TTHNobbfile= ROOT.TFile(args.inDir+"output_TTHToNonbb_2018.root")
-   #TTHbbfile =  ROOT.TFile(args.inDir+"output_TTHTobb_2018.root")
-    if compare_data: datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
+    #TTHbbfile =  ROOT.TFile(args.inDir+"output_TTHTobb_2018.root")
+    if compare_data: 
+        datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
 
     #get historam
     signalplots = []
     ZToMuMuplots = []
-    for i in range(len(args.signalMass)): signalplots.append(get_plot(signalfiles[i],plotname,lineColor=ROOT.kPink+i,lineWidth=2))
-    for i in range(len(ZToMuMufiles)): ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
+    for i in range(len(args.signalMass)): 
+        signalplots.append(get_plot(signalfiles[i],plotname,lineColor=ROOT.kPink+i,lineWidth=2))
+    for i in range(len(ZToMuMufiles)): 
+        ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
     if compare_data: dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
     #DYplot = get_plot(DYfile,plotname,fillColor=ROOT.kOrange)
     WWplot = get_plot(WWfile,plotname,fillColor=ROOT.kOrange+1)
@@ -101,8 +119,10 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     legend.SetTextFont(60)
     legend.SetTextSize(0.02)
 
-    for i,mass in enumerate(args.signalMass): legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral())+("* %3.0f"%(float(args.signalScale)*float(signalXSecScale[mass])) if log==False and args.signalScale else ""))
-    if compare_data: legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral()))
+    for i,mass in enumerate(args.signalMass): 
+        legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral())+("* %3.0f"%(float(args.signalScale)*float(signalXSecScale[mass])) if log==False and args.signalScale else ""))
+    if compare_data: 
+        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral()))
     legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral()))
     #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral()))
     legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral()))
@@ -179,16 +199,20 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         if compare_data==True:
             canvas.SaveAs(args.outDir + plotname + "_mc+data_linear.png")
 
-ROOT.gStyle.SetOptStat(0000)
+ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-#listofplots1=["mu1_pt", "mu1_pt_pre", "mu1_pt_post", "mu2_pt", "mu2_pt_pre", "mu2_pt_post",
-#                "nGood_PV_pre", "nGood_PV_post","nCand_Muons_pre","nCand_Muons_post","nCand_trigObj_pre","nCand_trigObj_post",
-#                "mu1_trkRelIso_pre", "mu1_trkRelIso_post", "mu2_trkRelIso_pre", "mu2_trkRelIso_post",
-#                "mu1_highPtId_pre", "mu1_highPtId_post", "mu2_highPtId_pre", "mu2_highPtId_post", ]
-listofplots1 = ["nCand_Muons", "mll_pf", "mll_pf_btag","mll_pf_pre", "bjet1_pt", "bjet2_pt",  "min_mlb", "mu1_pt", "mu2_pt", "met_pre_mlb_cut", "met_post_mlb_cut", "met_phi_pre_mlb", "met_phi_post_mlb"]
+listofplots = []
+listfile = ROOT.TFile(args.inDir+"output_ttbar_2018.root")
+listkeys = listfile.GetListOfKeys()
+size = listkeys.GetSize()
+for i in range(0,size):
+    listofplots.append(listkeys.At(i).GetName())
+toexclude = []
 
-for plot in listofplots1:
+for plot in listofplots:
+    if plot in toexclude:
+        continue
     title=plot
     draw_plot(plot, title, False, args.data, False)
     draw_plot(plot, title, True, args.data, False)
