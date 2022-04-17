@@ -93,10 +93,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
     TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
     H1(cutflow,20,0,20);
-    H1(mll_pf_sel6 ,250,0,2500);
-    H1(mll_pf_sel7 ,250,0,2500);
-    H1(mll_pf_sel8 ,250,0,2500);
-    H1(mll_pf_sel9 ,250,0,2500);
+    H1(mll_pf_sel6,240,100,2500);
+    H1(mll_pf_sel7,240,100,2500);
+    H1(mll_pf_sel8,240,100,2500);
+    H1(mll_pf_sel9,240,100,2500);
     H1(mu1_pt_sel1,200,0,1000);
     H1(mu2_pt_sel1,200,0,1000);
     H1(mu1_pt_sel2,200,0,1000);
@@ -149,12 +149,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
         nt.Init(tree);
 
+	// Before any cuts
+	int icutflow = 0;
+	h_cutflow->Fill(icutflow,xsec*lumi);
+	h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (before skim)");
+	icutflow++;
+
         for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
             nt.GetEntry(event);
             tree->LoadTree(event);
 
             float weight = genWeight();
+	    if(weight>1e3) continue;
+
 	    int runnb = nt.run();
 	    int npv = nt.PV_npvs();
 
@@ -176,10 +184,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             nEventsTotal++;
             bar.progress(nEventsTotal, nEventsChain);
 
-            // Before any cuts
-            int icutflow = 0;
+            // After skim
             h_cutflow->Fill(icutflow,weight*factor);
-	    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total");
+	    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (after skim)");
             icutflow++;
 
             // HLT selection
