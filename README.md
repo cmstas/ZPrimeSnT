@@ -36,6 +36,19 @@ To produce cutflow table:
 python python/make_cutflow_table.py
 ```
 
+## Pull requests:
+
+When opening a PR against the `main` branch, please make sure your code is up-to-date:
+```bash
+pushd ZPrimeSnt/
+git checkout main
+git pull
+git checkout -b <branchname>
+<Do your developmets and commit>
+git push origin <branchname>
+```
+Then, open a PR against `main` branch and request review.
+
 
 ## NanoCORE synchronization:
 
