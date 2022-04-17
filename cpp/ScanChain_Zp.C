@@ -118,8 +118,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     H1(nbtagDeepFlavB_sel8,5,0,5);
     H1(bjet1_pt_sel10,50,0,1000);
     H1(bjet2_pt_sel10,50,0,1000);
-    H1(bjet1_pt_sel11,50,0,1000);
-    H1(bjet2_pt_sel11,50,0,1000);
     H1(min_mlb_sel10,200,0,2000);
     H1(min_mlb_sel11,200,0,2000);
     H1(met_pt_sel10,100,0,600);
