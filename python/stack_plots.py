@@ -17,6 +17,7 @@ parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
 parser.add_argument("--signalScale", default=1.0, help="Number to scale the signal by.")
+parser.add_argument("--shape", default=False, help="Shape normalization.")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -72,6 +73,11 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     ZToMuMuplots = []
     for i in range(len(args.signalMass)): 
         signalplots.append(get_plot(signalfiles[i],plotname,lineColor=ROOT.kPink+i,lineWidth=2))
+        if args.shape and signalplots[i].Integral(0,-1)>0.0:
+            if "cutflow" not in plotname:
+                signalplots[i].Scale(1.0/signalplots[i].Integral(0,-1))
+            else:
+                signalplots[i].Scale(1.0/signalplots[i].GetBinContent(1))
     for i in range(len(ZToMuMufiles)): 
         ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
     if compare_data: dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
@@ -85,16 +91,37 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWplot = get_plot(TTWfile,plotname,fillColor=ROOT.kOrange+6)
     TTZplot = get_plot(TTZfile,plotname,fillColor=ROOT.kOrange+6)
     TTHNobbplot = get_plot(TTHNobbfile,plotname,fillColor=ROOT.kOrange+6)
-   #TTHbbplot = TTHbbfile.Get(plotname)
-
+    #TTHbbplot = TTHbbfile.Get(plotname)
+   
     #add histos
     ZToMuMuplot = ZToMuMuplots[0].Clone("ZToMuMu")
-    for i in range(1,len(ZToMuMuplots)): ZToMuMuplot.Add(ZToMuMuplots[i])
+    for i in range(1,len(ZToMuMuplots)): 
+        ZToMuMuplot.Add(ZToMuMuplots[i])
     ST_tWplot = tWplot.Clone("ST_tW")
     ST_tWplot.Add(tbarWplot)
     TTXplot = TTWplot.Clone("TTX")
     TTXplot.Add(TTZplot)
     TTXplot.Add(TTHNobbplot)
+
+    totalSM = ZToMuMuplot.Clone("totalSM")
+    totalSM.Add(ST_tWplot)
+    totalSM.Add(TTXplot)
+    totalSM.Add(ttbarplot)
+    totalSM.Add(ZZplot)
+    totalSM.Add(WWplot)
+    totalSM.Add(WZplot)
+    totalScale   = totalSM.Integral(0,-1)
+    if "cutflow" in plotname:
+        totalScale = totalSM.GetBinContent(1)
+
+    if args.shape and totalScale>0.0:
+        ZToMuMuplot.Scale(1.0/totalScale)
+        ST_tWplot.Scale(1.0/totalScale)
+        TTXplot.Scale(1.0/totalScale)
+        ttbarplot.Scale(1.0/totalScale)
+        ZZplot.Scale(1.0/totalScale)
+        WWplot.Scale(1.0/totalScale)
+        WZplot.Scale(1.0/totalScale)
 
     #build stack
     stack = ROOT.THStack("stack","")
@@ -120,7 +147,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     legend.SetTextSize(0.02)
 
     for i,mass in enumerate(args.signalMass): 
-        if log==False and args.signalScale:
+        if log==False and args.signalScale and not args.shape:
             legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))))
         else:
             legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral(0,-1)))
@@ -129,11 +156,11 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)))
     legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral(0,-1)))
     #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral(0,-1)))
-    legend.AddEntry(ttbarplot,"ttbar %1.2E"%(ttbarplot.Integral(0,-1)))
-    legend.AddEntry(tWplot,"tW+tbarW %1.2E"%(ST_tWplot.Integral(0,-1)))
+    legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)))
+    legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)))
     #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral(0,-1)))
     #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral(0,-1)))
-    legend.AddEntry(TTXplot,"ttX %1.2E"%(TTXplot.Integral(0,-1)))
+    legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)))
     #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral(0,-1)))
     #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral(0,-1)))
     #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral(0,-1)))
@@ -177,33 +204,37 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     stack.Draw("HIST")
     histMax = 0.0
     for i,mass in enumerate(args.signalMass):
-        if log==False:
-            if args.signalScale: 
-                signalplots[i].Scale((float(args.signalScale))*(float(signalXSecScale[str(mass)])))
+        if log==False and args.signalScale and not args.shape: 
+            signalplots[i].Scale((float(args.signalScale))*(float(signalXSecScale[str(mass)])))
         if histMax < signalplots[i].GetMaximum(): 
             histMax = signalplots[i].GetMaximum()
         signalplots[i].Draw("HIST same")
-    if compare_data: dataplot.Draw("E0 same")
+    if compare_data: 
+        dataplot.Draw("E0 same")
 
-    if histMax < stack.GetMaximum(): histMax = stack.GetMaximum()
+    if histMax < stack.GetMaximum(): 
+        histMax = stack.GetMaximum()
     stack.SetMaximum(1.1*histMax)
     if log==True:
-        stack.SetMinimum(10e-2)
+        stack.SetMinimum(10e-3)
         #stack.Draw("Hist")
 
     legend.Draw()
 
     #print and save
-    if log==True:
-        if compare_data==False:
-            canvas.SaveAs(args.outDir + plotname + "_s+b_log.png")
-        if compare_data==True:
-            canvas.SaveAs(args.outDir + plotname + "_mc+data_log.png")
-    if log==False:
-        if compare_data==False:
-            canvas.SaveAs(args.outDir + plotname + "_s+b_linear.png")
-        if compare_data==True:
-            canvas.SaveAs(args.outDir + plotname + "_mc+data_linear.png")
+    extension = ""
+    if compare_data:
+        extension = extension+"_mc+data"
+    else:
+        extension = extension+"_s+b"
+    if log:
+        extension = extension+"_log"
+    else:
+        extension = extension+"_linear"
+    if args.shape:
+        extension = extension+"_areaNormalized"
+    
+    canvas.SaveAs(args.outDir + plotname + extension + ".png")
 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
