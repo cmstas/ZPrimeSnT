@@ -30,6 +30,8 @@
 
 // #define DEBUG
 
+bool removeSpikes = false;
+
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
 
@@ -163,7 +165,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       tree->LoadTree(event);
 
       float weight = genWeight();
-      if(weight>1e3) continue;
+      if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
       int npv = nt.PV_npvs();
