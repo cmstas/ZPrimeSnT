@@ -104,7 +104,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
         tlabel = tlabel.replace("$$","$ $")
         fout.write(tlabel)
         for i in range(len(samples)):
-            fout.write('& %.3E & %.2E'%(yields[i][c],100.0*effs[i][c]))
+            fout.write('& %.2E & %.2E'%(yields[i][c],100.0*effs[i][c]))
         fout.write('\\\\\n')
     
     fout.write('\\end{tabular}\n')
