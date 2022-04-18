@@ -54,7 +54,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         signalfiles.append(ROOT.TFile(args.inDir+"output_Y3_M"+str(mass)+"_2018.root"))
     for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
         ZToMuMufiles.append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_2018.root"))
-    #DYfile =     ROOT.TFile(args.inDir+"output_DY_2018.root")
     WWfile =     ROOT.TFile(args.inDir+"output_WW_2018.root")
     WZfile =     ROOT.TFile(args.inDir+"output_WZ_2018.root")
     ZZfile =     ROOT.TFile(args.inDir+"output_ZZ_2018.root")
@@ -64,7 +63,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWfile =    ROOT.TFile(args.inDir+"output_TTW_2018.root")
     TTZfile =    ROOT.TFile(args.inDir+"output_TTZ_2018.root")
     TTHNobbfile= ROOT.TFile(args.inDir+"output_TTHToNonbb_2018.root")
-    #TTHbbfile =  ROOT.TFile(args.inDir+"output_TTHTobb_2018.root")
     if compare_data: 
         datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
 
@@ -81,7 +79,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     for i in range(len(ZToMuMufiles)): 
         ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
     if compare_data: dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
-    #DYplot = get_plot(DYfile,plotname,fillColor=ROOT.kOrange)
     WWplot = get_plot(WWfile,plotname,fillColor=ROOT.kOrange+1)
     WZplot = get_plot(WZfile,plotname,fillColor=ROOT.kOrange+2)
     ZZplot = get_plot(ZZfile,plotname,fillColor=ROOT.kOrange+3)
@@ -91,7 +88,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWplot = get_plot(TTWfile,plotname,fillColor=ROOT.kOrange+6)
     TTZplot = get_plot(TTZfile,plotname,fillColor=ROOT.kOrange+6)
     TTHNobbplot = get_plot(TTHNobbfile,plotname,fillColor=ROOT.kOrange+6)
-    #TTHbbplot = TTHbbfile.Get(plotname)
    
     #add histos
     ZToMuMuplot = ZToMuMuplots[0].Clone("ZToMuMu")
@@ -129,42 +125,27 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     stack.Add(WZplot)
     stack.Add(WWplot)
     stack.Add(TTXplot)
-    #stack.Add(TTWplot)
-    #stack.Add(TTZplot)
-    #stack.Add(TTHNobbplot)
-    #stack.Add(TTHbbplot)
     stack.Add(ST_tWplot)
-    #stack.Add(tWplot)
-    #stack.Add(tbarWplot)
     stack.Add(ttbarplot)
     stack.Add(ZToMuMuplot)
-    #stack.Add(DYplot)
     stack.SetTitle(title)
 
     #plot legends, ranges
     legend = ROOT.TLegend(0.65,0.65,0.97,0.97)
-    legend.SetTextFont(60)
-    legend.SetTextSize(0.02)
+    #legend.SetTextSize(0.02)
 
     for i,mass in enumerate(args.signalMass): 
         if log==False and args.signalScale and not args.shape:
-            legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))))
+            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))))
         else:
-            legend.AddEntry(signalplots[i],"Y3_M"+str(mass)+" %1.2E"%(signalplots[i].Integral(0,-1)))
+            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E"%(signalplots[i].Integral(0,-1)))
             
     if compare_data: 
         legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)))
-    legend.AddEntry(ZToMuMuplot, "ZToMuMu %1.2E"%(ZToMuMuplot.Integral(0,-1)))
-    #legend.AddEntry(DYplot, "DY %1.2E"%(DYplot.Integral(0,-1)))
+    legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.Integral(0,-1)))
     legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)))
     legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)))
-    #legend.AddEntry(tWplot,"tW %1.2E"%(tWplot.Integral(0,-1)))
-    #legend.AddEntry(tbarWplot,"tbarW %1.2E"%(tbarWplot.Integral(0,-1)))
     legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)))
-    #legend.AddEntry(TTWplot,"ttW %1.2E"%(TTWplot.Integral(0,-1)))
-    #legend.AddEntry(TTZplot,"ttZ %1.2E"%(TTZplot.Integral(0,-1)))
-    #legend.AddEntry(TTHNobbplot,"ttHNobb %1.2E"%(TTHNobbplot.Integral(0,-1)))
-    #legend.AddEntry(TTHbbplot,"ttHbb %1.2E"%(TTHbbplot.Integral(0,-1))) 
     legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)))
     legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)))
     legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)))
@@ -173,7 +154,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
 
     if DoRatio==True:
-        #MCplot = copy.deepcopy(DYplot)
         MCplot = copy.deepcopy(ZToMuMuplot)
         MCplot.Add(WWplot)
         MCplot.Add(WZplot)
@@ -220,6 +200,8 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         #stack.Draw("Hist")
 
     legend.Draw()
+
+    canvas.Update()
 
     #print and save
     extension = ""
