@@ -27,6 +27,7 @@
 #define COUNT_LT(vec,num) std::count_if((vec).begin(), (vec).end(), [](float x) { return x < (num); });
 
 #define H1(name,nbins,low,high,xtitle) TH1F *h_##name = new TH1F(#name,"",nbins,low,high); h_##name->GetXaxis()->SetTitle(xtitle); h_##name->GetYaxis()->SetTitle("Events");
+#define HTemp(name,nbins,low,high,xtitle) TH1F *h_temp = new TH1F(name,"",nbins,low,high); h_temp->GetXaxis()->SetTitle(xtitle); h_temp->GetYaxis()->SetTitle("Events");
 
 // #define DEBUG
 
@@ -94,43 +95,79 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
+
   H1(cutflow,20,0,20,"");
-  H1(mll_pf_sel6,240,100,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel7,240,100,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel8,240,100,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel9,240,100,2500,"m_{ll} [GeV]");
-  H1(mu1_pt_sel1,200,0,1000,"p_{T} (leading #mu) [GeV]");
-  H1(mu1_pt_sel2,200,0,1000,"p_{T} (leading #mu) [GeV]");
-  H1(mu1_pt_sel8,200,0,1000,"p_{T} (leading #mu) [GeV]");
-  H1(mu1_pt_sel9,200,0,1000,"p_{T} (leading #mu) [GeV]");
-  H1(mu2_pt_sel1,200,0,1000,"p_{T} (subleading #mu) [GeV]");
-  H1(mu2_pt_sel2,200,0,1000,"p_{T} (subleading #mu) [GeV]");
-  H1(mu2_pt_sel8,200,0,1000,"p_{T} (subleading #mu) [GeV]");
-  H1(mu2_pt_sel9,200,0,1000,"p_{T} (subleading #mu) [GeV]");
-  H1(mu1_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (leading #mu)");
-  H1(mu1_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (leading #mu)");
-  H1(mu1_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (leading #mu)");
-  H1(mu1_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (leading #mu)");
-  H1(mu2_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
-  H1(mu2_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
-  H1(mu2_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
-  H1(mu2_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
-  H1(nCand_Muons_sel4,4,2,6,"Number of #mu candidates");
-  //H1(btagDeepFlavB_sel6,50,0,1,"b-tag deep-flavor discriminant");
-  H1(nbtagDeepFlavB_sel6,5,0,5,"Number of b-tags (medium WP)");
-  H1(bjet1_pt_sel8,200,0,1000,"p_{T} (leading b-tagged jet) [GeV]");
-  H1(bjet2_pt_sel8,200,0,1000,"p_{T} (subleading b-tagged jet) [GeV]");
-  H1(min_mlb_sel8,200,0,2000,"min m_{lb} [GeV]");
-  H1(min_mlb_sel9,200,0,2000,"min m_{lb} [GeV]");
-  H1(met_pt_sel8,120,0,600,"PF MET p_{T} [GeV]");
-  H1(met_pt_sel9,120,0,600,"PF MET p_{T} [GeV]");
-  H1(met_phi_sel8,65,-3.25,3.25,"PF MET #phi");
-  H1(met_phi_sel9,65,-3.25,3.25,"PF MET #phi");
-  H1(nExtra_muons_sel5,6,0,6,"Number of additional #mu's");
-  H1(nExtra_electrons_sel5,6,0,6,"Number of electrons");
-  H1(nExtra_lepIsoTracks_sel5,6,0,6,"Number of (additional) lepton (e/#mu) PF candidates");
-  H1(nExtra_chhIsoTracks_sel5,6,0,6,"Number of (additional) charged hadron PF candidates");
-  H1(dr_trigobj_sel3,50,0,0.5,"min #Delta R (#mu, trigger object)");
+
+  //vector<TString> plot_names = {"mll_pf","mu1_pt","mu2_pt","mu1_eta","mu2_eta","mu1_trkRelIso","mu2_trkRelIso","nCand_Muons","nbtagDeepFlavB","bjet1_pt","bjet1_eta","bjet2_pt","bjet2_eta","min_mlb","pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi","nExtra_muons","nExtra_electrons","nExtra_lepIsoTracks","nExtra_chhIsoTracks"};
+  map<TString, int> nbins { {"mll_pf", 240}, {"mu1_pt", 200}, {"mu2_pt", 200}, {"mu1_eta", 60}, {"mu2_eta", 60}, {"mu1_trkRelIso", 50}, {"mu2_trkRelIso", 50}, {"nCand_Muons", 4}, {"nbtagDeepFlavB", 5}, {"bjet1_pt", 200}, {"bjet1_eta", 60}, {"bjet2_pt", 200}, {"bjet2_eta", 60}, {"min_mlb", 200}, {"pfmet_pt", 120}, {"pfmet_phi", 65}, {"puppimet_pt", 120}, {"puppimet_phi", 65}, {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+  map<TString, float> low { {"mll_pf", 100}, {"mu1_pt", 0}, {"mu2_pt", 0}, {"mu1_eta", -3}, {"mu2_eta", -3}, {"mu1_trkRelIso", 0}, {"mu2_trkRelIso", 0}, {"nCand_Muons", 2}, {"nbtagDeepFlavB", 0}, {"bjet1_pt", 0}, {"bjet1_eta", -3}, {"bjet2_pt", 0}, {"bjet2_eta", -3}, {"min_mlb", 0}, {"pfmet_pt", 0}, {"pfmet_phi", -3.25}, {"puppimet_pt", 0}, {"puppimet_phi", -3.25}, {"nExtra_muons", 0}, {"nExtra_electrons", 0}, {"nExtra_lepIsoTracks", 0}, {"nExtra_chhIsoTracks", 0} };
+  map<TString, float> high { {"mll_pf", 2500}, {"mu1_pt", 1000}, {"mu2_pt", 1000}, {"mu1_eta", 3}, {"mu2_eta", 3}, {"mu1_trkRelIso", 0.5}, {"mu2_trkRelIso", 0.5}, {"nCand_Muons", 6}, {"nbtagDeepFlavB", 5}, {"bjet1_pt", 1000}, {"bjet1_eta", 3}, {"bjet2_pt", 1000}, {"bjet2_eta", 3}, {"min_mlb", 2000}, {"pfmet_pt", 600}, {"pfmet_phi", 3.25}, {"puppimet_pt", 600}, {"puppimet_phi", 3.25}, {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+  map<TString, TString> title { {"mll_pf", "m_{ll} [GeV]"}, {"mu1_pt", "p_{T} (leading #mu) [GeV]"}, {"mu2_pt", "p_{T} (subleading #mu) [GeV]"}, {"mu1_eta", "#eta (leading #mu)"}, {"mu2_eta", "#eta (subleading #mu)"}, {"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"}, {"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"}, {"nCand_Muons", "Number of #mu candidates"}, {"nbtagDeepFlavB", "Number of b-tags (medium WP)"}, {"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"}, {"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"}, {"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"}, {"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"}, {"min_mlb", "min m_{lb} [GeV]"}, {"pfmet_pt", "PF MET p_{T} [GeV]"}, {"pfmet_phi", "PF MET #phi [GeV]"}, {"puppimet_pt", "PUPPI MET p_{T} [GeV]"}, {"puppimet_phi", "PUPPI MET #phi [GeV]"}, {"nExtra_muons", "Number of additional #mu's"}, {"nExtra_electrons", "Number of electrons"}, {"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"}, {"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"} };
+
+  vector<TString> selection = {"sel0","sel1","sel2","sel3","sel4","sel5","sel6","sel7","sel8","sel9"};
+  map<TString, bool> selection_passed = { {"sel0", false}, {"sel1", false}, {"sel2", false} ,{"sel3", false}, {"sel4", false}, {"sel5", false} ,{"sel6", false}, {"sel7", false}, {"sel8", false}, {"sel9", false} };
+
+  vector<TString> plot_names = {"pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi"};
+  map<TString, TH1F*> histos;
+  for ( unsigned int isel=0; isel < selection.size(); isel++ )
+  {
+    if (isel==5)
+    {
+      plot_names.push_back("mll_pf"); plot_names.push_back("mu1_pt"); plot_names.push_back("mu2_pt"); plot_names.push_back("mu1_eta"); plot_names.push_back("mu2_eta"); plot_names.push_back("mu1_trkRelIso"); plot_names.push_back("mu2_trkRelIso"); plot_names.push_back("nCand_Muons");
+    }
+    if (isel==6)
+    {
+      plot_names.push_back("nExtra_muons"); plot_names.push_back("nExtra_electrons"); plot_names.push_back("nExtra_lepIsoTracks"); plot_names.push_back("nExtra_chhIsoTracks");
+    }
+    if (isel==7)
+    {
+      plot_names.push_back("nbtagDeepFlavB"); plot_names.push_back("bjet1_pt"); plot_names.push_back("bjet1_eta"); plot_names.push_back("bjet2_pt"); plot_names.push_back("bjet2_eta"); plot_names.push_back("min_mlb");
+    }
+    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+    {
+
+      TString plot_name = plot_names[iplot];
+      TString name = plot_name+"_"+selection[isel];
+      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+      //TH1F *h_temp = new TH1F(plot_names[iplot]+"_"+selection[isel],"",240,100,2500); h_temp->GetXaxis()->SetTitle("m_{ll} [GeV]"); h_temp->GetYaxis()->SetTitle("Events");
+      histos[name] = h_temp;
+    }
+  }
+  //H1(mll_pf_sel6,240,100,2500,"m_{ll} [GeV]");
+  //H1(mll_pf_sel7,240,100,2500,"m_{ll} [GeV]");
+  //H1(mll_pf_sel8,240,100,2500,"m_{ll} [GeV]");
+  //H1(mll_pf_sel9,240,100,2500,"m_{ll} [GeV]");
+  //H1(mu1_pt_sel1,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  //H1(mu1_pt_sel2,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  //H1(mu1_pt_sel8,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  //H1(mu1_pt_sel9,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  //H1(mu2_pt_sel1,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  //H1(mu2_pt_sel2,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  //H1(mu2_pt_sel8,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  //H1(mu2_pt_sel9,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  //H1(mu1_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (leading #mu)");
+  //H1(mu1_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (leading #mu)");
+  //H1(mu1_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (leading #mu)");
+  //H1(mu1_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (leading #mu)");
+  //H1(mu2_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
+  //H1(mu2_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
+  //H1(mu2_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
+  //H1(mu2_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
+  //H1(nCand_Muons_sel4,4,2,6,"Number of #mu candidates");
+  //H1(nbtagDeepFlavB_sel6,5,0,5,"Number of b-tags (medium WP)");
+  //H1(bjet1_pt_sel8,200,0,1000,"p_{T} (leading b-tagged jet) [GeV]");
+  //H1(bjet2_pt_sel8,200,0,1000,"p_{T} (subleading b-tagged jet) [GeV]");
+  //H1(min_mlb_sel8,200,0,2000,"min m_{lb} [GeV]");
+  //H1(min_mlb_sel9,200,0,2000,"min m_{lb} [GeV]");
+  //H1(met_pt_sel8,120,0,600,"PF MET p_{T} [GeV]");
+  //H1(met_pt_sel9,120,0,600,"PF MET p_{T} [GeV]");
+  //H1(met_phi_sel8,65,-3.25,3.25,"PF MET #phi");
+  //H1(met_phi_sel9,65,-3.25,3.25,"PF MET #phi");
+  //H1(nExtra_muons_sel5,6,0,6,"Number of additional #mu's");
+  //H1(nExtra_electrons_sel5,6,0,6,"Number of electrons");
+  //H1(nExtra_lepIsoTracks_sel5,6,0,6,"Number of (additional) lepton (e/#mu) PF candidates");
+  //H1(nExtra_chhIsoTracks_sel5,6,0,6,"Number of (additional) charged hadron PF candidates");
+  //H1(dr_trigobj_sel3,50,0,0.5,"min #Delta R (#mu, trigger object)");
 
   int nEventsTotal = 0;
   int nEvents_more_leps = 0;
@@ -175,6 +212,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       double puppimet_pt  = puppimet.first;
       double puppimet_phi = puppimet.second;
 
+      plot_names = {"pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi"};
+      map<TString, float> variable { {"pfmet_pt", pfmet_pt}, {"pfmet_phi", pfmet_phi}, {"puppimet_pt", puppimet_pt}, {"puppimet_phi", puppimet_phi} };
+
       // Define vector of muon candidate indices here.....
       vector<int> cand_muons_pf_id;
       vector<int> cand_muons_pf_id_and_pteta;
@@ -198,10 +238,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       icutflow++;
 
       // Number of good primary vertices
+      //if ( nt.PV_npvsGood() > 0 )
       if ( nt.PV_npvsGood() < 1 ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 good PVs");
-      icutflow++;
+      else
+      {
+        selection_passed["sel0"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 good PVs");
+        icutflow++;
+        TString sel = "sel0";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
       // Single muon selection loop
       int nMu_id = 0;
@@ -232,29 +284,65 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       bool pt_req = ( nMu_pt > 1 );
       bool iso_req = ( nMu_iso > 1);
 
+      //if ( id_req && selection_passed["sel0"] )
       if ( !id_req ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ highPt ID");
-      icutflow++;
+      else
+      {
+        selection_passed["sel1"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ highPt ID");
+        icutflow++;
+        TString sel = "sel1";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
       //Fill histograms before and after these requirements!
-      h_mu1_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[0]),weight*factor);
-      h_mu2_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[1]),weight*factor);
+      //h_mu1_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[0]),weight*factor);
+      //h_mu2_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[1]),weight*factor);
+      //if ( pt_req && selection_passed["sel1"] )
       if ( !pt_req ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ pT>53 GeV & |eta|<2.4");
-      icutflow++;
-      h_mu1_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
-      h_mu2_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
+      else
+      {
+        selection_passed["sel2"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ pT>53 GeV & |eta|<2.4");
+        icutflow++;
+        TString sel = "sel2";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
+      //h_mu1_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
+      //h_mu2_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
 
-      h_mu1_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
-      h_mu2_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
+      //h_mu1_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
+      //h_mu2_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
+      //if ( iso_req && selection_passed["sel2"] )
       if ( !iso_req ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ track iso./pT<0.1");
-      icutflow++;
-      h_mu1_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[0]),weight*factor);
-      h_mu2_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[1]),weight*factor);
+      else
+      {
+        selection_passed["sel3"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ track iso./pT<0.1");
+        icutflow++;
+        TString sel = "sel3";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
+      //h_mu1_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[0]),weight*factor);
+      //h_mu2_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[1]),weight*factor);
 
 
       // Trigger object finding
@@ -267,7 +355,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  float deta = nt.TrigObj_eta().at(n) - nt.Muon_eta().at(i_cand_muons_pf);
 	  float dphi = TVector2::Phi_mpi_pi(nt.TrigObj_phi().at(n) - nt.Muon_phi().at(i_cand_muons_pf));
 	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-	  h_dr_trigobj_sel3->Fill(dr,weight*factor);
+	  //h_dr_trigobj_sel3->Fill(dr,weight*factor);
 	  if ( dr < 0.02 ){
 	    muMatchedToTrigObj.push_back(true);
 	    atLeastSelectedMu_matchedToTrigObj = true;
@@ -275,12 +363,24 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  else muMatchedToTrigObj.push_back(false);
 	}
       }
+      //if ( atLeastSelectedMu_matchedToTrigObj && selection_passed["sel3"] )
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 HLT match (dR<0.02)");
-      icutflow++;
+      else
+      {
+        selection_passed["sel4"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 HLT match (dR<0.02)");
+        icutflow++;
+        TString sel = "sel4";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
-      h_nCand_Muons_sel4->Fill(cand_muons_pf.size(),weight*factor);
+      //h_nCand_Muons_sel4->Fill(cand_muons_pf.size(),weight*factor);
 
       int leadingMu_idx = -1, subleadingMu_idx = -1;
       float selectedPair_M = -1.0;
@@ -305,11 +405,24 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
 	if ( Zboson ) break;
       }
-      if ( selectedPair_M < 0.0 ) continue;
-      if ( Zboson ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pair (OS, !Z)");
-      icutflow++;
+      //if ( selectedPair_M > 0.0 && !Zboson && selection_passed["sel4"] )
+      if ( selectedPair_M < 0.0 || Zboson ) continue;
+      else
+      {
+        plot_names.push_back("mll_pf"); plot_names.push_back("mu1_pt"); plot_names.push_back("mu2_pt"); plot_names.push_back("mu1_eta"); plot_names.push_back("mu2_eta"); plot_names.push_back("mu1_trkRelIso"); plot_names.push_back("mu2_trkRelIso"); plot_names.push_back("nCand_Muons");
+        variable.insert({"mll_pf", selectedPair_M}); variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)}); variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)}); variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)}); variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)}); variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)}); variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)}); variable.insert({"nCand_Muons", cand_muons_pf.size()});
+        selection_passed["sel5"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pair (OS, !Z)");
+        icutflow++;
+        TString sel = "sel5";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
       // Look for a third isolated lepton and then veto the event if it is found
       // Muons
@@ -381,20 +494,38 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       //Fill relevant histograms for extra electrons, muons
-      h_nExtra_muons_sel5->Fill(extra_muons.size(),weight*factor);
-      h_nExtra_electrons_sel5->Fill(extra_electrons.size(),weight*factor);
-      h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
-      h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
+      //h_nExtra_muons_sel5->Fill(extra_muons.size(),weight*factor);
+      //h_nExtra_electrons_sel5->Fill(extra_electrons.size(),weight*factor);
+      //h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
+      //h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
  
+      //if ( extra_muons.size() == 0 && extra_electrons.size() == 0 && selection_passed["sel5"] )
       if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
-      icutflow++;
+      else
+      {
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
+        icutflow++;
+      }
 
+      //if ( extra_muons.size() == 0 && extra_electrons.size() == 0 && extra_isotracks_lep.size() == 0 && extra_isotracks_chh.size() == 0 && selection_passed["sel5"] )
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
-      icutflow++;
+      else
+      {
+        plot_names.push_back("nExtra_muons"); plot_names.push_back("nExtra_electrons"); plot_names.push_back("nExtra_lepIsoTracks"); plot_names.push_back("nExtra_chhIsoTracks");
+        variable.insert({"nExtra_muons", extra_muons.size()}); variable.insert({"nExtra_electrons",extra_electrons.size()}); variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()}); variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+        selection_passed["sel6"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
+        icutflow++;
+        TString sel = "sel6";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
       vector<int> cand_bJets;
       unsigned int nbtagDeepFlavB = 0;
@@ -411,31 +542,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) // 0.0490 for loose, 0.7100 for tight
 	  {
 	    cand_bJets.push_back(jet);  // Medium DeepJet WP
-	    //h_btagDeepFlavB_sel6->Fill(nt.Jet_btagDeepFlavB().at(jet),weight*factor);
 	  }
       }
-      h_nbtagDeepFlavB_sel6->Fill(cand_bJets.size(),weight*factor);
-      h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
+      //h_nbtagDeepFlavB_sel6->Fill(cand_bJets.size(),weight*factor);
+      //h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
+      //if ( cand_bJets.size() > 0 && selection_passed["sel6"] )
       if ( cand_bJets.size() < 1 ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
-      icutflow++;
-      h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
-      if ( selectedPair_M < 150 ) continue;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"m(ll)>150 GeV");
-      icutflow++;
-
-      //Fill pT distributions for the bjets....
-      if ( cand_bJets.size() == 1 ){
-	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
-      }
-
-      if ( cand_bJets.size() > 1 ){
-	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
-	h_bjet2_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[1]),weight*factor);
-      }
-
+      float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
+      float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
+      //if ( cand_bJets.size() > 1 ) nt.Jet_pt().at(cand_bJets[1]);
+      float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
+      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
 
       //Construct mlb pairs from selected muon pair and candidate b jets
       //float m_lb = 0;
@@ -456,31 +573,120 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
 
-      h_met_pt_sel8->Fill(pfmet_pt,weight*factor);
-      h_met_phi_sel8->Fill(pfmet_phi,weight*factor);
-      h_mu1_trkRelIso_sel8->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
-      h_mu2_trkRelIso_sel8->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
-      h_mll_pf_sel8->Fill(selectedPair_M,weight*factor); 	 
-      h_mu1_pt_sel8->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
-      h_mu2_pt_sel8->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
-      h_min_mlb_sel8->Fill(min_mlb,weight*factor);
-            
-      if ( min_mlb < 175.0 ) continue;
+      plot_names.push_back("nbtagDeepFlavB"); plot_names.push_back("bjet1_pt"); plot_names.push_back("bjet1_eta"); plot_names.push_back("bjet2_pt"); plot_names.push_back("bjet2_eta"); plot_names.push_back("min_mlb");
+      variable.insert({"nbtagDeepFlavB", cand_bJets.size()}); variable.insert({"bjet1_pt", bjet1_pt}); variable.insert({"bjet1_eta", bjet1_eta}); variable.insert({"bjet2_pt", bjet2_pt}); variable.insert({"bjet2_eta", bjet2_eta}); variable.insert({"min_mlb", min_mlb});
+      selection_passed["sel7"]=true;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"min m(lb)>175 GeV");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
       icutflow++;
-      h_cutflow->GetXaxis()->SetRangeUser(0,icutflow);
-      h_cutflow->GetXaxis()->SetLabelSize(0.025);
+      TString sel = "sel7";
+      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+      {
+        TString plot_name = plot_names[iplot];
+        if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        TString name = plot_name+"_"+sel;
+        histos[name]->Fill(variable[plot_name],weight*factor);
+      }
+        
+      //h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
+      //if ( selectedPair_M > 150 && selection_passed["sel7"] )
+      if ( selectedPair_M < 150 ) continue;
+      else
+      {
+        selection_passed["sel8"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"m(ll)>150 GeV");
+        icutflow++;
+        TString sel = "sel8";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
 
-      h_met_pt_sel9->Fill(pfmet_pt,weight*factor);
-      h_met_phi_sel9->Fill(pfmet_phi,weight*factor);
-      h_mu1_trkRelIso_sel9->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
-      h_mu2_trkRelIso_sel9->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
-      h_mll_pf_sel9->Fill(selectedPair_M,weight*factor); 	 
-      h_mu1_pt_sel9->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
-      h_mu2_pt_sel9->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
-      h_min_mlb_sel9->Fill(min_mlb,weight*factor);
+      //Fill pT distributions for the bjets....
+      //if ( cand_bJets.size() == 1 ){
+	//h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
+      //}
 
+      //if ( cand_bJets.size() > 1 ){
+	//h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
+	//h_bjet2_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[1]),weight*factor);
+      //}
+
+
+      //h_met_pt_sel8->Fill(pfmet_pt,weight*factor);
+      //h_met_phi_sel8->Fill(pfmet_phi,weight*factor);
+      //h_mu1_trkRelIso_sel8->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
+      //h_mu2_trkRelIso_sel8->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
+      //h_mll_pf_sel8->Fill(selectedPair_M,weight*factor); 	 
+      //h_mu1_pt_sel8->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
+      //h_mu2_pt_sel8->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
+      //h_min_mlb_sel8->Fill(min_mlb,weight*factor);
+            
+      //if ( min_mlb > 175.0 && selection_passed["sel8"] )
+      if ( min_mlb < 175.0 ) continue;
+      else
+      {
+        selection_passed["sel9"]=true;
+        h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"min m(lb)>175 GeV");
+        icutflow++;
+        TString sel = "sel9";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+        {
+          TString plot_name = plot_names[iplot];
+          if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+          TString name = plot_name+"_"+sel;
+          histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+        h_cutflow->GetXaxis()->SetRangeUser(0,icutflow);
+        h_cutflow->GetXaxis()->SetLabelSize(0.025);
+      }
+
+      //h_met_pt_sel9->Fill(pfmet_pt,weight*factor);
+      //h_met_phi_sel9->Fill(pfmet_phi,weight*factor);
+      //h_mu1_trkRelIso_sel9->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
+      //h_mu2_trkRelIso_sel9->Fill(nt.Muon_tkRelIso().at(subleadingMu_idx),weight*factor);
+      //h_mll_pf_sel9->Fill(selectedPair_M,weight*factor); 	 
+      //h_mu1_pt_sel9->Fill(nt.Muon_pt().at(leadingMu_idx),weight*factor);
+      //h_mu2_pt_sel9->Fill(nt.Muon_pt().at(subleadingMu_idx),weight*factor);
+      //h_min_mlb_sel9->Fill(min_mlb,weight*factor);
+
+      //Fill plots for selections
+      //plot_names = {"pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi"};
+      //map<TString, float> variable { {"pfmet_pt", pfmet_pt}, {"pfmet_phi", pfmet_phi}, {"puppimet_pt", puppimet_pt}, {"puppimet_phi", puppimet_phi} };
+      //for ( unsigned int isel=0; isel < selection.size(); isel++ )
+      //{
+      //  if (isel==5)
+      //  {
+      //    plot_names.push_back("mll_pf"); plot_names.push_back("mu1_pt"); plot_names.push_back("mu2_pt"); plot_names.push_back("mu1_eta"); plot_names.push_back("mu2_eta"); plot_names.push_back("mu1_trkRelIso"); plot_names.push_back("mu2_trkRelIso"); plot_names.push_back("nCand_Muons");
+      //    variable.insert({"mll_pf", selectedPair_M}); variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)}); variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)}); variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)}); variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)}); variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)}); variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)}); variable.insert({"nCand_Muons", cand_muons_pf.size()});
+      //  }
+      //  if (isel==6)
+      //  {
+      //    plot_names.push_back("nExtra_muons"); plot_names.push_back("nExtra_electrons"); plot_names.push_back("nExtra_lepIsoTracks"); plot_names.push_back("nExtra_chhIsoTracks");
+      //    variable.insert({"nExtra_muons", extra_muons.size()}); variable.insert({"nExtra_electrons",extra_electrons.size()}); variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()}); variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+      //  }
+      //  if (isel==7)
+      //  {
+      //    plot_names.push_back("nbtagDeepFlavB"); plot_names.push_back("bjet1_pt"); plot_names.push_back("bjet1_eta"); plot_names.push_back("bjet2_pt"); plot_names.push_back("bjet2_eta"); plot_names.push_back("min_mlb");
+      //    variable.insert({"nbtagDeepFlavB", cand_bJets.size()}); variable.insert({"bjet1_pt", nt.Jet_pt().at(cand_bJets[0])}); variable.insert({"bjet1_eta", nt.Jet_eta().at(cand_bJets[0])}); variable.insert({"bjet2_pt", nt.Jet_pt().at(cand_bJets[1])}); variable.insert({"bjet2_eta", nt.Jet_eta().at(cand_bJets[1])}); variable.insert({"min_mlb", min_mlb});
+      //  }
+      //  TString sel = selection[isel];
+      //  if ( !selection_passed[sel] ) continue;
+      //  for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+      //  {
+      //    TString plot_name = plot_names[iplot];
+      //    TString name = plot_name+"_"+sel;
+      //    if ( plot_name.Contains("bjet2") ) cout << plot_name << "\n";
+      //    if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+      //    histos[name]->Fill(variable[plot_name],weight*factor);
+      //  }
+      //}
     } // Event loop
 
     delete file;
