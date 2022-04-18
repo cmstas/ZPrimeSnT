@@ -8,10 +8,13 @@ import ROOT
 ### pdfcrop --margins '0 0' <filename>.pdf
 ### mv <filename-crop>.pdf <filename>.pdf 
 
-def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="tables/"):
-    
+def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/"):
+
     if not os.path.exists(outdir):
         os.makedirs(outdir)
+
+    if len(sampleLabels)<len(samples):
+        sampleLabels = samples
 
     nCuts = 0
     yields = []
@@ -21,7 +24,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
         yields.append([])
         effs  .append([])
         subsamples = []
-        if samples[i]=='DY':
+        if samples[i]=='ZToMuMu':
             subsamples = ['ZToMuMu_50_120',
                           'ZToMuMu_120_200',
                           'ZToMuMu_200_400',
@@ -72,6 +75,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
     fout.write('\\usepackage{adjustbox}\n')
     fout.write('\\thispagestyle{empty}\n')
     fout.write('\\begin{document}\n')
+    fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 100 GeV.}')
     fout.write('\\begin{table*}[h]\n')
     fout.write('\\footnotesize\n')
     fout.write('\\begin{adjustbox}{width=\\textwidth}\n')
@@ -82,7 +86,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
     fout.write('|}\n')
     fout.write('Selection ')
     for i in range(len(samples)):
-        fout.write('& \multicolumn{2}{|c|}{'+samples[i].replace("_"," ")+'}')
+        fout.write('& \multicolumn{2}{|c|}{'+sampleLabels[i].replace("_"," ")+'}')
     fout.write('\\\\\n')
     for i in range(len(samples)):
         fout.write('& Yield & Eff. (\%)')
@@ -92,6 +96,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
     for c in range(nCuts):
         tlabel = labels[c]
         tlabel = tlabel.replace("pT","$p_{\\mathrm{T}}$")
+        tlabel = tlabel.replace("dR","$\\Delta$R")
         tlabel = tlabel.replace("&","and")
         tlabel = tlabel.replace("|eta|","$|\\eta|$")
         tlabel = tlabel.replace(">","$>$")
@@ -99,7 +104,7 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
         tlabel = tlabel.replace("$$","$ $")
         fout.write(tlabel)
         for i in range(len(samples)):
-            fout.write('& %.3E & %.2f'%(yields[i][c],100.0*effs[i][c]))
+            fout.write('& %.3E & %.2E'%(yields[i][c],100.0*effs[i][c]))
         fout.write('\\\\\n')
     
     fout.write('\\end{tabular}\n')
@@ -109,6 +114,11 @@ def make_table(samples, indir = "./cpp/temp_data/", year = "2018", outdir="table
 
     fout.close()
 
-samples=['ttbar','tW','ttX','DY','VV']
+# SM backgrounds
+samples=['ttbar','tW','ttX','ZToMuMu','VV']
+sampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
+
+# Signal
 samples=samples+['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
-make_table(samples)
+sampleLabels=sampleLabels+["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y3 (1500 GeV)","Y3 (2000 GeV)"]
+make_table(samples,sampleLabels)
