@@ -96,6 +96,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
     for c in range(nCuts):
         tlabel = labels[c]
         tlabel = tlabel.replace("pT","$p_{\\mathrm{T}}$")
+        tlabel = tlabel.replace("dR","$\\Delta$R")
         tlabel = tlabel.replace("&","and")
         tlabel = tlabel.replace("|eta|","$|\\eta|$")
         tlabel = tlabel.replace(">","$>$")

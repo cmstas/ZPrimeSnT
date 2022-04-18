@@ -16,7 +16,7 @@ parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input di
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'.")
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
-parser.add_argument("--signalScale", default=1.0, help="Number to scale the signal by.")
+parser.add_argument("--signalScale", default=10.0, help="Number to scale the signal by.")
 parser.add_argument("--shape", default=False, help="Shape normalization.")
 args = parser.parse_args()
 
@@ -29,7 +29,7 @@ os.system('cp '+args.inDir+'../../utils/index.php '+args.outDir)
 
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
-signalXSecScale = { "200": 1.0, "400": 50, "700": 25.0, "1000": 80.0, "1500": 450.0, "2000": 2000.0}
+signalXSecScale = { "200": 1.0, "400": 5.0, "700": 25.0, "1000": 100.0, "1500": 500.0, "2000": 2000.0}
 
 def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
     plot = plotFile.Get(plotname)
@@ -46,7 +46,38 @@ def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
 
     return plot
 
-def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_data=False, DoRatio=True):
+def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_data=False, DoRatio=True, lumi=59.83, year="2018"):
+
+    #labels
+    latex = ROOT.TLatex()
+    latex.SetTextFont(42)
+    latex.SetTextAlign(31)
+    latex.SetTextSize(0.04)
+    latex.SetNDC(True)
+
+    latexCMS = ROOT.TLatex()
+    latexCMS.SetTextFont(61)
+    latexCMS.SetTextSize(0.05)
+    latexCMS.SetNDC(True)
+
+    latexCMSExtra = ROOT.TLatex()
+    latexCMSExtra.SetTextFont(52)
+    latexCMSExtra.SetTextSize(0.04)
+    latexCMSExtra.SetNDC(True)
+
+    latexSel = ROOT. TLatex()
+    latexSel.SetTextAlign(21)
+    latexSel.SetTextFont(42)
+    latexSel.SetTextSize(0.035)
+    latexSel.SetNDC(True)
+
+    yearenergy=""
+    if year!="all":
+        yearenergy="%.1f fb^{-1} (%s, 13 TeV)"%(lumi,year)
+    else:
+        yearenergy="%.0f fb^{-1} (13 TeV)"%(lumi)
+    cmsExtra="Simulation"
+
     #open file
     signalfiles = []
     ZToMuMufiles = []
@@ -131,7 +162,9 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     stack.SetTitle(title)
 
     #plot legends, ranges
-    legend = ROOT.TLegend(0.65,0.65,0.97,0.97)
+    legend = ROOT.TLegend(0.55,0.55,0.89,0.89)
+    legend.SetLineColor(0)
+    legend.SetFillColor(0)
     #legend.SetTextSize(0.02)
 
     for i,mass in enumerate(args.signalMass): 
@@ -163,7 +196,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
         MCplot.Add(TTXplot)
         ratioplot=copy.deepcopy(dataplot)
         ratioplot.Divide(MCplot)
-        ratioplot.SetTitle(";"+title+";data / MC")
+        ratioplot.SetTitle(";"+title+";Data / MC")
         pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1)
         pad2 = ROOT.TPad("pad2","pad2",0,0,1,0.3)
         pad1.Draw()
@@ -182,6 +215,13 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
 
     #plot data,stack, signal, data  
     stack.Draw("HIST")
+    if "cutflow" in plotname:
+        stack.GetXaxis().SetLabelSize(0.025)
+    else:
+        stack.GetXaxis().SetTitle(totalSM.GetXaxis().GetTitle())
+        stack.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
+        stack.GetYaxis().SetLabelSize(0.03)
+        stack.GetYaxis().SetMaxDigits(3)
     histMax = 0.0
     for i,mass in enumerate(args.signalMass):
         if log==False and args.signalScale and not args.shape: 
@@ -194,14 +234,21 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
 
     if histMax < stack.GetMaximum(): 
         histMax = stack.GetMaximum()
-    stack.SetMaximum(1.1*histMax)
     if log==True:
-        stack.SetMinimum(10e-3)
-        #stack.Draw("Hist")
+        histMax = histMax*1e3
+        stack.SetMinimum(1e-3)
+        
+    stack.SetMaximum(1.1*histMax)
+
+    canvas.Update()
 
     legend.Draw()
 
-    canvas.Update()
+    ROOT.gPad.RedrawAxis()
+
+    latex.DrawLatex(0.9, 0.92+0.03, yearenergy);
+    latexCMS.DrawLatex(0.11,0.92+0.03,"CMS");
+    latexCMSExtra.DrawLatex(0.22,0.92+0.03, cmsExtra);
 
     #print and save
     extension = ""
@@ -232,6 +279,6 @@ toexclude = []
 for plot in listofplots:
     if plot in toexclude:
         continue
-    title=plot
-    draw_plot(plot, title, False, args.data, False)
-    draw_plot(plot, title, True , args.data, False)
+    title=""
+    draw_plot(plot, title, False, args.data, False, 59.83, "2018")
+    draw_plot(plot, title, True , args.data, False, 59.83, "2018")

@@ -26,7 +26,7 @@
 #define COUNT_GT(vec,num) std::count_if((vec).begin(), (vec).end(), [](float x) { return x > (num); });
 #define COUNT_LT(vec,num) std::count_if((vec).begin(), (vec).end(), [](float x) { return x < (num); });
 
-#define H1(name,nbins,low,high) TH1F *h_##name = new TH1F(#name,"",nbins,low,high);
+#define H1(name,nbins,low,high,xtitle) TH1F *h_##name = new TH1F(#name,"",nbins,low,high); h_##name->GetXaxis()->SetTitle(xtitle); h_##name->GetYaxis()->SetTitle("Events");
 
 // #define DEBUG
 
@@ -93,48 +93,44 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* f1 = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
-  H1(cutflow,20,0,20);
-  H1(mll_pf_sel6,241,90,2500);
-  H1(mll_pf_sel7,241,90,2500);
-  H1(mll_pf_sel8,241,90,2500);
-  H1(mll_pf_sel9,241,90,2500);
-  H1(mu1_pt_sel1,200,0,1000);
-  H1(mu2_pt_sel1,200,0,1000);
-  H1(mu1_pt_sel2,200,0,1000);
-  H1(mu2_pt_sel2,200,0,1000);
-  H1(mu1_pt_sel8,200,0,1000);
-  H1(mu2_pt_sel8,200,0,1000);
-  H1(mu1_pt_sel9,200,0,1000);
-  H1(mu2_pt_sel9,200,0,1000);
-  H1(mu1_trkRelIso_sel2,50,0,0.5);
-  H1(mu2_trkRelIso_sel2,50,0,0.5);
-  H1(mu1_trkRelIso_sel3,50,0,0.5);
-  H1(mu2_trkRelIso_sel3,50,0,0.5);
-  H1(mu1_trkRelIso_sel8,50,0,0.1);
-  H1(mu2_trkRelIso_sel8,50,0,0.1);
-  H1(mu1_trkRelIso_sel9,50,0,0.1);
-  H1(mu2_trkRelIso_sel9,50,0,0.1);
-  H1(nCand_Muons_sel4,5,0,5);
-  //H1(btagDeepFlavB_sel6,50,0,1);
-  H1(nbtagDeepFlavB_sel6,5,0,5);
-  H1(bjet1_pt_sel8,200,0,1000);
-  H1(bjet2_pt_sel8,200,0,1000);
-  H1(min_mlb_sel8,200,0,2000);
-  H1(min_mlb_sel9,200,0,2000);
-  H1(met_pt_sel8,120,0,600);
-  H1(met_pt_sel9,120,0,600);
-  H1(met_phi_sel8,65,-3.25,3.25);
-  H1(met_phi_sel9,65,-3.25,3.25);
-  H1(nExtra_muons_sel5,6,0,6);
-  H1(nExtra_electrons_sel5,6,0,6);
-  H1(nExtra_lepIsoTracks_sel5,6,0,6);
-  H1(nExtra_chhIsoTracks_sel5,6,0,6);
-  //H1(third_mu_pt_sel5,100,0,500);
-  //H1(fourth_mu_pt_sel5,100,0,500);
-  //H1(first_el_pt_sel5,100,0,500);
-  //H1(second_el_pt_sel5,100,0,500);
-  //H1(dr_trigobj_sel3,50,0,0.5);
+  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
+  H1(cutflow,20,0,20,"");
+  H1(mll_pf_sel6,241,90,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel7,241,90,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel8,241,90,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel9,241,90,2500,"m_{ll} [GeV]");
+  H1(mu1_pt_sel1,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  H1(mu1_pt_sel2,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  H1(mu1_pt_sel8,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  H1(mu1_pt_sel9,200,0,1000,"p_{T} (leading #mu) [GeV]");
+  H1(mu2_pt_sel1,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  H1(mu2_pt_sel2,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  H1(mu2_pt_sel8,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  H1(mu2_pt_sel9,200,0,1000,"p_{T} (subleading #mu) [GeV]");
+  H1(mu1_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (leading #mu)");
+  H1(mu1_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (leading #mu)");
+  H1(mu1_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (leading #mu)");
+  H1(mu1_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (leading #mu)");
+  H1(mu2_trkRelIso_sel2,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
+  H1(mu2_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
+  H1(mu2_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
+  H1(mu2_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
+  H1(nCand_Muons_sel4,3,2,5,"Number of #mu candidates");
+  //H1(btagDeepFlavB_sel6,50,0,1,"b-tag deep-flavor discriminant");
+  H1(nbtagDeepFlavB_sel6,5,0,5,"Number of b-tags (medium WP)");
+  H1(bjet1_pt_sel8,200,0,1000,"p_{T} (leading b-tagged jet) [GeV]");
+  H1(bjet2_pt_sel8,200,0,1000,"p_{T} (subleading b-tagged jet) [GeV]");
+  H1(min_mlb_sel8,200,0,2000,"min m_{lb} [GeV]");
+  H1(min_mlb_sel9,200,0,2000,"min m_{lb} [GeV]");
+  H1(met_pt_sel8,120,0,600,"PF MET p_{T} [GeV]");
+  H1(met_pt_sel9,120,0,600,"PF MET p_{T} [GeV]");
+  H1(met_phi_sel8,65,-3.25,3.25,"PF MET #phi");
+  H1(met_phi_sel9,65,-3.25,3.25,"PF MET #phi");
+  H1(nExtra_muons_sel5,6,0,6,"Number of additional #mu's");
+  H1(nExtra_electrons_sel5,6,0,6,"Number of electrons");
+  H1(nExtra_lepIsoTracks_sel5,6,0,6,"Number of (additional) lepton (e/#mu) PF candidates");
+  H1(nExtra_chhIsoTracks_sel5,6,0,6,"Number of (additional) charged hadron PF candidates");
+  H1(dr_trigobj_sel3,50,0,0.5,"min #Delta R (#mu, trigger object)");
 
   int nEventsTotal = 0;
   int nEvents_more_leps = 0;
@@ -157,7 +153,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     // Before any cuts
     int icutflow = 0;
     h_cutflow->Fill(icutflow,xsec*lumi);
-    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (before skim)");
+    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total");
 
     for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
@@ -191,7 +187,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // After skim
       icutflow = 1;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total (after skim)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"After skim");
       icutflow++;
 
       // HLT selection
@@ -204,7 +200,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least 1 good PV");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one good PV");
       icutflow++;
 
       // Single muon selection loop
@@ -238,7 +234,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( !id_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon ID (highPt)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ highPt ID");
       icutflow++;
 
       //Fill histograms before and after these requirements!
@@ -246,7 +242,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mu2_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[1]),weight*factor);
       if ( !pt_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pT>53 GeV & |eta|<2.4");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ pT>53 GeV & |eta|<2.4");
       icutflow++;
       h_mu1_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
       h_mu2_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
@@ -255,7 +251,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mu2_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
       if ( !iso_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon track iso./pT<0.1");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ track iso./pT<0.1");
       icutflow++;
       h_mu1_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[0]),weight*factor);
       h_mu2_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[1]),weight*factor);
@@ -271,7 +267,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  float deta = nt.TrigObj_eta().at(n) - nt.Muon_eta().at(i_cand_muons_pf);
 	  float dphi = TVector2::Phi_mpi_pi(nt.TrigObj_phi().at(n) - nt.Muon_phi().at(i_cand_muons_pf));
 	  float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-	  //h_dr_trigobj_sel3->Fill(dr,weight*factor);
+	  h_dr_trigobj_sel3->Fill(dr,weight*factor);
 	  if ( dr < 0.02 ){
 	    muMatchedToTrigObj.push_back(true);
 	    atLeastSelectedMu_matchedToTrigObj = true;
@@ -281,7 +277,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one muon HLT match");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one HLT match (dR<0.02)");
       icutflow++;
 
       h_nCand_Muons_sel4->Fill(cand_muons_pf.size(),weight*factor);
@@ -389,17 +385,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_nExtra_electrons_sel5->Fill(extra_electrons.size(),weight*factor);
       h_nExtra_lepIsoTracks_sel5->Fill(extra_isotracks_lep.size(),weight*factor);
       h_nExtra_chhIsoTracks_sel5->Fill(extra_isotracks_chh.size(),weight*factor);
-
-      //if ( extra_muons.size() == 1 ) h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
-      //if ( extra_electrons.size() == 1 ) h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
-      //if ( extra_muons.size() > 1 ){
-      //     h_third_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[0]),weight*factor);
-      //	 h_fourth_mu_pt_sel5->Fill(nt.Muon_pt().at(extra_muons[1]),weight*factor); 
-      //}
-      //if ( extra_electrons.size() > 1 ){
-      //     h_first_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[0]),weight*factor);
-      //     h_second_el_pt_sel5->Fill(nt.Electron_pt().at(extra_electrons[1]),weight*factor);
-      //}
  
       if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
@@ -433,7 +418,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
       if ( cand_bJets.size() < 1 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least 1 b-tag");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one b-tag");
       icutflow++;
       h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
       if ( selectedPair_M < 150 ) continue;
@@ -484,6 +469,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"min m(lb)>175 GeV");
       icutflow++;
+      h_cutflow->GetXaxis()->SetRangeUser(0,icutflow);
+      h_cutflow->GetXaxis()->SetLabelSize(0.025);
+
       h_met_pt_sel9->Fill(pfmet_pt,weight*factor);
       h_met_phi_sel9->Fill(pfmet_phi,weight*factor);
       h_mu1_trkRelIso_sel9->Fill(nt.Muon_tkRelIso().at(leadingMu_idx),weight*factor);
@@ -501,7 +489,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   } // File loop
   bar.finish();
 
-  f1->Write();
-  f1->Close();
+  fout->Write();
+  fout->Close();
   return 0;
 }
