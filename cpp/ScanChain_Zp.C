@@ -200,7 +200,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one good PV");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 good PVs");
       icutflow++;
 
       // Single muon selection loop
@@ -234,7 +234,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( !id_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ highPt ID");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ highPt ID");
       icutflow++;
 
       //Fill histograms before and after these requirements!
@@ -242,7 +242,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mu2_pt_sel1->Fill(nt.Muon_pt().at(cand_muons_pf_id[1]),weight*factor);
       if ( !pt_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ pT>53 GeV & |eta|<2.4");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ pT>53 GeV & |eta|<2.4");
       icutflow++;
       h_mu1_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[0]),weight*factor);
       h_mu2_pt_sel2->Fill(nt.Muon_pt().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
@@ -251,7 +251,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mu2_trkRelIso_sel2->Fill(nt.Muon_tkRelIso().at(cand_muons_pf_id_and_pteta[1]),weight*factor);
       if ( !iso_req ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least two muons w/ track iso./pT<0.1");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ track iso./pT<0.1");
       icutflow++;
       h_mu1_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[0]),weight*factor);
       h_mu2_trkRelIso_sel3->Fill(nt.Muon_tkRelIso().at(cand_muons_pf[1]),weight*factor);
@@ -277,7 +277,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one HLT match (dR<0.02)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 HLT match (dR<0.02)");
       icutflow++;
 
       h_nCand_Muons_sel4->Fill(cand_muons_pf.size(),weight*factor);
@@ -418,7 +418,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
       if ( cand_bJets.size() < 1 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"At least one b-tag");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
       icutflow++;
       h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
       if ( selectedPair_M < 150 ) continue;

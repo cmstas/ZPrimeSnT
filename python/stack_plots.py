@@ -39,8 +39,11 @@ def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
 
     if fillColor: 
         plot.SetFillColor(fillColor)
+        plot.SetLineColor(fillColor)
+        plot.SetMarkerColor(fillColor)
     if lineColor: 
         plot.SetLineColor(lineColor)
+        plot.SetMarkerColor(lineColor)
     plot.SetLineWidth(lineWidth)
     #plot.Sumw2()
 
@@ -109,7 +112,8 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
                 signalplots[i].Scale(1.0/signalplots[i].GetBinContent(1))
     for i in range(len(ZToMuMufiles)): 
         ZToMuMuplots.append(get_plot(ZToMuMufiles[i],plotname,fillColor=ROOT.kOrange))
-    if compare_data: dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
+    if compare_data: 
+        dataplot = get_plot(datafile,plotname,lineColor=ROOT.kBlack,lineWidth=2)
     WWplot = get_plot(WWfile,plotname,fillColor=ROOT.kOrange+1)
     WZplot = get_plot(WZfile,plotname,fillColor=ROOT.kOrange+2)
     ZZplot = get_plot(ZZfile,plotname,fillColor=ROOT.kOrange+3)
@@ -169,19 +173,19 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
 
     for i,mass in enumerate(args.signalMass): 
         if log==False and args.signalScale and not args.shape:
-            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))))
+            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))),"L")
         else:
-            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E"%(signalplots[i].Integral(0,-1)))
+            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E"%(signalplots[i].Integral(0,-1)),"L")
             
     if compare_data: 
-        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)))
-    legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.Integral(0,-1)))
-    legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)))
-    legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)))
-    legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)))
-    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)))
-    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)))
-    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)))
+        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)),"PL")
+    legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.Integral(0,-1)),"F")
+    legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)),"F")
+    legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)),"F")
+    legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)),"F")
+    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)),"F")
+    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)),"F")
+    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)),"F")
 
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
@@ -216,12 +220,14 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     #plot data,stack, signal, data  
     stack.Draw("HIST")
     if "cutflow" in plotname:
-        stack.GetXaxis().SetLabelSize(0.025)
+        stack.GetXaxis().SetLabelSize(0.023)
     else:
         stack.GetXaxis().SetTitle(totalSM.GetXaxis().GetTitle())
-        stack.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
-        stack.GetYaxis().SetLabelSize(0.03)
-        stack.GetYaxis().SetMaxDigits(3)
+    stack.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
+    if args.shape:
+        stack.GetYaxis().SetTitle("A.U.")
+    stack.GetYaxis().SetLabelSize(0.03)
+    stack.GetYaxis().SetMaxDigits(3)
     histMax = 0.0
     for i,mass in enumerate(args.signalMass):
         if log==False and args.signalScale and not args.shape: 
