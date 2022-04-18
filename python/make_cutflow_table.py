@@ -75,7 +75,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
     fout.write('\\usepackage{adjustbox}\n')
     fout.write('\\thispagestyle{empty}\n')
     fout.write('\\begin{document}\n')
-    fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 90 GeV.}')
+    fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 100 GeV.}')
     fout.write('\\begin{table*}[h]\n')
     fout.write('\\footnotesize\n')
     fout.write('\\begin{adjustbox}{width=\\textwidth}\n')

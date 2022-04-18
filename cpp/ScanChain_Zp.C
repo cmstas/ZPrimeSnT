@@ -95,10 +95,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
   H1(cutflow,20,0,20,"");
-  H1(mll_pf_sel6,241,90,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel7,241,90,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel8,241,90,2500,"m_{ll} [GeV]");
-  H1(mll_pf_sel9,241,90,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel6,240,100,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel7,240,100,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel8,240,100,2500,"m_{ll} [GeV]");
+  H1(mll_pf_sel9,240,100,2500,"m_{ll} [GeV]");
   H1(mu1_pt_sel1,200,0,1000,"p_{T} (leading #mu) [GeV]");
   H1(mu1_pt_sel2,200,0,1000,"p_{T} (leading #mu) [GeV]");
   H1(mu1_pt_sel8,200,0,1000,"p_{T} (leading #mu) [GeV]");
@@ -115,7 +115,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   H1(mu2_trkRelIso_sel3,50,0,0.5,"Track iso./p_{T} (subleading #mu)");
   H1(mu2_trkRelIso_sel8,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
   H1(mu2_trkRelIso_sel9,50,0,0.1,"Track iso./p_{T} (subleading #mu)");
-  H1(nCand_Muons_sel4,3,2,5,"Number of #mu candidates");
+  H1(nCand_Muons_sel4,4,2,6,"Number of #mu candidates");
   //H1(btagDeepFlavB_sel6,50,0,1,"b-tag deep-flavor discriminant");
   H1(nbtagDeepFlavB_sel6,5,0,5,"Number of b-tags (medium WP)");
   H1(bjet1_pt_sel8,200,0,1000,"p_{T} (leading b-tagged jet) [GeV]");
@@ -211,7 +211,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
 	bool mu_id = ( nt.Muon_highPtId().at(mu) == 2 );
 	bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-	bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.02 );
+	bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
 	      
 	if ( mu_trk_and_global && mu_id ){
 	  nMu_id++;
@@ -354,7 +354,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      mindr = dr;
 	    }
 	  }
-	  if ( mindr > 0.02)
+	  if ( mindr > 0.02 )
 	    extra_isotracks_lep.push_back(i);
         }
       }
@@ -375,7 +375,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      mindr = dr;
 	    }
 	  }
-	  if ( mindr > 0.02)
+	  if ( mindr > 0.02 )
 	    extra_isotracks_chh.push_back(i);
         }
       }
