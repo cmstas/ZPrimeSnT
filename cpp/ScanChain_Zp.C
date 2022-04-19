@@ -216,23 +216,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       int nMu_pt = 0;
       int nMu_iso = 0;
       for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ){
-	bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
-	bool mu_id = ( nt.Muon_highPtId().at(mu) == 2 );
-	bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-	bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
+        bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
+        bool mu_id = ( nt.Muon_highPtId().at(mu) == 2 );
+        bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
+        bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
 	      
-	if ( mu_trk_and_global && mu_id ){
-	  nMu_id++;
-	  cand_muons_pf_id.push_back(mu);
-	  if ( mu_pt_pf ){
-	    nMu_pt++;
-	    cand_muons_pf_id_and_pteta.push_back(mu);
-	    if ( mu_relIso ){
-	      nMu_iso++;
-	      cand_muons_pf.push_back(mu);
-	    }
-	  }
-	}
+        if ( mu_trk_and_global && mu_id ){
+          nMu_id++;
+          cand_muons_pf_id.push_back(mu);
+          if ( mu_pt_pf ){
+            nMu_pt++;
+            cand_muons_pf_id_and_pteta.push_back(mu);
+            if ( mu_relIso ){
+              nMu_iso++;
+              cand_muons_pf.push_back(mu);
+            }
+          }
+        }
       }
 	    
       // Defining booleans for cutflow
