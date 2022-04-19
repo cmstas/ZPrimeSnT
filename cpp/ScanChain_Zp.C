@@ -98,10 +98,25 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   H1(cutflow,20,0,20,"");
 
-  map<TString, int> nbins { {"mll_pf", 240}, {"mu1_pt", 200}, {"mu2_pt", 200}, {"mu1_eta", 60}, {"mu2_eta", 60}, {"mu1_trkRelIso", 50}, {"mu2_trkRelIso", 50}, {"nCand_Muons", 4}, {"nbtagDeepFlavB", 5}, {"bjet1_pt", 200}, {"bjet1_eta", 60}, {"bjet2_pt", 200}, {"bjet2_eta", 60}, {"min_mlb", 200}, {"pfmet_pt", 120}, {"pfmet_phi", 65}, {"puppimet_pt", 120}, {"puppimet_phi", 65}, {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
-  map<TString, float> low { {"mll_pf", 100}, {"mu1_pt", 0}, {"mu2_pt", 0}, {"mu1_eta", -3}, {"mu2_eta", -3}, {"mu1_trkRelIso", 0}, {"mu2_trkRelIso", 0}, {"nCand_Muons", 2}, {"nbtagDeepFlavB", 0}, {"bjet1_pt", 0}, {"bjet1_eta", -3}, {"bjet2_pt", 0}, {"bjet2_eta", -3}, {"min_mlb", 0}, {"pfmet_pt", 0}, {"pfmet_phi", -3.25}, {"puppimet_pt", 0}, {"puppimet_phi", -3.25}, {"nExtra_muons", 0}, {"nExtra_electrons", 0}, {"nExtra_lepIsoTracks", 0}, {"nExtra_chhIsoTracks", 0} };
-  map<TString, float> high { {"mll_pf", 2500}, {"mu1_pt", 1000}, {"mu2_pt", 1000}, {"mu1_eta", 3}, {"mu2_eta", 3}, {"mu1_trkRelIso", 0.5}, {"mu2_trkRelIso", 0.5}, {"nCand_Muons", 6}, {"nbtagDeepFlavB", 5}, {"bjet1_pt", 1000}, {"bjet1_eta", 3}, {"bjet2_pt", 1000}, {"bjet2_eta", 3}, {"min_mlb", 2000}, {"pfmet_pt", 600}, {"pfmet_phi", 3.25}, {"puppimet_pt", 600}, {"puppimet_phi", 3.25}, {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
-  map<TString, TString> title { {"mll_pf", "m_{ll} [GeV]"}, {"mu1_pt", "p_{T} (leading #mu) [GeV]"}, {"mu2_pt", "p_{T} (subleading #mu) [GeV]"}, {"mu1_eta", "#eta (leading #mu)"}, {"mu2_eta", "#eta (subleading #mu)"}, {"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"}, {"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"}, {"nCand_Muons", "Number of #mu candidates"}, {"nbtagDeepFlavB", "Number of b-tags (medium WP)"}, {"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"}, {"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"}, {"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"}, {"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"}, {"min_mlb", "min m_{lb} [GeV]"}, {"pfmet_pt", "PF MET p_{T} [GeV]"}, {"pfmet_phi", "PF MET #phi [GeV]"}, {"puppimet_pt", "PUPPI MET p_{T} [GeV]"}, {"puppimet_phi", "PUPPI MET #phi [GeV]"}, {"nExtra_muons", "Number of additional #mu's"}, {"nExtra_electrons", "Number of electrons"}, {"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"}, {"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"} };
+  map<TString, int> nbins { {"mll_pf", 240}, {"mu1_pt", 200}, {"mu2_pt", 200}, {"mu1_eta", 60}, {"mu2_eta", 60}, {"mu1_trkRelIso", 50}, {"mu2_trkRelIso", 50}, {"nCand_Muons", 4}, 
+    {"nbtagDeepFlavB", 5}, {"bjet1_pt", 200}, {"bjet1_eta", 60}, {"bjet2_pt", 200}, {"bjet2_eta", 60}, {"min_mlb", 200}, 
+    {"pfmet_pt", 120}, {"pfmet_phi", 65}, {"puppimet_pt", 120}, {"puppimet_phi", 65}, 
+    {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+
+  map<TString, float> low { {"mll_pf", 100}, {"mu1_pt", 0}, {"mu2_pt", 0}, {"mu1_eta", -3}, {"mu2_eta", -3}, {"mu1_trkRelIso", 0}, {"mu2_trkRelIso", 0}, {"nCand_Muons", 2}, 
+    {"nbtagDeepFlavB", 0}, {"bjet1_pt", 0}, {"bjet1_eta", -3}, {"bjet2_pt", 0}, {"bjet2_eta", -3}, {"min_mlb", 0}, 
+    {"pfmet_pt", 0}, {"pfmet_phi", -3.25}, {"puppimet_pt", 0}, {"puppimet_phi", -3.25}, 
+    {"nExtra_muons", 0}, {"nExtra_electrons", 0}, {"nExtra_lepIsoTracks", 0}, {"nExtra_chhIsoTracks", 0} };
+
+  map<TString, float> high { {"mll_pf", 2500}, {"mu1_pt", 1000}, {"mu2_pt", 1000}, {"mu1_eta", 3}, {"mu2_eta", 3}, {"mu1_trkRelIso", 0.5}, {"mu2_trkRelIso", 0.5}, {"nCand_Muons", 6}, 
+    {"nbtagDeepFlavB", 5}, {"bjet1_pt", 1000}, {"bjet1_eta", 3}, {"bjet2_pt", 1000}, {"bjet2_eta", 3}, {"min_mlb", 2000}, 
+    {"pfmet_pt", 600}, {"pfmet_phi", 3.25}, {"puppimet_pt", 600}, {"puppimet_phi", 3.25}, 
+    {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+
+  map<TString, TString> title { {"mll_pf", "m_{ll} [GeV]"}, {"mu1_pt", "p_{T} (leading #mu) [GeV]"}, {"mu2_pt", "p_{T} (subleading #mu) [GeV]"}, {"mu1_eta", "#eta (leading #mu)"}, {"mu2_eta", "#eta (subleading #mu)"}, {"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"}, {"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"}, {"nCand_Muons", "Number of #mu candidates"}, 
+    {"nbtagDeepFlavB", "Number of b-tags (medium WP)"}, {"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"}, {"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"}, {"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"}, {"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"}, {"min_mlb", "min m_{lb} [GeV]"}, 
+    {"pfmet_pt", "PF MET p_{T} [GeV]"}, {"pfmet_phi", "PF MET #phi [GeV]"}, {"puppimet_pt", "PUPPI MET p_{T} [GeV]"}, {"puppimet_phi", "PUPPI MET #phi [GeV]"}, 
+    {"nExtra_muons", "Number of additional #mu's"}, {"nExtra_electrons", "Number of electrons"}, {"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"}, {"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"} };
 
   vector<TString> selection = {"sel0","sel1","sel2","sel3","sel4","sel5","sel6","sel7","sel8","sel9"};
 
