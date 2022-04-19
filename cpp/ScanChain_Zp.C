@@ -98,43 +98,170 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   H1(cutflow,20,0,20,"");
 
-  map<TString, int> nbins { {"mll_pf", 240}, {"mu1_pt", 200}, {"mu2_pt", 200}, {"mu1_eta", 60}, {"mu2_eta", 60}, {"mu1_trkRelIso", 50}, {"mu2_trkRelIso", 50}, {"nCand_Muons", 4}, 
-    {"nbtagDeepFlavB", 5}, {"bjet1_pt", 200}, {"bjet1_eta", 60}, {"bjet2_pt", 200}, {"bjet2_eta", 60}, {"min_mlb", 200}, 
-    {"pfmet_pt", 120}, {"pfmet_phi", 65}, {"puppimet_pt", 120}, {"puppimet_phi", 65}, 
-    {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+  // Define histo info maps
+  map<TString, int> nbins { };
+  map<TString, float> low { };
+  map<TString, float> high { };
+  map<TString, TString> title { };
 
-  map<TString, float> low { {"mll_pf", 100}, {"mu1_pt", 0}, {"mu2_pt", 0}, {"mu1_eta", -3}, {"mu2_eta", -3}, {"mu1_trkRelIso", 0}, {"mu2_trkRelIso", 0}, {"nCand_Muons", 2}, 
-    {"nbtagDeepFlavB", 0}, {"bjet1_pt", 0}, {"bjet1_eta", -3}, {"bjet2_pt", 0}, {"bjet2_eta", -3}, {"min_mlb", 0}, 
-    {"pfmet_pt", 0}, {"pfmet_phi", -3.25}, {"puppimet_pt", 0}, {"puppimet_phi", -3.25}, 
-    {"nExtra_muons", 0}, {"nExtra_electrons", 0}, {"nExtra_lepIsoTracks", 0}, {"nExtra_chhIsoTracks", 0} };
+  // Define histos
+  nbins.insert({"mll_pf", 240});
+  low.insert({"mll_pf", 100});
+  high.insert({"mll_pf", 2500});
+  title.insert({"mll_pf", "m_{ll} [GeV]"});
 
-  map<TString, float> high { {"mll_pf", 2500}, {"mu1_pt", 1000}, {"mu2_pt", 1000}, {"mu1_eta", 3}, {"mu2_eta", 3}, {"mu1_trkRelIso", 0.5}, {"mu2_trkRelIso", 0.5}, {"nCand_Muons", 6}, 
-    {"nbtagDeepFlavB", 5}, {"bjet1_pt", 1000}, {"bjet1_eta", 3}, {"bjet2_pt", 1000}, {"bjet2_eta", 3}, {"min_mlb", 2000}, 
-    {"pfmet_pt", 600}, {"pfmet_phi", 3.25}, {"puppimet_pt", 600}, {"puppimet_phi", 3.25}, 
-    {"nExtra_muons", 6}, {"nExtra_electrons", 6}, {"nExtra_lepIsoTracks", 6}, {"nExtra_chhIsoTracks", 6} };
+  nbins.insert({"mu1_pt", 200});
+  low.insert({"mu1_pt", 0});
+  high.insert({"mu1_pt", 1000});
+  title.insert({"mu1_pt", "p_{T} (leading #mu) [GeV]"});
 
-  map<TString, TString> title { {"mll_pf", "m_{ll} [GeV]"}, {"mu1_pt", "p_{T} (leading #mu) [GeV]"}, {"mu2_pt", "p_{T} (subleading #mu) [GeV]"}, {"mu1_eta", "#eta (leading #mu)"}, {"mu2_eta", "#eta (subleading #mu)"}, {"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"}, {"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"}, {"nCand_Muons", "Number of #mu candidates"}, 
-    {"nbtagDeepFlavB", "Number of b-tags (medium WP)"}, {"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"}, {"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"}, {"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"}, {"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"}, {"min_mlb", "min m_{lb} [GeV]"}, 
-    {"pfmet_pt", "PF MET p_{T} [GeV]"}, {"pfmet_phi", "PF MET #phi [GeV]"}, {"puppimet_pt", "PUPPI MET p_{T} [GeV]"}, {"puppimet_phi", "PUPPI MET #phi [GeV]"}, 
-    {"nExtra_muons", "Number of additional #mu's"}, {"nExtra_electrons", "Number of electrons"}, {"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"}, {"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"} };
+  nbins.insert({"mu2_pt", 200});
+  low.insert({"mu2_pt", 0});
+  high.insert({"mu2_pt", 1000});
+  title.insert({"mu2_pt", "p_{T} (subleading #mu) [GeV]"});
 
-  vector<TString> selection = {"sel0","sel1","sel2","sel3","sel4","sel5","sel6","sel7","sel8","sel9"};
+  nbins.insert({"mu1_eta", 60});
+  low.insert({"mu1_eta", -3});
+  high.insert({"mu1_eta", 3});
+  title.insert({"mu1_eta", "#eta (leading #mu)"});
 
-  vector<TString> plot_names = {"pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi"};
+  nbins.insert({"mu2_eta", 60});
+  low.insert({"mu2_eta", -3});
+  high.insert({"mu2_eta", 3});
+  title.insert({"mu2_eta", "#eta (subleading #mu)"});
+
+  nbins.insert({"mu1_trkRelIso", 50});
+  low.insert({"mu1_trkRelIso", 0});
+  high.insert({"mu1_trkRelIso", 0.5});
+  title.insert({"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"});
+
+  nbins.insert({"mu2_trkRelIso", 50});
+  low.insert({"mu2_trkRelIso", 0});
+  high.insert({"mu2_trkRelIso", 0.5});
+  title.insert({"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"});
+
+  nbins.insert({"nCand_Muons", 4});
+  low.insert({"nCand_Muons", 2});
+  high.insert({"nCand_Muons", 6});
+  title.insert({"nCand_Muons", "Number of #mu candidates"});
+
+  nbins.insert({"nbtagDeepFlavB", 5});
+  low.insert({"nbtagDeepFlavB", 0});
+  high.insert({"nbtagDeepFlavB", 5});
+  title.insert({"nbtagDeepFlavB", "Number of b-tags (medium WP)"});
+
+  nbins.insert({"bjet1_pt", 200});
+  low.insert({"bjet1_pt", 0});
+  high.insert({"bjet1_pt", 1000});
+  title.insert({"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"});
+
+  nbins.insert({"bjet1_eta", 60});
+  low.insert({"bjet1_eta", -3});
+  high.insert({"bjet1_eta", 3});
+  title.insert({"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"});
+
+  nbins.insert({"bjet2_pt", 200});
+  low.insert({"bjet2_pt", 0});
+  high.insert({"bjet2_pt", 1000});
+  title.insert({"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"});
+
+  nbins.insert({"bjet2_eta", 60});
+  low.insert({"bjet2_eta", -3});
+  high.insert({"bjet2_eta", 3});
+  title.insert({"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"});
+
+  nbins.insert({"min_mlb", 200});
+  low.insert({"min_mlb", 0});
+  high.insert({"min_mlb", 2000});
+  title.insert({"min_mlb", "min m_{lb} [GeV]"});
+
+  nbins.insert({"pfmet_pt", 120});
+  low.insert({"pfmet_pt", 0});
+  high.insert({"pfmet_pt", 600});
+  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
+
+  nbins.insert({"pfmet_phi", 65});
+  low.insert({"pfmet_phi", -3.25});
+  high.insert({"pfmet_phi", 3.25});
+  title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
+
+  nbins.insert({"puppimet_pt", 120});
+  low.insert({"puppimet_pt", 0});
+  high.insert({"puppimet_pt", 600});
+  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
+
+  nbins.insert({"puppimet_phi", 65});
+  low.insert({"puppimet_phi", -3.25});
+  high.insert({"puppimet_phi", 3.25});
+  title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
+
+  nbins.insert({"nExtra_muons", 6});
+  low.insert({"nExtra_muons", 0});
+  high.insert({"nExtra_muons", 6});
+  title.insert({"nExtra_muons", "Number of additional #mu's"});
+
+  nbins.insert({"nExtra_electrons", 6});
+  low.insert({"nExtra_electrons", 0});
+  high.insert({"nExtra_electrons", 6});
+  title.insert({"nExtra_electrons", "Number of electrons"});
+
+  nbins.insert({"nExtra_lepIsoTracks", 6});
+  low.insert({"nExtra_lepIsoTracks", 0});
+  high.insert({"nExtra_lepIsoTracks", 6});
+  title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
+
+  nbins.insert({"nExtra_chhIsoTracks", 6});
+  low.insert({"nExtra_chhIsoTracks", 0});
+  high.insert({"nExtra_chhIsoTracks", 6});
+  title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
+
+  // Define selection
+  vector<TString> selection = { };
+  selection.push_back("sel0"); // Skimming + HLT + Good PV
+  selection.push_back("sel1"); // 2 high-pT ID muons
+  selection.push_back("sel2"); // pT > 53 GeV && |eta| < 2.4 muons
+  selection.push_back("sel3"); // Relative track isolation < 0.1
+  selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
+  selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
+  selection.push_back("sel6"); // No extra lepton/iso track
+  selection.push_back("sel7"); // NbTag > 1 (medium WP)
+  selection.push_back("sel8"); // Mmumu > 150 GeV
+  selection.push_back("sel9"); // minMlb > 175 GeV
+
+  vector<TString> plot_names = { };
+  plot_names.push_back("pfmet_pt");
+  plot_names.push_back("pfmet_phi");
+  plot_names.push_back("puppimet_pt");
+  plot_names.push_back("puppimet_phi");
   map<TString, TH1F*> histos;
   for ( unsigned int isel=0; isel < selection.size(); isel++ )
   {
     if (isel==5)
     {
-      plot_names.push_back("mll_pf"); plot_names.push_back("mu1_pt"); plot_names.push_back("mu2_pt"); plot_names.push_back("mu1_eta"); plot_names.push_back("mu2_eta"); plot_names.push_back("mu1_trkRelIso"); plot_names.push_back("mu2_trkRelIso"); plot_names.push_back("nCand_Muons");
+      plot_names.push_back("mll_pf");
+      plot_names.push_back("mu1_pt");
+      plot_names.push_back("mu2_pt");
+      plot_names.push_back("mu1_eta");
+      plot_names.push_back("mu2_eta");
+      plot_names.push_back("mu1_trkRelIso");
+      plot_names.push_back("mu2_trkRelIso");
+      plot_names.push_back("nCand_Muons");
     }
     if (isel==6)
     {
-      plot_names.push_back("nExtra_muons"); plot_names.push_back("nExtra_electrons"); plot_names.push_back("nExtra_lepIsoTracks"); plot_names.push_back("nExtra_chhIsoTracks");
+      plot_names.push_back("nExtra_muons");
+      plot_names.push_back("nExtra_electrons");
+      plot_names.push_back("nExtra_lepIsoTracks");
+      plot_names.push_back("nExtra_chhIsoTracks");
     }
     if (isel==7)
     {
-      plot_names.push_back("nbtagDeepFlavB"); plot_names.push_back("bjet1_pt"); plot_names.push_back("bjet1_eta"); plot_names.push_back("bjet2_pt"); plot_names.push_back("bjet2_eta"); plot_names.push_back("min_mlb");
+      plot_names.push_back("nbtagDeepFlavB");
+      plot_names.push_back("bjet1_pt");
+      plot_names.push_back("bjet1_eta");
+      plot_names.push_back("bjet2_pt");
+      plot_names.push_back("bjet2_eta");
+      plot_names.push_back("min_mlb");
     }
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
     {
@@ -187,8 +314,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       double puppimet_pt  = puppimet.first;
       double puppimet_phi = puppimet.second;
 
-      plot_names = {"pfmet_pt","pfmet_phi","puppimet_pt","puppimet_phi"};
-      map<TString, float> variable { {"pfmet_pt", pfmet_pt}, {"pfmet_phi", pfmet_phi}, {"puppimet_pt", puppimet_pt}, {"puppimet_phi", puppimet_phi} };
+      // Define histo names and variables
+      plot_names = { };
+      map<TString, float> variable { };
+
+      // Book histo names and variables
+      plot_names.push_back("pfmet_pt");
+      variable.insert({"pfmet_pt", pfmet_pt});
+
+      plot_names.push_back("pfmet_phi");
+      variable.insert({"pfmet_phi", pfmet_phi});
+
+      plot_names.push_back("puppimet_pt");
+      variable.insert({"puppimet_pt", puppimet_pt});
+
+      plot_names.push_back("puppimet_phi");
+      variable.insert({"puppimet_phi", puppimet_phi});
+
 
       // Define vector of muon candidate indices here.....
       vector<int> cand_muons_pf_id;
@@ -350,9 +492,31 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       if ( selectedPair_M < 0.0 || Zboson ) continue;
       // Add histos: sel5
-      plot_names.push_back("mll_pf"); plot_names.push_back("mu1_pt"); plot_names.push_back("mu2_pt"); plot_names.push_back("mu1_eta"); plot_names.push_back("mu2_eta"); plot_names.push_back("mu1_trkRelIso"); plot_names.push_back("mu2_trkRelIso"); plot_names.push_back("nCand_Muons");
-      variable.insert({"mll_pf", selectedPair_M}); variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)}); variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)}); variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)}); variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)}); variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)}); variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)}); variable.insert({"nCand_Muons", cand_muons_pf.size()});
-      // Add histos: sel5
+      plot_names.push_back("mll_pf");
+      variable.insert({"mll_pf", selectedPair_M});
+
+      plot_names.push_back("mu1_pt");
+      variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)});
+
+      plot_names.push_back("mu2_pt");
+      variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)});
+
+      plot_names.push_back("mu1_eta");
+      variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
+
+      plot_names.push_back("mu2_eta");
+      variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
+
+      plot_names.push_back("mu1_trkRelIso");
+      variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
+
+      plot_names.push_back("mu2_trkRelIso");
+      variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)});
+
+      plot_names.push_back("nCand_Muons");
+      variable.insert({"nCand_Muons", cand_muons_pf.size()});
+
+      // Fill histos: sel5
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pair (OS, !Z)");
       icutflow++;
@@ -440,8 +604,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
       // Add histos: sel6
-      plot_names.push_back("nExtra_muons"); plot_names.push_back("nExtra_electrons"); plot_names.push_back("nExtra_lepIsoTracks"); plot_names.push_back("nExtra_chhIsoTracks");
-      variable.insert({"nExtra_muons", extra_muons.size()}); variable.insert({"nExtra_electrons",extra_electrons.size()}); variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()}); variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+      plot_names.push_back("nExtra_muons");
+      variable.insert({"nExtra_muons", extra_muons.size()});
+
+      plot_names.push_back("nExtra_electrons");
+      variable.insert({"nExtra_electrons",extra_electrons.size()});
+
+      plot_names.push_back("nExtra_lepIsoTracks");
+      variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()});
+
+      plot_names.push_back("nExtra_chhIsoTracks");
+      variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+
       // Fill histos: sel6
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
@@ -492,8 +666,24 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
              
 
       // Add histos: sel7
-      plot_names.push_back("nbtagDeepFlavB"); plot_names.push_back("bjet1_pt"); plot_names.push_back("bjet1_eta"); plot_names.push_back("bjet2_pt"); plot_names.push_back("bjet2_eta"); plot_names.push_back("min_mlb");
-      variable.insert({"nbtagDeepFlavB", cand_bJets.size()}); variable.insert({"bjet1_pt", bjet1_pt}); variable.insert({"bjet1_eta", bjet1_eta}); variable.insert({"bjet2_pt", bjet2_pt}); variable.insert({"bjet2_eta", bjet2_eta}); variable.insert({"min_mlb", min_mlb});
+      plot_names.push_back("nbtagDeepFlavB");
+      variable.insert({"nbtagDeepFlavB", cand_bJets.size()});
+
+      plot_names.push_back("bjet1_pt");
+      variable.insert({"bjet1_pt", bjet1_pt});
+
+      plot_names.push_back("bjet1_eta");
+      variable.insert({"bjet1_eta", bjet1_eta});
+
+      plot_names.push_back("bjet2_pt");
+      variable.insert({"bjet2_pt", bjet2_pt});
+
+      plot_names.push_back("bjet2_eta");
+      variable.insert({"bjet2_eta", bjet2_eta});
+
+      plot_names.push_back("min_mlb");
+      variable.insert({"min_mlb", min_mlb});
+
       // Fill histos: sel7
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
