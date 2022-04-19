@@ -8,7 +8,7 @@ import ROOT
 ### pdfcrop --margins '0 0' <filename>.pdf
 ### mv <filename-crop>.pdf <filename>.pdf 
 
-def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/"):
+def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/", extension=""):
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -69,7 +69,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
             else:
                 effs[i].append(0.0)
 
-    fout = open(outdir+"/cutflow_"+year+".tex",'w')
+    fout = open(outdir+"/cutflow_"+year+extension+".tex",'w')
     
     fout.write('\\documentclass{article}\n')  
     fout.write('\\usepackage{adjustbox}\n')
@@ -104,7 +104,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
         tlabel = tlabel.replace("$$","$ $")
         fout.write(tlabel)
         for i in range(len(samples)):
-            fout.write('& %.3E & %.2E'%(yields[i][c],100.0*effs[i][c]))
+            fout.write('& %.2E & %.2E'%(yields[i][c],100.0*effs[i][c]))
         fout.write('\\\\\n')
     
     fout.write('\\end{tabular}\n')
@@ -115,10 +115,17 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
     fout.close()
 
 # SM backgrounds
-samples=['ttbar','tW','ttX','ZToMuMu','VV']
-sampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
+bkgsamples=['ttbar','tW','ttX','ZToMuMu','VV']
+bkgsampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
 
 # Signal
-samples=samples+['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
-sampleLabels=sampleLabels+["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y3 (1500 GeV)","Y3 (2000 GeV)"]
+sigsamples=['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
+sigsampleLabels=["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y3 (1500 GeV)","Y3 (2000 GeV)"]
+
+# SM + signal
+samples=bkgsamples+sigsamples
+sampleLabels=bkgsampleLabels+sigsampleLabels
+
 make_table(samples,sampleLabels)
+make_table(bkgsamples,bkgsampleLabels,extension="_bkg")
+make_table(sigsamples,sigsampleLabels,extension="_sig")

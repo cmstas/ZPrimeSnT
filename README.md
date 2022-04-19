@@ -2,6 +2,7 @@
 ```bash
 git clone git@github.com:cmstas/ZPrimeSnT.git
 pushd ZPrimeSnT/
+source /cvmfs/cms.cern.ch/cmsset_default.sh
 pushd /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_2_9/
 cmsenv
 popd

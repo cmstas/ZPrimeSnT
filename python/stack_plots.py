@@ -31,6 +31,31 @@ if len(args.signalMass)==0:
     args.signalMass = [200,400,700,1000,1500,2000]
 signalXSecScale = { "200": 1.0, "400": 5.0, "700": 25.0, "1000": 100.0, "1500": 500.0, "2000": 2000.0}
 
+sels = []
+sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
+sels.append("HLT selection")
+sels.append("N_{good PV}#geq 1")
+sels.append("N_{highPt ID #mu}#geq 2")
+sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
+sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
+sels.append("N_{HLT match} #geq 1 (#DeltaR<0.02)")
+sels.append("N_{#mu#mu} #geq 1 (OS, not from Z)")
+sels.append("No extra lepton / iso. track")
+sels.append("N_{b-tag}#geq 1 (p_{T}>30 GeV, medium WP)")
+sels.append("m_{#mu#mu}>150 GeV")
+sels.append("min m_{#mu b}>175 GeV")
+
+nsel=dict()
+nsel["sel1"]=3
+nsel["sel2"]=4
+nsel["sel3"]=5
+nsel["sel4"]=6
+nsel["sel5"]=7
+nsel["sel6"]=8
+nsel["sel7"]=9
+nsel["sel8"]=10
+nsel["sel9"]=11
+
 def get_plot(plotFile, plotname, fillColor=None, lineColor=None, lineWidth=0):
     plot = plotFile.Get(plotname)
 
@@ -69,9 +94,9 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     latexCMSExtra.SetNDC(True)
 
     latexSel = ROOT. TLatex()
-    latexSel.SetTextAlign(21)
+    latexSel.SetTextAlign(11)
     latexSel.SetTextFont(42)
-    latexSel.SetTextSize(0.035)
+    latexSel.SetTextSize(0.017)
     latexSel.SetNDC(True)
 
     yearenergy=""
@@ -172,21 +197,34 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     #legend.SetTextSize(0.02)
 
     for i,mass in enumerate(args.signalMass): 
-        if log==False and args.signalScale and not args.shape:
+        if log==False and args.signalScale and not args.shape and ("cutflow" not in plotname):
             legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E x%1.1E"%(signalplots[i].Integral(0,-1),(float(args.signalScale))*(float(signalXSecScale[str(mass)]))),"L")
-        else:
+        elif "cutflow" not in plotname:
             legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E"%(signalplots[i].Integral(0,-1)),"L")
+        else: 
+            legend.AddEntry(signalplots[i],"Y3 ("+str(mass)+" GeV) %1.2E"%(signalplots[i].GetBinContent(1)),"L")
             
-    if compare_data: 
-        legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)),"PL")
-    legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.Integral(0,-1)),"F")
-    legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)),"F")
-    legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)),"F")
-    legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)),"F")
-    legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)),"F")
-    legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)),"F")
-    legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)),"F")
-
+    if "cutflow" not in plotname:
+        if compare_data: 
+            legend.AddEntry(dataplot,"data %1.2E"%(dataplot.Integral(0,-1)),"PL")
+        legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.Integral(0,-1)),"F")
+        legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.Integral(0,-1)),"F")
+        legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.Integral(0,-1)),"F")
+        legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.Integral(0,-1)),"F")
+        legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.Integral(0,-1)),"F")
+        legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.Integral(0,-1)),"F")
+        legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.Integral(0,-1)),"F")
+    else:
+        if compare_data: 
+            legend.AddEntry(dataplot,"data %1.2E"%(dataplot.GetBinContent(1)),"PL")
+        legend.AddEntry(ZToMuMuplot, "DY(#mu#mu) %1.2E"%(ZToMuMuplot.GetBinContent(1)),"F")
+        legend.AddEntry(ttbarplot,"t#bar{t} %1.2E"%(ttbarplot.GetBinContent(1)),"F")
+        legend.AddEntry(tWplot,"tW %1.2E"%(ST_tWplot.GetBinContent(1)),"F")
+        legend.AddEntry(TTXplot,"t#bar{t}X %1.2E"%(TTXplot.GetBinContent(1)),"F")
+        legend.AddEntry(WWplot, "WW %1.2E"%(WWplot.GetBinContent(1)),"F")
+        legend.AddEntry(WZplot, "WZ %1.2E"%(WZplot.GetBinContent(1)),"F")
+        legend.AddEntry(ZZplot,"ZZ %1.2E"%(ZZplot.GetBinContent(1)),"F")
+    
     #define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
 
@@ -255,6 +293,11 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     latex.DrawLatex(0.9, 0.92+0.03, yearenergy);
     latexCMS.DrawLatex(0.11,0.92+0.03,"CMS");
     latexCMSExtra.DrawLatex(0.22,0.92+0.03, cmsExtra);
+
+    if "cutflow" not in plotname:
+        whichsel = plotname.split("_")[len(plotname.split("_"))-1]
+        for s in range(0,nsel[whichsel]+1):
+            latexSel.DrawLatex(0.3, 0.87-s*0.025, sels[s])
 
     #print and save
     extension = ""
