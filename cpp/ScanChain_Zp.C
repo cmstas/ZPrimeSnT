@@ -247,43 +247,27 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
-  vector<TString> mllbinsel = { };
   mllbin.push_back("mllinclusive");
-  mllbinsel.push_back("selectedPair_M >  0");
-  //
   if ( doMllBins ) {
     mllbin.push_back("mll150to250");
-    mllbinsel.push_back("selectedPair_M >  150 && selectedPair_M <  250");
-    //
     mllbin.push_back("mll200to600");
-    mllbinsel.push_back("selectedPair_M >  200 && selectedPair_M <  600");
-    //
     mllbin.push_back("mll500to900");
-    mllbinsel.push_back("selectedPair_M >  500 && selectedPair_M <  900");
-    //
     mllbin.push_back("mll700to1300");
-    mllbinsel.push_back("selectedPair_M >  700 && selectedPair_M < 1300");
-    //
     mllbin.push_back("mll1100to1900");
-    mllbinsel.push_back("selectedPair_M > 1100 && selectedPair_M < 1900");
-    //
     mllbin.push_back("mll1500to2500");
-    mllbinsel.push_back("selectedPair_M > 1500 && selectedPair_M < 2500");
   }
+  const int nMllBins = mllbin.size();
+  bool mllbinsel[nMllBins];
 
   // Define number of b-tag bins
   vector<TString> nbtag = { };
-  vector<TString> nbtagsel = { };
   nbtag.push_back("nBTag1p");
-  nbtagsel.push_back("cand_bJets.size()>=1");
-  //
   if ( doNbTagBins ) {
     nbtag.push_back("nBTag1");
-    nbtagsel.push_back("cand_bJets.size()==1");
-    //
     nbtag.push_back("nBTag2p");
-    nbtagsel.push_back("cand_bJets.size()>=2");
   }
+  const int nBTagBins = nbtag.size();
+  bool nbtagsel[nBTagBins];
 
   // Define selection
   vector<TString> selection = { };
@@ -586,6 +570,29 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         if ( Zboson ) break;
       }
       if ( selectedPair_M < 0.0 || Zboson ) continue;
+      
+      mllbinsel[0] = true;
+      if (doMllBins){
+	if ( selectedPair_M > 150. && selectedPair_M < 250)
+	  mllbinsel[1] = true;
+	else mllbinsel[1] = false;
+	if ( selectedPair_M > 200. && selectedPair_M < 600)
+	  mllbinsel[2] = true;
+	else mllbinsel[2] = false;
+	if ( selectedPair_M > 500. && selectedPair_M < 900)
+	  mllbinsel[3] = true;
+	else mllbinsel[3] = false;
+	if ( selectedPair_M > 700. && selectedPair_M < 1300.)
+	  mllbinsel[4] = true;
+	else mllbinsel[4] = false;
+	if ( selectedPair_M > 1100. && selectedPair_M < 1900.)
+	  mllbinsel[5] = true;
+	else mllbinsel[5] = false;
+	if ( selectedPair_M > 1500. && selectedPair_M < 2500.)
+	  mllbinsel[6] = true;
+	else mllbinsel[6] = false;
+      }
+
       // Add histos: sel5
       plot_names.push_back("mll_pf");
       variable.insert({"mll_pf", selectedPair_M});
@@ -829,6 +836,15 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("dPhi_ll_MET");
       variable.insert({"dPhi_ll_MET", dPhi_ll_MET});
 
+      if (cand_bJets.size()>=1) nbtagsel[0] = true;
+      else nbtagsel[0] = false;
+      if (doNbTagBins) {
+	if (cand_bJets.size()==1) nbtagsel[1] = true;
+	else nbtagsel[1] = false;
+	if (cand_bJets.size()>=2) nbtagsel[2] = true;
+	else nbtagsel[2] = false;
+      }
+
       // Fill histos: sel7
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
@@ -842,7 +858,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
 	    if ( mllbinsel[imll] && nbtagsel[inb] )
-		histos[name]->Fill(variable[plot_name],weight*factor);
+	      histos[name]->Fill(variable[plot_name],weight*factor);
 	  }
 	}
       }
