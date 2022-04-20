@@ -299,7 +299,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     latexCMSExtra.DrawLatex(0.22,0.92+0.03, cmsExtra);
 
     if "cutflow" not in plotname:
-        whichsel = plotname.split("_")[len(plotname.split("_"))-1]
+        whichsel = plotname.split("_")[len(plotname.split("_"))-3]
         for s in range(0,nsel[whichsel]+1):
             latexSel.DrawLatex(0.3, 0.87-s*0.025, sels[s])
 
