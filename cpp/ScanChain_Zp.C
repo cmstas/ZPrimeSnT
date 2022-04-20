@@ -31,7 +31,7 @@
 
 // #define DEBUG
 
-bool removeSpikes = false;
+bool removeSpikes = true;
 bool doMllBins = true;
 bool doNbTagBins = true;
 
@@ -179,20 +179,80 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"nExtra_muons", 6});
   title.insert({"nExtra_muons", "Number of additional #mu's"});
 
+  nbins.insert({"mu3_pt", 200});
+  low.insert({"mu3_pt", 0});
+  high.insert({"mu3_pt", 1000});
+  title.insert({"mu3_pt", "p_{T} (third #mu) [GeV]"});
+
+  nbins.insert({"mu3_eta", 60});
+  low.insert({"mu3_eta", -3});
+  high.insert({"mu3_eta", 3});
+  title.insert({"mu3_eta", "#eta (third #mu)"});
+
+  nbins.insert({"mu3_trkRelIso", 10});
+  low.insert({"mu3_trkRelIso", 0});
+  high.insert({"mu3_trkRelIso", 0.1});
+  title.insert({"mu3_trkRelIso", "Track iso./p_{T} (third #mu)"});
+
   nbins.insert({"nExtra_electrons", 6});
   low.insert({"nExtra_electrons", 0});
   high.insert({"nExtra_electrons", 6});
   title.insert({"nExtra_electrons", "Number of electrons"});
+
+  nbins.insert({"ele_extra_pt", 200});
+  low.insert({"ele_extra_pt", 0});
+  high.insert({"ele_extra_pt", 1000});
+  title.insert({"ele_extra_pt", "p_{T} (extra electron) [GeV]"});
+
+  nbins.insert({"ele_extra_eta", 60});
+  low.insert({"ele_extra_eta", -3});
+  high.insert({"ele_extra_eta", 3});
+  title.insert({"ele_extra_eta", "#eta (extra electron)"});
+
+  nbins.insert({"ele_extra_miniPFRelIso", 10});
+  low.insert({"ele_extra_miniPFRelIso", 0});
+  high.insert({"ele_extra_miniPFRelIso", 0.1});
+  title.insert({"ele_extra_miniPFRelIso", "PF mini-iso./p_{T} (extra electron)"});
 
   nbins.insert({"nExtra_lepIsoTracks", 6});
   low.insert({"nExtra_lepIsoTracks", 0});
   high.insert({"nExtra_lepIsoTracks", 6});
   title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
 
+  nbins.insert({"lepIsoTrack_extra_pt", 200});
+  low.insert({"lepIsoTrack_extra_pt", 0});
+  high.insert({"lepIsoTrack_extra_pt", 1000});
+  title.insert({"lepIsoTrack_extra_pt", "p_{T} (extra lepton isoTrack) [GeV]"});
+
+  nbins.insert({"lepIsoTrack_extra_eta", 60});
+  low.insert({"lepIsoTrack_extra_eta", -3});
+  high.insert({"lepIsoTrack_extra_eta", 3});
+  title.insert({"lepIsoTrack_extra_eta", "#eta (extra lepton isoTrack)"});
+
+  nbins.insert({"lepIsoTrack_extra_PFRelIsoChg", 10});
+  low.insert({"lepIsoTrack_extra_PFRelIsoChg", 0});
+  high.insert({"lepIsoTrack_extra_PFRelIsoChg", 0.1});
+  title.insert({"lepIsoTrack_extra_PFRelIsoChg", "PF charged iso./p_{T} (extra lepton isoTrack)"});
+
   nbins.insert({"nExtra_chhIsoTracks", 6});
   low.insert({"nExtra_chhIsoTracks", 0});
   high.insert({"nExtra_chhIsoTracks", 6});
   title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
+
+  nbins.insert({"chhIsoTrack_extra_pt", 200});
+  low.insert({"chhIsoTrack_extra_pt", 0});
+  high.insert({"chhIsoTrack_extra_pt", 1000});
+  title.insert({"chhIsoTrack_extra_pt", "p_{T} (extra ch. hadron isoTrack) [GeV]"});
+
+  nbins.insert({"chhIsoTrack_extra_eta", 60});
+  low.insert({"chhIsoTrack_extra_eta", -3});
+  high.insert({"chhIsoTrack_extra_eta", 3});
+  title.insert({"chhIsoTrack_extra_eta", "#eta (extra ch. hadron isoTrack)"});
+
+  nbins.insert({"chhIsoTrack_extra_PFRelIsoChg", 10});
+  low.insert({"chhIsoTrack_extra_PFRelIsoChg", 0});
+  high.insert({"chhIsoTrack_extra_PFRelIsoChg", 0.1});
+  title.insert({"chhIsoTrack_extra_PFRelIsoChg", "PF charged iso./p_{T} (extra ch. hadron isoTrack)"});
 
   nbins.insert({"nbtagDeepFlavB", 5});
   low.insert({"nbtagDeepFlavB", 0});
@@ -277,7 +337,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel3"); // Relative track isolation < 0.1
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
-  selection.push_back("sel6"); // No extra lepton/iso track
+  selection.push_back("sel6"); // No extra lepton / isoTrack
   selection.push_back("sel7"); // NbTag >= 1 (medium WP)
   selection.push_back("sel8"); // Mmumu > 150 GeV
   selection.push_back("sel9"); // minMlb > 175 GeV
@@ -301,13 +361,27 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu2_trkRelIso");
       plot_names.push_back("nCand_Muons");
-    }
-    if (isel==6)
-    {
+      // Add also extra plot before third lepton/isotrack veto
       plot_names.push_back("nExtra_muons");
       plot_names.push_back("nExtra_electrons");
       plot_names.push_back("nExtra_lepIsoTracks");
       plot_names.push_back("nExtra_chhIsoTracks");
+      plot_names.push_back("mu3_pt");
+      plot_names.push_back("mu3_eta");
+      plot_names.push_back("mu3_trkRelIso");
+      plot_names.push_back("ele_extra_pt");
+      plot_names.push_back("ele_extra_eta");
+      plot_names.push_back("ele_extra_miniPFRelIso");
+      plot_names.push_back("lepIsoTrack_extra_pt");
+      plot_names.push_back("lepIsoTrack_extra_eta");
+      plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg");
+      plot_names.push_back("chhIsoTrack_extra_pt");
+      plot_names.push_back("chhIsoTrack_extra_eta");
+      plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg");
+    }
+    if (isel==6) // Third lepton/isotrack veto
+    {
+      // Nothing to add
     }
     if (isel==7)
     {
@@ -396,6 +470,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Define histo names and variables
       plot_names = { };
       map<TString, float> variable { };
+
+      // Define extra histo names and variables (for third lepton/isotrack veto variables)
+      vector<TString> extra_plot_names = { };
+      map<TString, float> extra_variable { };
 
       // Book histo names and variables
       plot_names.push_back("pfmet_pt");
@@ -712,29 +790,85 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         }
       }
 
+      // Add extra histos: before sel6 (third lepton/isotrack veto)
+      extra_plot_names.push_back("nExtra_muons");
+      extra_variable.insert({"nExtra_muons", extra_muons.size()});
+
+      extra_plot_names.push_back("nExtra_electrons");
+      extra_variable.insert({"nExtra_electrons",extra_electrons.size()});
+
+      extra_plot_names.push_back("nExtra_lepIsoTracks");
+      extra_variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()});
+
+      extra_plot_names.push_back("nExtra_chhIsoTracks");
+      extra_variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+
+      if ( extra_muons.size() > 0 ) {
+	extra_plot_names.push_back("mu3_pt");
+	extra_variable.insert({"mu3_pt", nt.Muon_pt().at(extra_muons[0])});
+
+	extra_plot_names.push_back("mu3_eta");
+	extra_variable.insert({"mu3_eta", nt.Muon_eta().at(extra_muons[0])});
+
+	extra_plot_names.push_back("mu3_trkRelIso");
+	extra_variable.insert({"mu3_trkRelIso", nt.Muon_tkRelIso().at(extra_muons[0])});
+      }
+
+      if ( extra_electrons.size() > 0 ) {
+	extra_plot_names.push_back("ele_extra_pt");
+	extra_variable.insert({"ele_extra_pt", nt.Electron_pt().at(extra_electrons[0])});
+
+	extra_plot_names.push_back("ele_extra_eta");
+	extra_variable.insert({"ele_extra_eta", nt.Electron_eta().at(extra_electrons[0])});
+
+	extra_plot_names.push_back("ele_extra_miniPFRelIso");
+	extra_variable.insert({"ele_extra_miniPFRelIso", nt.Electron_miniPFRelIso_all().at(extra_electrons[0])});
+      }
+
+      if ( extra_isotracks_lep.size() > 0 ) {
+	extra_plot_names.push_back("lepIsoTrack_extra_pt");
+	extra_variable.insert({"lepIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_lep[0])});
+
+	extra_plot_names.push_back("lepIsoTrack_extra_eta");
+	extra_variable.insert({"lepIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_lep[0])});
+
+	extra_plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg");
+	extra_variable.insert({"lepIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_lep[0])});
+      }
+
+      if ( extra_isotracks_chh.size() > 0 ) {
+	extra_plot_names.push_back("chhIsoTrack_extra_pt");
+	extra_variable.insert({"chhIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_chh[0])});
+
+	extra_plot_names.push_back("chhIsoTrack_extra_eta");
+	extra_variable.insert({"chhIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_chh[0])});
+
+	extra_plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg");
+	extra_variable.insert({"chhIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_chh[0])});
+      }
+
+      // Fill extra histos: sel5 (before third lepton/isotrack veto)
+      for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ )
+      {
+        TString plot_name = extra_plot_names[iplot];
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
+	  if ( mllbinsel[imll] )
+	    histos[name]->Fill(extra_variable[plot_name],weight*factor);
+	}
+      }
+
       if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
       icutflow++;
 
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
-      // Add histos: sel6
-      plot_names.push_back("nExtra_muons");
-      variable.insert({"nExtra_muons", extra_muons.size()});
-
-      plot_names.push_back("nExtra_electrons");
-      variable.insert({"nExtra_electrons",extra_electrons.size()});
-
-      plot_names.push_back("nExtra_lepIsoTracks");
-      variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()});
-
-      plot_names.push_back("nExtra_chhIsoTracks");
-      variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
-
-      // Fill histos: sel6
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
       icutflow++;
+
+      // Fill histos: sel6
       sel = "sel6";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
