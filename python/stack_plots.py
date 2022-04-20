@@ -207,13 +207,18 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
             sigIntegral = signalplots[i].Integral(0,-1)
             steps = [50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 50000.0]
             signalXSecScale[str(mass)]=1.0
-            if sigIntegral>0.0:
-                ratioSMtoSig = totalScale / sigIntegral
+            if sigIntegral>0.0 and totalScale>0.0:
+                ratioSMToSig = totalScale / sigIntegral
+                ratioSigToSM = sigIntegral / totalScale
                 for s in steps:
-                    if ratioSMtoSig<s:
+                    if ratioSMToSig<s:
                         signalXSecScale[str(mass)]=s/50.0
-                if ratioSMtoSig>steps[len(steps)-1]:
+                        if ratioSigToSM*(s/50.0) > 1:
+                            signalXSecScale[str(mass)]=signalXSecScale[str(mass)]/10.0
+                if ratioSMToSig>steps[len(steps)-1]:
                     signalXSecScale[str(mass)]=5e3
+                    if ratioSigToSM*(5e3) > 1:
+                        signalXSecScale[str(mass)]=signalXSecScale[str(mass)]/10.0
             signalplots[i].Scale(signalXSecScale[str(mass)])
 
     #build stack
@@ -368,7 +373,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
     ROOT.gPad.RedrawAxis()
 
     expoffset=0.03
-    if log==True:
+    if log==True or 1.1*histMax<1000.0:
         expoffset=0
     latex.DrawLatex(0.9, 0.92+expoffset, yearenergy);
     latexCMS.DrawLatex(0.11,0.92+expoffset,"CMS");
@@ -400,7 +405,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
     else:
         extension = extension+"_s+b"
     if log:
-        extension = extension+"_log"
+        extension = extension+"_logY"
     if args.shape:
         extension = extension+"_areaNormalized"
     
