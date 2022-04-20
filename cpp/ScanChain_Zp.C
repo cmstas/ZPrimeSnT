@@ -32,6 +32,8 @@
 // #define DEBUG
 
 bool removeSpikes = false;
+bool doMllBins = true;
+bool doNbTagBins = true;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -52,7 +54,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   float lumi = 1.0;
   float xsec = 1.0;
   bool isMC = true;
- 
+
+  // SM processes and cross-sections:
   if ( process == "ttbar" )               xsec = 87310.0; // fb
   if ( process == "DY" )                  xsec = 5765400.0; // fb
   if ( process == "ZToMuMu_50_120" )      xsec = 2112904.0; // fb
@@ -75,7 +78,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   if ( process == "TTHToNonbb" )          xsec = 507.5*(1-0.575); // fb
   if ( process == "TTHTobb" )             xsec = 507.5*0.575; // fb
 
-    
+  // Signal processes and cross-sections:
   if ( year == "2018" )
     {
       lumi = 59.83; // fb-1
@@ -87,6 +90,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if ( process == "Y3_M1500" )    xsec = 3.636946e-05*1000; // fb
       if ( process == "Y3_M2000" )    xsec = 8.253412e-06*1000; // fb
     }
+
   if ( year == "2017" )       lumi = 41.48; // fb-1
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
@@ -129,16 +133,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   low.insert({"mll_pf", 100});
   high.insert({"mll_pf", 2500});
   title.insert({"mll_pf", "m_{ll} [GeV]"});
-
-  nbins.insert({"mll_pf_1bjet", 240});
-  low.insert({"mll_pf_1bjet", 100});
-  high.insert({"mll_pf_1bjet", 2500});
-  title.insert({"mll_pf_1bjet", "m_{ll} [GeV] 1 bjet"});
-
-  nbins.insert({"mll_pf_2bjet", 240});
-  low.insert({"mll_pf_2bjet", 100});
-  high.insert({"mll_pf_2bjet", 2500});
-  title.insert({"mll_pf_2bjet", "m_{ll} [GeV] 2+ bjet"});
 
   nbins.insert({"mu1_pt", 200});
   low.insert({"mu1_pt", 0});
@@ -250,6 +244,47 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"dPhi_ll_MET", 3.2});
   title.insert({"dPhi_ll_MET", "min #Delta#phi(ll,MET)"});
 
+
+  // Define (overlapping) mll bins
+  vector<TString> mllbin = { };
+  vector<TString> mllbinsel = { };
+  mllbin.push_back("mllinclusive");
+  mllbinsel.push_back("selectedPair_M >  0");
+  //
+  if ( doMllBins ) {
+    mllbin.push_back("mll150to250");
+    mllbinsel.push_back("selectedPair_M >  150 && selectedPair_M <  250");
+    //
+    mllbin.push_back("mll200to600");
+    mllbinsel.push_back("selectedPair_M >  200 && selectedPair_M <  600");
+    //
+    mllbin.push_back("mll500to900");
+    mllbinsel.push_back("selectedPair_M >  500 && selectedPair_M <  900");
+    //
+    mllbin.push_back("mll700to1300");
+    mllbinsel.push_back("selectedPair_M >  700 && selectedPair_M < 1300");
+    //
+    mllbin.push_back("mll1100to1900");
+    mllbinsel.push_back("selectedPair_M > 1100 && selectedPair_M < 1900");
+    //
+    mllbin.push_back("mll1500to2500");
+    mllbinsel.push_back("selectedPair_M > 1500 && selectedPair_M < 2500");
+  }
+
+  // Define number of b-tag bins
+  vector<TString> nbtag = { };
+  vector<TString> nbtagsel = { };
+  nbtag.push_back("nBTag1p");
+  nbtagsel.push_back("cand_bJets.size()>=1");
+  //
+  if ( doNbTagBins ) {
+    nbtag.push_back("nBTag1");
+    nbtagsel.push_back("cand_bJets.size()==1");
+    //
+    nbtag.push_back("nBTag2p");
+    nbtagsel.push_back("cand_bJets.size()>=2");
+  }
+
   // Define selection
   vector<TString> selection = { };
   selection.push_back("sel0"); // Skimming + HLT + Good PV
@@ -259,7 +294,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
   selection.push_back("sel6"); // No extra lepton/iso track
-  selection.push_back("sel7"); // NbTag > 1 (medium WP)
+  selection.push_back("sel7"); // NbTag >= 1 (medium WP)
   selection.push_back("sel8"); // Mmumu > 150 GeV
   selection.push_back("sel9"); // minMlb > 175 GeV
 
@@ -298,8 +333,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
-      plot_names.push_back("mll_pf_1bjet");
-      plot_names.push_back("mll_pf_2bjet");
       plot_names.push_back("minDPhi_b_MET");
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
@@ -307,10 +340,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     }
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
     {
-      TString plot_name = plot_names[iplot];
-      TString name = plot_name+"_"+selection[isel];
-      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-      histos[name] = h_temp;
+      if(isel<5){
+	TString plot_name = plot_names[iplot];
+	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0]+"_"+nbtag[0];
+	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	histos[name] = h_temp;
+      }
+      else if(isel>=5 && isel<7) {
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  TString plot_name = plot_names[iplot];
+	  TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll]+"_"+nbtag[0];
+	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	  histos[name] = h_temp;
+	}
+      }
+      else if(isel>=7) {
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
+	    TString plot_name = plot_names[iplot];
+	    TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll]+"_"+nbtag[inb];
+	    HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	    histos[name] = h_temp;
+	  }
+	}
+      }
     }
   }
 
@@ -406,7 +459,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
+        TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -448,7 +501,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
+        TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -461,7 +514,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
+        TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -474,7 +527,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
+        TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -505,7 +558,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
+        TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -569,8 +622,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
-        histos[name]->Fill(variable[plot_name],weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[0];
+	  if ( mllbinsel[imll] ){
+	    histos[name]->Fill(variable[plot_name],weight*factor);
+	    
+	  }
+	}
       }
 
       // Look for a third isolated lepton and then veto the event if it is found
@@ -674,8 +732,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        TString name = plot_name+"_"+sel;
-        histos[name]->Fill(variable[plot_name],weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
+	  if ( mllbinsel[imll] )
+	    histos[name]->Fill(variable[plot_name],weight*factor);
+	}
       }
 
       vector<int> cand_bJets;
@@ -756,12 +817,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("min_mlb");
       variable.insert({"min_mlb", min_mlb});
 
-      plot_names.push_back("mll_pf_1bjet");
-      variable.insert({"mll_pf_1bjet", selectedPair_M});
-
-      plot_names.push_back("mll_pf_2bjet");
-      variable.insert({"mll_pf_2bjet", selectedPair_M});
-      
       plot_names.push_back("minDPhi_b_MET");
       variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
 
@@ -783,10 +838,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
-        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
-        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
-        TString name = plot_name+"_"+sel;
-        histos[name]->Fill(variable[plot_name],weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
+	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
+	    if ( mllbinsel[imll])
+	      if ( nbtagsel[inb] ) 
+		histos[name]->Fill(variable[plot_name],weight*factor);
+	  }
+	}
       }
 
 
@@ -800,10 +859,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
-        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
-        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
-        TString name = plot_name+"_"+sel;
-        histos[name]->Fill(variable[plot_name],weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
+	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
+	    if ( mllbinsel[imll] && nbtagsel[inb] ) 
+	      histos[name]->Fill(variable[plot_name],weight*factor);
+	  }
+	}
       }
 
       if ( min_mlb < 175.0 ) continue;
@@ -815,10 +877,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
-        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
-        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
-        TString name = plot_name+"_"+sel;
-        histos[name]->Fill(variable[plot_name],weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
+	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
+	    if ( mllbinsel[imll] && nbtagsel[inb] ) 
+	      histos[name]->Fill(variable[plot_name],weight*factor);
+	  }
+	}
       }
       h_cutflow->GetXaxis()->SetRangeUser(0,icutflow);
       h_cutflow->GetXaxis()->SetLabelSize(0.025);
