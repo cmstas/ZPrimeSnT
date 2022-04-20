@@ -97,6 +97,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
 
   H1(cutflow,20,0,20,"");
+  H1(nbjets, 5,0,5,"Number of b-jets (after selection)");
 
   // Define histo info maps
   map<TString, int> nbins { };
@@ -649,6 +650,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
       float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
       float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
+
+      h_nbjets->Fill(cand_bJets.size(), weight*factor);
 
       //Construct mlb pairs from selected muon pair and candidate b jets
       float min_mlb = 1e9;
