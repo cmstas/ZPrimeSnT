@@ -416,7 +416,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       int nMu_iso = 0;
       for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ){
         bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
-        bool mu_id = ( nt.Muon_highPtId().at(mu) == 2 );
+        bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
         bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
         bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
 	      
@@ -574,15 +574,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       // Look for a third isolated lepton and then veto the event if it is found
-      // Muons
+      // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
       vector<int> extra_muons;
       for ( int i = 0; i < nt.nMuon(); i++ ){
         if ( nt.Muon_pt().at(i) > 10. && 
-            fabs(nt.Muon_eta().at(i)) < 2.4 &&
-            nt.Muon_looseId().at(i) > 0 && 
-            fabs(nt.Muon_dxy().at(i)) < 0.2 && fabs(nt.Muon_dz().at(i)) < 0.5 &&
-            nt.Muon_miniPFRelIso_all().at(i) < 0.2 &&
-            !( i == leadingMu_idx || i == subleadingMu_idx)){
+	     fabs(nt.Muon_eta().at(i)) < 2.4 &&
+	     nt.Muon_highPtId().at(i) >= 2 && 
+	     nt.Muon_tkRelIso().at(i) < 0.1 &&
+	     !( i == leadingMu_idx || i == subleadingMu_idx)){
           extra_muons.push_back(i);
         }
       }
@@ -591,9 +590,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       vector<int> extra_electrons;
       for ( int i = 0; i < nt.nElectron(); i++ ){
         if ( nt.Electron_pt().at(i) > 10. &&
-            fabs(nt.Electron_eta().at(i)) < 2.4 &&
-            nt.Electron_cutBased().at(i) > 0 && 
-            nt.Electron_miniPFRelIso_all().at(i) < 0.1){
+	     fabs(nt.Electron_eta().at(i)) < 2.5 &&
+	     nt.Electron_cutBased().at(i) > 0 && 
+	     nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
+	     fabs(nt.Electron_dxy().at(i)) < 0.2 &&
+	     fabs(nt.Electron_dz().at(i)) < 0.5 ) {
           extra_electrons.push_back(i);
         }
       }
@@ -601,11 +602,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // IsoTracks
       vector<int> extra_isotracks_lep;
       for ( int i = 0; i < nt.nIsoTrack(); i++ ){
-        if ( nt.IsoTrack_isPFcand().at(i) && 
-            nt.IsoTrack_pt().at(i) > 5. && (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
-            fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-            fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-            nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
+        if ( nt.IsoTrack_isPFcand().at(i) &&
+	     (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
+	     nt.IsoTrack_pt().at(i) > 5. && 
+	     fabs(nt.IsoTrack_eta().at(i)) < 2.5 &&
+	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2){
           float mindr=1e9;
           for ( auto i_cand_muons_pf : cand_muons_pf ){
             if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
@@ -616,17 +618,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
               mindr = dr;
             }
           }
-          if ( mindr > 0.02 )
+	  // Avoid overlap with muon isolation cone: otherwise, muons and isotracks are anyways likely to fail isolation requirement
+          if ( mindr > 0.3 )
             extra_isotracks_lep.push_back(i);
         }
       }
       vector<int> extra_isotracks_chh;
       for ( int i = 0; i < nt.nIsoTrack(); i++ ){
-        if ( nt.IsoTrack_isPFcand().at(i) && 
-            nt.IsoTrack_pt().at(i) > 10. && abs(nt.IsoTrack_pdgId().at(i))==211 &&
-            fabs(nt.IsoTrack_eta().at(i)) < 2.4 &&
-            fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-            nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
+        if ( nt.IsoTrack_isPFcand().at(i) &&
+	     abs(nt.IsoTrack_pdgId().at(i))==211 &&
+	     nt.IsoTrack_pt().at(i) > 10. &&
+	     fabs(nt.IsoTrack_eta().at(i)) < 2.5 &&
+	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1){
           float mindr=1e9;
           for ( auto i_cand_muons_pf : cand_muons_pf ){
             if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
@@ -637,7 +641,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
               mindr = dr;
             }
           }
-          if ( mindr > 0.02 )
+	  // Avoid overlap with muon isolation cone: otherwise, muons and isotracks are anyways likely to fail isolation requirement
+          if ( mindr > 0.3 )
             extra_isotracks_chh.push_back(i);
         }
       }
@@ -684,7 +689,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
         // Reject jets if they are within dR = 0.4 of the candidate leptons
         if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
-        if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) // 0.0490 for loose, 0.7100 for tight
+        if ( nt.Jet_pt().at(jet) > 20 && 
+	     fabs(nt.Jet_eta().at(jet))<2.5 && 
+	     nt.Jet_jetId().at(jet) > 0 && 
+	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
         {
           cand_bJets.push_back(jet);  // Medium DeepJet WP
         }
