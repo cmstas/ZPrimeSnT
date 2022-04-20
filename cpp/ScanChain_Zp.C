@@ -131,6 +131,15 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   H1(nExtra_lepIsoTracks_sel5,6,0,6,"Number of (additional) lepton (e/#mu) PF candidates");
   H1(nExtra_chhIsoTracks_sel5,6,0,6,"Number of (additional) charged hadron PF candidates");
   H1(dr_trigobj_sel3,50,0,0.5,"min #Delta R (#mu, trigger object)");
+  H1(n_bjets_pF_sel6,6,0,6,"Number of partonFlavor bjets");
+  H1(n_bjets_hF_sel6,6,0,6,"Number of hadronFlavor bjets");
+  H1(n_bjets_both_sel6,6,0,6,"Number of hadronFlavor+partonFlavor bjets");
+  H1(n_non_bjets_sel6,6,0,6,"Number of non-bjets");
+  H1(pt_bjets_pF_sel6,50,0,1000,"p_{T} of partonFlavor bjets [GeV]");
+  H1(pt_bjets_hF_sel6,50,0,1000,"p_{T} of hadronFlavor bjets [GeV]");
+  H1(pt_bjets_both_sel6,50,0,1000,"p_{T} of hadron+partonFlavor bjets [GeV]");
+  H1(pt_leading_bjet_pFhF_sel6,50,0,1000,"p_{T} of leading hF+pF bjet [GeV]");
+  H1(pt_second_bjet_pFhF_sel6,50,0,1000,"p_{T} of subleading hF+pF bjet [GeV]");
 
   int nEventsTotal = 0;
   int nEvents_more_leps = 0;
@@ -397,23 +406,74 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       icutflow++;
 
       vector<int> cand_bJets;
+      //vector<int> gen_bjets;
+      vector<int> bjets_hF;
+      vector<int> bjets_pF;
+      vector<int> bjets_pF_and_hF;
+      vector<int> non_bjets;
+      //vector<int> gen_non_bjets;
       unsigned int nbtagDeepFlavB = 0;
       //bool mu_jet_sep = true;
+      
+      //std::cout << "Number of reco jets = " << nt.nJet() << endl;
+      //std::cout << "Number of gen jets = " << nt.nGenJet() << endl;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
+
+        // Determine number of real b jets using partonFlavor, hadronFlavor, and both
+        bool partonFlavor = ( abs(nt.Jet_partonFlavour().at(jet)) == 5 );
+        bool hadronFlavor = ( abs(nt.Jet_hadronFlavour().at(jet)) == 5 );
+        
+        if ( partonFlavor ) bjets_pF.push_back(jet);
+        if ( hadronFlavor ) bjets_hF.push_back(jet);
+        if ( hadronFlavor && partonFlavor ) bjets_pF_and_hF.push_back(jet);
+        if ( !hadronFlavor && !partonFlavor ) non_bjets.push_back(jet);
+
 	float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
 	float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - nt.Jet_eta().at(jet);
 	float d_phi_1 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(leadingMu_idx) - nt.Jet_phi().at(jet));
 	float d_phi_2 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(subleadingMu_idx) - nt.Jet_phi().at(jet));
 	float dr_jmu1 = TMath::Sqrt( d_eta_1*d_eta_1+d_phi_1*d_phi_1 );
 	float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
+        //std::cout << "Jet index = " << jet << ", Corresponding genJetIndex = " << nt.Jet_genJetIdx().at(jet) << endl;
 	// Reject jets if they are within dR = 0.4 of the candidate leptons
 	if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
-	if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) // 0.0490 for loose, 0.7100 for tight
+	if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 && abs(nt.Jet_eta().at(jet)) < 2.5 ) // 0.0490 for loose, 0.7100 for tight
 	  {
 	    cand_bJets.push_back(jet);  // Medium DeepJet WP
 	    //h_btagDeepFlavB_sel6->Fill(nt.Jet_btagDeepFlavB().at(jet),weight*factor);
 	  }
       }
+
+      // Fill histograms for gen-matched btagged jets
+      h_n_bjets_pF_sel6->Fill(bjets_pF.size(),weight*factor);
+      h_n_bjets_hF_sel6->Fill(bjets_hF.size(),weight*factor);
+      h_n_bjets_both_sel6->Fill(bjets_pF_and_hF.size(),weight*factor);
+      h_n_non_bjets_sel6->Fill(non_bjets.size(),weight*factor);
+
+      // Fill pT histograms for bjets
+      if ( bjets_pF.size() > 0 ){
+	   for ( int i = 0; i < bjets_pF.size(); i++ ){
+		h_pt_bjets_pF_sel6->Fill(nt.Jet_pt().at(bjets_pF[i]),weight*factor);
+	   }
+      }
+      
+      if ( bjets_hF.size() > 0 ){
+           for ( int k = 0; k < bjets_hF.size(); k++ ){
+		h_pt_bjets_hF_sel6->Fill(nt.Jet_pt().at(bjets_hF[k]),weight*factor);
+	   }
+      }
+
+      if ( bjets_pF_and_hF.size() > 0 ){
+           h_pt_leading_bjet_pFhF_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[0]),weight*factor);
+           if ( bjets_pF_and_hF.size() > 1 ) h_pt_second_bjet_pFhF_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[1]),weight*factor);
+           
+           for ( int j = 0; j < bjets_pF_and_hF.size(); j++ ){
+                h_pt_bjets_both_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[j]),weight*factor);
+           }
+ 
+      }
+      
+
       h_nbtagDeepFlavB_sel6->Fill(cand_bJets.size(),weight*factor);
       h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
       if ( cand_bJets.size() < 1 ) continue;
@@ -421,6 +481,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
       icutflow++;
       h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
+
+
       if ( selectedPair_M < 150 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"m(ll)>150 GeV");
