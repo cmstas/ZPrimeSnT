@@ -105,6 +105,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   map<TString, TString> title { };
 
   // Define histos
+  nbins.insert({"pfmet_pt", 120});
+  low.insert({"pfmet_pt", 0});
+  high.insert({"pfmet_pt", 600});
+  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
+
+  nbins.insert({"pfmet_phi", 65});
+  low.insert({"pfmet_phi", -3.25});
+  high.insert({"pfmet_phi", 3.25});
+  title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
+
+  nbins.insert({"puppimet_pt", 120});
+  low.insert({"puppimet_pt", 0});
+  high.insert({"puppimet_pt", 600});
+  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
+
+  nbins.insert({"puppimet_phi", 65});
+  low.insert({"puppimet_phi", -3.25});
+  high.insert({"puppimet_phi", 3.25});
+  title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
+
   nbins.insert({"mll_pf", 240});
   low.insert({"mll_pf", 100});
   high.insert({"mll_pf", 2500});
@@ -140,6 +160,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"mu2_eta", 3});
   title.insert({"mu2_eta", "#eta (subleading #mu)"});
 
+  nbins.insert({"dPhi_ll", 32});
+  low.insert({"dPhi_ll", 0});
+  high.insert({"dPhi_ll", 3.2});
+  title.insert({"dPhi_ll", "min #Delta#phi(ll)"});
+
   nbins.insert({"mu1_trkRelIso", 50});
   low.insert({"mu1_trkRelIso", 0});
   high.insert({"mu1_trkRelIso", 0.5});
@@ -154,6 +179,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   low.insert({"nCand_Muons", 2});
   high.insert({"nCand_Muons", 6});
   title.insert({"nCand_Muons", "Number of #mu candidates"});
+
+  nbins.insert({"nExtra_muons", 6});
+  low.insert({"nExtra_muons", 0});
+  high.insert({"nExtra_muons", 6});
+  title.insert({"nExtra_muons", "Number of additional #mu's"});
+
+  nbins.insert({"nExtra_electrons", 6});
+  low.insert({"nExtra_electrons", 0});
+  high.insert({"nExtra_electrons", 6});
+  title.insert({"nExtra_electrons", "Number of electrons"});
+
+  nbins.insert({"nExtra_lepIsoTracks", 6});
+  low.insert({"nExtra_lepIsoTracks", 0});
+  high.insert({"nExtra_lepIsoTracks", 6});
+  title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
+
+  nbins.insert({"nExtra_chhIsoTracks", 6});
+  low.insert({"nExtra_chhIsoTracks", 0});
+  high.insert({"nExtra_chhIsoTracks", 6});
+  title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
 
   nbins.insert({"nbtagDeepFlavB", 5});
   low.insert({"nbtagDeepFlavB", 0});
@@ -185,45 +230,25 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"min_mlb", 2000});
   title.insert({"min_mlb", "min m_{lb} [GeV]"});
 
-  nbins.insert({"pfmet_pt", 120});
-  low.insert({"pfmet_pt", 0});
-  high.insert({"pfmet_pt", 600});
-  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
+  nbins.insert({"minDPhi_b_MET", 32});
+  low.insert({"minDPhi_b_MET", 0});
+  high.insert({"minDPhi_b_MET", 3.2});
+  title.insert({"minDPhi_b_MET", "min #Delta#phi(b,MET)"});
 
-  nbins.insert({"pfmet_phi", 65});
-  low.insert({"pfmet_phi", -3.25});
-  high.insert({"pfmet_phi", 3.25});
-  title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
+  nbins.insert({"minDPhi_lb_MET", 32});
+  low.insert({"minDPhi_lb_MET", 0});
+  high.insert({"minDPhi_lb_MET", 3.2});
+  title.insert({"minDPhi_lb_MET", "min #Delta#phi(lb,MET)"});
 
-  nbins.insert({"puppimet_pt", 120});
-  low.insert({"puppimet_pt", 0});
-  high.insert({"puppimet_pt", 600});
-  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
+  nbins.insert({"minDPhi_llb_MET", 32});
+  low.insert({"minDPhi_llb_MET", 0});
+  high.insert({"minDPhi_llb_MET", 3.2});
+  title.insert({"minDPhi_llb_MET", "min #Delta#phi(llb,MET)"});
 
-  nbins.insert({"puppimet_phi", 65});
-  low.insert({"puppimet_phi", -3.25});
-  high.insert({"puppimet_phi", 3.25});
-  title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
-
-  nbins.insert({"nExtra_muons", 6});
-  low.insert({"nExtra_muons", 0});
-  high.insert({"nExtra_muons", 6});
-  title.insert({"nExtra_muons", "Number of additional #mu's"});
-
-  nbins.insert({"nExtra_electrons", 6});
-  low.insert({"nExtra_electrons", 0});
-  high.insert({"nExtra_electrons", 6});
-  title.insert({"nExtra_electrons", "Number of electrons"});
-
-  nbins.insert({"nExtra_lepIsoTracks", 6});
-  low.insert({"nExtra_lepIsoTracks", 0});
-  high.insert({"nExtra_lepIsoTracks", 6});
-  title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
-
-  nbins.insert({"nExtra_chhIsoTracks", 6});
-  low.insert({"nExtra_chhIsoTracks", 0});
-  high.insert({"nExtra_chhIsoTracks", 6});
-  title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
+  nbins.insert({"dPhi_ll_MET", 32});
+  low.insert({"dPhi_ll_MET", 0});
+  high.insert({"dPhi_ll_MET", 3.2});
+  title.insert({"dPhi_ll_MET", "min #Delta#phi(ll,MET)"});
 
   // Define selection
   vector<TString> selection = { };
@@ -253,6 +278,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu2_pt");
       plot_names.push_back("mu1_eta");
       plot_names.push_back("mu2_eta");
+      plot_names.push_back("dPhi_ll");
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu2_trkRelIso");
       plot_names.push_back("nCand_Muons");
@@ -272,8 +298,15 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
+<<<<<<< HEAD
       plot_names.push_back("mll_pf_1bjet");
       plot_names.push_back("mll_pf_2bjet");
+=======
+      plot_names.push_back("minDPhi_b_MET");
+      plot_names.push_back("minDPhi_lb_MET");
+      plot_names.push_back("minDPhi_llb_MET");
+      plot_names.push_back("dPhi_ll_MET");
+>>>>>>> f2287ea74587badd3f84f04c1264f160c457fff7
     }
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
     {
@@ -519,6 +552,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu2_eta");
       variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
 
+      plot_names.push_back("dPhi_ll");
+      variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
+
       plot_names.push_back("mu1_trkRelIso");
       variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
 
@@ -662,19 +698,38 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
       float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
 
-      //Construct mlb pairs from selected muon pair and candidate b jets
+      // Construct mlb pairs from selected muon pair and candidate b jets
+      auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
+      auto subleadingMu_p4 = nt.Muon_p4().at(subleadingMu_idx);
+      auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
+      float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9;
       float min_mlb = 1e9;
       for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
         if ( bjet > 2 ) continue;
-        float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+        auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
+        float m_mu1_b = (leadingMu_p4+bjet_p4).M();
         if ( m_mu1_b < min_mlb ){
           min_mlb = m_mu1_b;
         }
-        float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+        float m_mu2_b = (subleadingMu_p4+bjet_p4).M();
         if ( m_mu2_b < min_mlb ){
           min_mlb = m_mu2_b;
         }
+
+        float dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
+        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
+        dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
+        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
+
+        float dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
+        dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
+
+        float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
       }
+      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi()));
              
 
       // Add histos: sel7
@@ -701,6 +756,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       plot_names.push_back("mll_pf_2bjet");
       variable.insert({"mll_pf_2bjet", selectedPair_M});
+      
+      plot_names.push_back("minDPhi_b_MET");
+      variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
+
+      plot_names.push_back("minDPhi_lb_MET");
+      variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
+
+      plot_names.push_back("minDPhi_llb_MET");
+      variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
+
+      plot_names.push_back("dPhi_ll_MET");
+      variable.insert({"dPhi_ll_MET", dPhi_ll_MET});
 
       // Fill histos: sel7
       h_cutflow->Fill(icutflow,weight*factor);
