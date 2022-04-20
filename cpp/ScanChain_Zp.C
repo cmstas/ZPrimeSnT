@@ -175,6 +175,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"min_mlb", 2000});
   title.insert({"min_mlb", "min m_{lb} [GeV]"});
 
+  nbins.insert({"minDPhi_b_MET", 32});
+  low.insert({"minDPhi_b_MET", 0});
+  high.insert({"minDPhi_b_MET", 3.2});
+  title.insert({"minDPhi_b_MET", "min #Delta#phi(b,MET)"});
+
+  nbins.insert({"minDPhi_lb_MET", 32});
+  low.insert({"minDPhi_lb_MET", 0});
+  high.insert({"minDPhi_lb_MET", 3.2});
+  title.insert({"minDPhi_lb_MET", "min #Delta#phi(lb,MET)"});
+
+  nbins.insert({"minDPhi_llb_MET", 32});
+  low.insert({"minDPhi_llb_MET", 0});
+  high.insert({"minDPhi_llb_MET", 3.2});
+  title.insert({"minDPhi_llb_MET", "min #Delta#phi(llb,MET)"});
+
+  nbins.insert({"dPhi_ll_MET", 32});
+  low.insert({"dPhi_ll_MET", 0});
+  high.insert({"dPhi_ll_MET", 3.2});
+  title.insert({"dPhi_ll_MET", "min #Delta#phi(ll,MET)"});
+
   nbins.insert({"pfmet_pt", 120});
   low.insert({"pfmet_pt", 0});
   high.insert({"pfmet_pt", 600});
@@ -262,6 +282,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
+      plot_names.push_back("minDPhi_b_MET");
+      plot_names.push_back("minDPhi_lb_MET");
+      plot_names.push_back("minDPhi_llb_MET");
+      plot_names.push_back("dPhi_ll_MET");
     }
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
     {
@@ -650,19 +674,38 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
       float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
 
-      //Construct mlb pairs from selected muon pair and candidate b jets
+      // Construct mlb pairs from selected muon pair and candidate b jets
+      auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
+      auto subleadingMu_p4 = nt.Muon_p4().at(subleadingMu_idx);
+      auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
+      float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9;
       float min_mlb = 1e9;
       for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
         if ( bjet > 2 ) continue;
-        float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+        auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
+        float m_mu1_b = (leadingMu_p4+bjet_p4).M();
         if ( m_mu1_b < min_mlb ){
           min_mlb = m_mu1_b;
         }
-        float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+        float m_mu2_b = (subleadingMu_p4+bjet_p4).M();
         if ( m_mu2_b < min_mlb ){
           min_mlb = m_mu2_b;
         }
+
+        float dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
+        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
+        dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
+        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
+
+        float dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
+        dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
+
+        float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
       }
+      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi()));
              
 
       // Add histos: sel7
@@ -683,6 +726,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       plot_names.push_back("min_mlb");
       variable.insert({"min_mlb", min_mlb});
+
+      plot_names.push_back("minDPhi_b_MET");
+      variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
+
+      plot_names.push_back("minDPhi_lb_MET");
+      variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
+
+      plot_names.push_back("minDPhi_llb_MET");
+      variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
+
+      plot_names.push_back("dPhi_ll_MET");
+      variable.insert({"dPhi_ll_MET", dPhi_ll_MET});
 
       // Fill histos: sel7
       h_cutflow->Fill(icutflow,weight*factor);
