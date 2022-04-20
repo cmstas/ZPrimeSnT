@@ -841,8 +841,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
-	    if ( mllbinsel[imll])
-	      if ( nbtagsel[inb] ) 
+	    if ( mllbinsel[imll] && nbtagsel[inb] )
 		histos[name]->Fill(variable[plot_name],weight*factor);
 	  }
 	}
