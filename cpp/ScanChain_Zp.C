@@ -105,6 +105,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   map<TString, TString> title { };
 
   // Define histos
+  nbins.insert({"pfmet_pt", 120});
+  low.insert({"pfmet_pt", 0});
+  high.insert({"pfmet_pt", 600});
+  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
+
+  nbins.insert({"pfmet_phi", 65});
+  low.insert({"pfmet_phi", -3.25});
+  high.insert({"pfmet_phi", 3.25});
+  title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
+
+  nbins.insert({"puppimet_pt", 120});
+  low.insert({"puppimet_pt", 0});
+  high.insert({"puppimet_pt", 600});
+  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
+
+  nbins.insert({"puppimet_phi", 65});
+  low.insert({"puppimet_phi", -3.25});
+  high.insert({"puppimet_phi", 3.25});
+  title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
+
   nbins.insert({"mll_pf", 240});
   low.insert({"mll_pf", 100});
   high.insert({"mll_pf", 2500});
@@ -130,6 +150,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"mu2_eta", 3});
   title.insert({"mu2_eta", "#eta (subleading #mu)"});
 
+  nbins.insert({"dPhi_ll", 32});
+  low.insert({"dPhi_ll", 0});
+  high.insert({"dPhi_ll", 3.2});
+  title.insert({"dPhi_ll", "min #Delta#phi(ll)"});
+
   nbins.insert({"mu1_trkRelIso", 50});
   low.insert({"mu1_trkRelIso", 0});
   high.insert({"mu1_trkRelIso", 0.5});
@@ -144,6 +169,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   low.insert({"nCand_Muons", 2});
   high.insert({"nCand_Muons", 6});
   title.insert({"nCand_Muons", "Number of #mu candidates"});
+
+  nbins.insert({"nExtra_muons", 6});
+  low.insert({"nExtra_muons", 0});
+  high.insert({"nExtra_muons", 6});
+  title.insert({"nExtra_muons", "Number of additional #mu's"});
+
+  nbins.insert({"nExtra_electrons", 6});
+  low.insert({"nExtra_electrons", 0});
+  high.insert({"nExtra_electrons", 6});
+  title.insert({"nExtra_electrons", "Number of electrons"});
+
+  nbins.insert({"nExtra_lepIsoTracks", 6});
+  low.insert({"nExtra_lepIsoTracks", 0});
+  high.insert({"nExtra_lepIsoTracks", 6});
+  title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
+
+  nbins.insert({"nExtra_chhIsoTracks", 6});
+  low.insert({"nExtra_chhIsoTracks", 0});
+  high.insert({"nExtra_chhIsoTracks", 6});
+  title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
 
   nbins.insert({"nbtagDeepFlavB", 5});
   low.insert({"nbtagDeepFlavB", 0});
@@ -195,46 +240,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"dPhi_ll_MET", 3.2});
   title.insert({"dPhi_ll_MET", "min #Delta#phi(ll,MET)"});
 
-  nbins.insert({"pfmet_pt", 120});
-  low.insert({"pfmet_pt", 0});
-  high.insert({"pfmet_pt", 600});
-  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
-
-  nbins.insert({"pfmet_phi", 65});
-  low.insert({"pfmet_phi", -3.25});
-  high.insert({"pfmet_phi", 3.25});
-  title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
-
-  nbins.insert({"puppimet_pt", 120});
-  low.insert({"puppimet_pt", 0});
-  high.insert({"puppimet_pt", 600});
-  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
-
-  nbins.insert({"puppimet_phi", 65});
-  low.insert({"puppimet_phi", -3.25});
-  high.insert({"puppimet_phi", 3.25});
-  title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
-
-  nbins.insert({"nExtra_muons", 6});
-  low.insert({"nExtra_muons", 0});
-  high.insert({"nExtra_muons", 6});
-  title.insert({"nExtra_muons", "Number of additional #mu's"});
-
-  nbins.insert({"nExtra_electrons", 6});
-  low.insert({"nExtra_electrons", 0});
-  high.insert({"nExtra_electrons", 6});
-  title.insert({"nExtra_electrons", "Number of electrons"});
-
-  nbins.insert({"nExtra_lepIsoTracks", 6});
-  low.insert({"nExtra_lepIsoTracks", 0});
-  high.insert({"nExtra_lepIsoTracks", 6});
-  title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
-
-  nbins.insert({"nExtra_chhIsoTracks", 6});
-  low.insert({"nExtra_chhIsoTracks", 0});
-  high.insert({"nExtra_chhIsoTracks", 6});
-  title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
-
   // Define selection
   vector<TString> selection = { };
   selection.push_back("sel0"); // Skimming + HLT + Good PV
@@ -263,6 +268,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu2_pt");
       plot_names.push_back("mu1_eta");
       plot_names.push_back("mu2_eta");
+      plot_names.push_back("dPhi_ll");
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu2_trkRelIso");
       plot_names.push_back("nCand_Muons");
@@ -530,6 +536,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       plot_names.push_back("mu2_eta");
       variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
+
+      plot_names.push_back("dPhi_ll");
+      variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
 
       plot_names.push_back("mu1_trkRelIso");
       variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
