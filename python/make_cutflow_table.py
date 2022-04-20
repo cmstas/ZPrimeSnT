@@ -40,7 +40,7 @@ def make_table(samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "
         elif samples[i]=='tW':
             subsamples = ['tW','tbarW']
         elif samples[i]=='ttX':
-            subsamples = ['TTW','TTZ','TTHToNonbb']
+            subsamples = ['TTW','TTZ','TTHToNonbb','TTHTobb']
         else: 
             subsamples.append(samples[i])
 

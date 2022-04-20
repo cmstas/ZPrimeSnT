@@ -23,8 +23,8 @@
   TChain *ch9aux = new TChain("Runs");
   TChain *ch10 = new TChain("Events");
   TChain *ch10aux = new TChain("Runs");
-  //TChain *ch11 = new TChain("Events");
-  //TChain *ch11aux = new TChain("Runs");
+  TChain *ch11 = new TChain("Events");
+  TChain *ch11aux = new TChain("Runs");
   TChain *ch_Y3_M100 = new TChain("Events");
   TChain *chaux_Y3_M100 = new TChain("Runs");
   TChain *ch_Y3_M200 = new TChain("Events");
@@ -143,9 +143,9 @@
   ch10aux->Add(baseDir+"/ttHJetToNonbb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100_allBranches/merged/merged.root");
   ScanChain(ch10,getSumOfGenEventSumw(ch10aux),"2018","TTHToNonbb");
     
-  //ch11->Add("");
-  //ch11aux->Add("");
-  //ScanChain(ch11,getSumOfGenEventSumw(ch11aux),"2018","TTHTobb");
+  ch11->Add(baseDir+"/ttHJetTobb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100_allBranches/merged/merged.root");
+  ch11aux->Add(baseDir+"/ttHJetTobb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8_RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1_NANOAODSIM_skim2mu_1muPt50_1Mll100_allBranches/merged/merged.root");
+  ScanChain(ch11,getSumOfGenEventSumw(ch11aux),"2018","TTHTobb");
  
   // Signal Y3, 2018
   ch_Y3_M100->Add(baseSignalDir+"/ZPrimeToMuMuSB_M100_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts_RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private_NANOAODSIM_skim2mu_1muPt50_1Mll100_allBranches/merged/merged.root");

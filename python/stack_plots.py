@@ -17,7 +17,7 @@ parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/
 parser.add_argument("--data", action="store_true", default=False, help="Include data")
 parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All.")
 parser.add_argument("--signalScale", default=10.0, help="Number to scale the signal by.")
-parser.add_argument("--shape", default=False, help="Shape normalization.")
+parser.add_argument("--shape", action="store_true", default=False, help="Shape normalization.")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -46,6 +46,7 @@ sels.append("m_{#mu#mu}>150 GeV")
 sels.append("min m_{#mu b}>175 GeV")
 
 nsel=dict()
+nsel["sel0"]=2
 nsel["sel1"]=3
 nsel["sel2"]=4
 nsel["sel3"]=5
@@ -122,6 +123,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWfile =    ROOT.TFile(args.inDir+"output_TTW_2018.root")
     TTZfile =    ROOT.TFile(args.inDir+"output_TTZ_2018.root")
     TTHNobbfile= ROOT.TFile(args.inDir+"output_TTHToNonbb_2018.root")
+    TTHbbfile=   ROOT.TFile(args.inDir+"output_TTHTobb_2018.root")
     if compare_data: 
         datafile = ROOT.TFile(args.inDir+"data_2018_2_selected.root")
 
@@ -148,6 +150,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTWplot = get_plot(TTWfile,plotname,fillColor=ROOT.kOrange+6)
     TTZplot = get_plot(TTZfile,plotname,fillColor=ROOT.kOrange+6)
     TTHNobbplot = get_plot(TTHNobbfile,plotname,fillColor=ROOT.kOrange+6)
+    TTHbbplot = get_plot(TTHNobbfile,plotname,fillColor=ROOT.kOrange+6)
    
     #add histos
     ZToMuMuplot = ZToMuMuplots[0].Clone("ZToMuMu")
@@ -158,6 +161,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, compare_da
     TTXplot = TTWplot.Clone("TTX")
     TTXplot.Add(TTZplot)
     TTXplot.Add(TTHNobbplot)
+    TTXplot.Add(TTHbbplot)
 
     totalSM = ZToMuMuplot.Clone("totalSM")
     totalSM.Add(ST_tWplot)
