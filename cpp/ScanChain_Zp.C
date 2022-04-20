@@ -130,6 +130,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"mll_pf", 2500});
   title.insert({"mll_pf", "m_{ll} [GeV]"});
 
+  nbins.insert({"mll_pf_1bjet", 240});
+  low.insert({"mll_pf_1bjet", 100});
+  high.insert({"mll_pf_1bjet", 2500});
+  title.insert({"mll_pf_1bjet", "m_{ll} [GeV] 1 bjet"});
+
+  nbins.insert({"mll_pf_2bjet", 240});
+  low.insert({"mll_pf_2bjet", 100});
+  high.insert({"mll_pf_2bjet", 2500});
+  title.insert({"mll_pf_2bjet", "m_{ll} [GeV] 2+ bjet"});
+
   nbins.insert({"mu1_pt", 200});
   low.insert({"mu1_pt", 0});
   high.insert({"mu1_pt", 1000});
@@ -288,6 +298,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
+      plot_names.push_back("mll_pf_1bjet");
+      plot_names.push_back("mll_pf_2bjet");
       plot_names.push_back("minDPhi_b_MET");
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
@@ -736,6 +748,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("min_mlb");
       variable.insert({"min_mlb", min_mlb});
 
+      plot_names.push_back("mll_pf_1bjet");
+      variable.insert({"mll_pf_1bjet", selectedPair_M});
+
+      plot_names.push_back("mll_pf_2bjet");
+      variable.insert({"mll_pf_2bjet", selectedPair_M});
+      
       plot_names.push_back("minDPhi_b_MET");
       variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
 
@@ -757,10 +775,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
+        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
         TString name = plot_name+"_"+sel;
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
-        
+
+
       if ( selectedPair_M < 150 ) continue;
       // Fill histos: sel8
       h_cutflow->Fill(icutflow,weight*factor);
@@ -771,6 +792,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
+        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
         TString name = plot_name+"_"+sel;
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
@@ -784,6 +807,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       {
         TString plot_name = plot_names[iplot];
         if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        if ( plot_name.Contains("mll_pf_1bjet") && cand_bJets.size() >=2 ) continue;
+        if ( plot_name.Contains("mll_pf_2bjet") && cand_bJets.size() <2 ) continue;
         TString name = plot_name+"_"+sel;
         histos[name]->Fill(variable[plot_name],weight*factor);
       }
