@@ -298,15 +298,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
-<<<<<<< HEAD
       plot_names.push_back("mll_pf_1bjet");
       plot_names.push_back("mll_pf_2bjet");
-=======
       plot_names.push_back("minDPhi_b_MET");
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
       plot_names.push_back("dPhi_ll_MET");
->>>>>>> f2287ea74587badd3f84f04c1264f160c457fff7
     }
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
     {
