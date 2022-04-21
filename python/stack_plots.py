@@ -411,7 +411,7 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
     
     canvas.SaveAs(args.outDir + plotname + extension + ".png")
 
-    if("pt" in plotname):
+    if("pt" in plotname or "mll_pf" in plotname):
         canvas.Clear()
         canvas.cd()
         
@@ -472,24 +472,23 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
         latexCMS.DrawLatex(0.11,0.92+0.03,"CMS");
         latexCMSExtra.DrawLatex(0.22,0.92+0.03, cmsExtra);
         
-        if "cutflow" not in plotname:
-            whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
-            whichmll = plotname.split("_")[len(plotname.split("_"))-2]
-            whichsel = plotname.split("_")[len(plotname.split("_"))-3]
-            ts = 0
-            for s in range(0,nsel[whichsel]+1):
-                if '1p' not in whichnb and s==7:
-                    continue
-                if 'inclusive' not in whichmll and s==8:
-                    continue
+        whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
+        whichmll = plotname.split("_")[len(plotname.split("_"))-2]
+        whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+        ts = 0
+        for s in range(0,nsel[whichsel]+1):
+            if '1p' not in whichnb and s==7:
+                continue
+            if 'inclusive' not in whichmll and s==8:
+                continue
                 ts = ts+1
-                latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), sels[s])
-            if '1p' not in whichnb and nsel[whichsel]>=9:
-                ts = ts+1
-                latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), nbbin[whichnb])
-            if 'inclusive' not in whichmll and nsel[whichsel]>=7:
-                ts = ts+1
-                latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), mllbin[whichmll])
+            latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), sels[s])
+        if '1p' not in whichnb and nsel[whichsel]>=9:
+            ts = ts+1
+            latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), nbbin[whichnb])
+        if 'inclusive' not in whichmll and nsel[whichsel]>=7:
+            ts = ts+1
+            latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), mllbin[whichmll])
 
         #print and save
         extension = ""
@@ -504,8 +503,6 @@ def draw_plot(plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=F
             extension = extension+"_areaNormalized"
             
         canvas.SaveAs(args.outDir + plotname + extension + ".png")
-
-
 
 
 ROOT.gStyle.SetOptStat(0)
