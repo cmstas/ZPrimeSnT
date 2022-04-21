@@ -126,6 +126,6 @@ sigsampleLabels=["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y
 samples=bkgsamples+sigsamples
 sampleLabels=bkgsampleLabels+sigsampleLabels
 
-make_table(samples,sampleLabels)
+#make_table(samples,sampleLabels)
 make_table(bkgsamples,bkgsampleLabels,extension="_bkg")
 make_table(sigsamples,sigsampleLabels,extension="_sig")
