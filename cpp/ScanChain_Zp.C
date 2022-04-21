@@ -353,6 +353,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel9"); // minMlb > 175 GeV
 
   vector<TString> plot_names = { };
+  vector<TString> plot_names_2b = { };
   plot_names.push_back("pfmet_pt");
   plot_names.push_back("pfmet_phi");
   plot_names.push_back("puppimet_pt");
@@ -410,10 +411,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
       plot_names.push_back("dPhi_ll_MET");
+      //
+      plot_names_2b.push_back("bjet2_pt");
+      plot_names_2b.push_back("bjet2_eta");
+      plot_names_2b.push_back("min_mbb");
+      plot_names_2b.push_back("max_mbb");
     }
-    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
-    {
-      if(isel<5){
+    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ){
+      if(isel<5) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0]+"_"+nbtag[0];
 	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
@@ -431,6 +436,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString plot_name = plot_names[iplot];
+	    if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && nbtag[inb]=="nBTag1" )
+	      continue;
 	    TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll]+"_"+nbtag[inb];
 	    HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
 	    histos[name] = h_temp;
@@ -718,19 +725,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pair (OS, !Z)");
       icutflow++;
-      sel = "sel5";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
-      {
-        TString plot_name = plot_names[iplot];
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
-	  TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[0];
-	  if ( mllbinsel[imll] ){
-	    histos[name]->Fill(variable[plot_name],weight*factor);
-	    
-	  }
-	}
-      }
-
       // Look for a third isolated lepton and then veto the event if it is found
       // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
       vector<int> extra_muons;
@@ -862,7 +856,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	extra_variable.insert({"chhIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_chh[0])});
       }
 
-      // Fill extra histos: sel5 (before third lepton/isotrack veto)
+      // Fill standard histos for sel5
+      sel = "sel5";
+      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
+      {
+        TString plot_name = plot_names[iplot];
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	  TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[0];
+	  if ( mllbinsel[imll] ){
+	    histos[name]->Fill(variable[plot_name],weight*factor);
+	    
+	  }
+	}
+      }
+      // Now fill extra histos for sel5 (before third lepton/isotrack veto)
       for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ )
       {
         TString plot_name = extra_plot_names[iplot];
