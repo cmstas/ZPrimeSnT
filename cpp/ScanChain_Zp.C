@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 
 #define SUM(vec) std::accumulate((vec).begin(), (vec).end(), 0);
-#define SUM_GT(vec,num) std::accumulate((vec).begin(), (vec).end(), 0, [](float x,float y){return ((y > (num)) ? x+y : x); });
+#define SUM_GT(vec,num) std::accumulate((vec).begin(), (vec).end(), 0, [](float x,float y) { return ((y > (num)) ? x+y : x); });
 #define COUNT_GT(vec,num) std::count_if((vec).begin(), (vec).end(), [](float x) { return x > (num); });
 #define COUNT_LT(vec,num) std::count_if((vec).begin(), (vec).end(), [](float x) { return x < (num); });
 
@@ -414,7 +414,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names_2b.push_back("min_mbb");
       plot_names_2b.push_back("max_mbb");
     }
-    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ){
+    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
       if(isel<5) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0]+"_"+nbtag[0];
@@ -422,7 +422,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	histos[name] = h_temp;
       }
       else if(isel>=5 && isel<7) {
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString plot_name = plot_names[iplot];
 	  TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll]+"_"+nbtag[0];
 	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
@@ -430,8 +430,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
       else if(isel>=7) {
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
-	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	    TString plot_name = plot_names[iplot];
 	    if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && nbtag[inb]=="nBTag1" )
 	      continue;
@@ -443,7 +443,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
     }
   }
-  
+
   int nEventsTotal = 0;
   int nEventsChain = ch->GetEntries();
   TFile *currentFile = 0;
@@ -724,7 +724,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     fabs(nt.Muon_eta().at(i)) < 2.4 &&
 	     nt.Muon_highPtId().at(i) >= 2 && 
 	     nt.Muon_tkRelIso().at(i) < 0.1 &&
-	     !( i == leadingMu_idx || i == subleadingMu_idx)){
+	     !( i == leadingMu_idx || i == subleadingMu_idx)) {
           extra_muons.push_back(i);
         }
       }
@@ -744,7 +744,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       // IsoTracks
       vector<int> extra_isotracks_lep;
-      for ( int i = 0; i < nt.nIsoTrack(); i++ ){
+      for ( int i = 0; i < nt.nIsoTrack(); i++ ) {
         if ( nt.IsoTrack_isPFcand().at(i) &&
 	     (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
 	     nt.IsoTrack_pt().at(i) > 5. && 
@@ -777,12 +777,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
 	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1) {
           float mindr=1e9;
-          for ( auto i_cand_muons_pf : cand_muons_pf ){
+          for ( auto i_cand_muons_pf : cand_muons_pf ) {
             if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
             float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
             float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
             float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-            if ( dr < mindr ){
+            if ( dr < mindr ) {
               mindr = dr;
             }
           }
@@ -853,7 +853,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel5";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[0];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(variable[plot_name],weight*factor);
@@ -862,7 +862,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Now fill extra histos for sel5 (before third lepton/isotrack veto)
       for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ ) {
 	TString plot_name = extra_plot_names[iplot];
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(extra_variable[plot_name],weight*factor);
@@ -883,7 +883,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel6";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(variable[plot_name],weight*factor);
@@ -1066,7 +1066,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->GetXaxis()->SetLabelSize(0.025);
 
     } // Event loop
-    
+
     delete file;
 
   } // File loop
