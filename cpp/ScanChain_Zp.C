@@ -749,6 +749,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     (abs(nt.IsoTrack_pdgId().at(i))==11 || (abs(nt.IsoTrack_pdgId().at(i))==13)) &&
 	     nt.IsoTrack_pt().at(i) > 5. && 
 	     fabs(nt.IsoTrack_eta().at(i)) < 2.5 &&
+	     fabs(nt.IsoTrack_dxy().at(i)) < 0.2 &&
 	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
 	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2) {
           float mindr=1e9;
@@ -772,6 +773,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     abs(nt.IsoTrack_pdgId().at(i))==211 &&
 	     nt.IsoTrack_pt().at(i) > 10. &&
 	     fabs(nt.IsoTrack_eta().at(i)) < 2.5 &&
+	     fabs(nt.IsoTrack_dxy().at(i)) < 0.2 &&
 	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
 	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1) {
           float mindr=1e9;
