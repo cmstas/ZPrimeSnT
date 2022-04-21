@@ -284,6 +284,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"min_mlb", 2000});
   title.insert({"min_mlb", "min m_{lb} [GeV]"});
 
+  nbins.insert({"min_mbb", 200});
+  low.insert({"min_mbb", 0});
+  high.insert({"min_mbb", 2000});
+  title.insert({"min_mbb", "min m_{bb} [GeV]"});
+
+  nbins.insert({"max_mbb", 200});
+  low.insert({"max_mbb", 0});
+  high.insert({"max_mbb", 2000});
+  title.insert({"max_mbb", "max m_{bb} [GeV]"});
+
   nbins.insert({"minDPhi_b_MET", 32});
   low.insert({"minDPhi_b_MET", 0});
   high.insert({"minDPhi_b_MET", 3.2});
@@ -348,6 +358,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   plot_names.push_back("puppimet_pt");
   plot_names.push_back("puppimet_phi");
   map<TString, TH1F*> histos;
+  int nExtraHistos = 0;
   for ( unsigned int isel=0; isel < selection.size(); isel++ )
   {
     if (isel==5)
@@ -361,27 +372,29 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu2_trkRelIso");
       plot_names.push_back("nCand_Muons");
-      // Add also extra plot before third lepton/isotrack veto
-      plot_names.push_back("nExtra_muons");
-      plot_names.push_back("nExtra_electrons");
-      plot_names.push_back("nExtra_lepIsoTracks");
-      plot_names.push_back("nExtra_chhIsoTracks");
-      plot_names.push_back("mu3_pt");
-      plot_names.push_back("mu3_eta");
-      plot_names.push_back("mu3_trkRelIso");
-      plot_names.push_back("ele_extra_pt");
-      plot_names.push_back("ele_extra_eta");
-      plot_names.push_back("ele_extra_miniPFRelIso");
-      plot_names.push_back("lepIsoTrack_extra_pt");
-      plot_names.push_back("lepIsoTrack_extra_eta");
-      plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg");
-      plot_names.push_back("chhIsoTrack_extra_pt");
-      plot_names.push_back("chhIsoTrack_extra_eta");
-      plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg");
+      // Add also extra plots before third lepton/isotrack veto
+      plot_names.push_back("nExtra_muons"); ++nExtraHistos;
+      plot_names.push_back("nExtra_electrons"); ++nExtraHistos;
+      plot_names.push_back("nExtra_lepIsoTracks"); ++nExtraHistos;
+      plot_names.push_back("nExtra_chhIsoTracks"); ++nExtraHistos;
+      plot_names.push_back("mu3_pt"); ++nExtraHistos;
+      plot_names.push_back("mu3_eta"); ++nExtraHistos;
+      plot_names.push_back("mu3_trkRelIso"); ++nExtraHistos;
+      plot_names.push_back("ele_extra_pt"); ++nExtraHistos;
+      plot_names.push_back("ele_extra_eta"); ++nExtraHistos;
+      plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
+      plot_names.push_back("lepIsoTrack_extra_pt"); ++nExtraHistos;
+      plot_names.push_back("lepIsoTrack_extra_eta"); ++nExtraHistos;
+      plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
+      plot_names.push_back("chhIsoTrack_extra_pt"); ++nExtraHistos;
+      plot_names.push_back("chhIsoTrack_extra_eta"); ++nExtraHistos;
+      plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
     }
     if (isel==6) // Third lepton/isotrack veto
     {
-      // Nothing to add
+      // Remove plots added for thid lepton/isotrack veto
+      for (int e=0; e<nExtraHistos; ++e)
+	plot_names.pop_back();
     }
     if (isel==7)
     {
@@ -391,6 +404,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet2_pt");
       plot_names.push_back("bjet2_eta");
       plot_names.push_back("min_mlb");
+      plot_names.push_back("min_mbb");
+      plot_names.push_back("max_mbb");
       plot_names.push_back("minDPhi_b_MET");
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
@@ -911,8 +926,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
       float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9;
       float min_mlb = 1e9;
+      float min_mbb = 1e9, max_mbb = -1e9;
       for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
-        if ( bjet > 2 ) continue;
+        //if ( bjet > 2 ) continue;
         auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
         float m_mu1_b = (leadingMu_p4+bjet_p4).M();
         if ( m_mu1_b < min_mlb ){
@@ -935,9 +951,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
         float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - nt.MET_phi()));
         if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
+
+	for ( int bbjet = bjet+1; bbjet < cand_bJets.size(); bbjet++){
+	  auto bbjet_p4 = nt.Jet_p4().at(cand_bJets[bbjet]);
+	  float mbb = (bjet_p4+bbjet_p4).M();
+	  if ( mbb < min_mbb ){
+	    min_mbb = mbb;
+	  }
+	  if ( mbb > max_mbb ){
+	    max_mbb = mbb;
+	  }
+	}
+
       }
       float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi()));
-             
 
       // Add histos: sel7
       plot_names.push_back("nbtagDeepFlavB");
@@ -949,11 +976,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet1_eta");
       variable.insert({"bjet1_eta", bjet1_eta});
 
-      plot_names.push_back("bjet2_pt");
-      variable.insert({"bjet2_pt", bjet2_pt});
+      if ( cand_bJets.size() > 1 ) {
 
-      plot_names.push_back("bjet2_eta");
-      variable.insert({"bjet2_eta", bjet2_eta});
+	plot_names.push_back("bjet2_pt");
+	variable.insert({"bjet2_pt", bjet2_pt});
+
+	plot_names.push_back("bjet2_eta");
+	variable.insert({"bjet2_eta", bjet2_eta});
+
+	plot_names.push_back("min_mbb");
+	variable.insert({"min_mbb", min_mbb});
+
+	plot_names.push_back("max_mbb");
+	variable.insert({"max_mbb", max_mbb});
+
+      }
 
       plot_names.push_back("min_mlb");
       variable.insert({"min_mlb", min_mlb});
@@ -987,7 +1024,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        //if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
@@ -1007,7 +1044,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        //if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
@@ -1025,7 +1062,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ )
       {
         TString plot_name = plot_names[iplot];
-        if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+        //if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ){
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ){
 	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
@@ -1044,6 +1081,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   } // File loop
   bar.finish();
+
+  // Avoid histograms with negative bin content (due to negative GEN weights)
+  map<TString, TH1F*>::iterator it;
+  for ( it = histos.begin(); it != histos.end(); it++ )
+  {
+    for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ )
+    {
+      if ( (it->second)->GetBinContent(b)<0.0){
+	(it->second)->SetBinContent(b,0.0);
+	(it->second)->SetBinError(b,0.0);
+      }
+    }
+  }
 
   fout->Write();
   fout->Close();
