@@ -359,10 +359,6 @@ toexclude = []
 for cutflow in listofcutflows:
     if cutflow in toexclude:
         continue
-    #make_cutflow_table(samples,sampleLabels)
-    #make_cutflow_table(cutflow,bkgsamples,bkgsampleLabels,extension="_bkg")
-    #make_cutflow_table(cutflow,sigsamples,sigsampleLabels,extension="_sig")
-    #
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=True,doSignalTable=False,doSoverB=False,doSignalOnlyTable=False)
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True)
