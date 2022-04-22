@@ -151,7 +151,7 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
                         continue
                     else:
                         cutlabels.append(thist.GetXaxis().GetBinLabel(b))
-                            
+
             for b in range(1, nCuts+1):
                 if ii==0:
                     if issignal[i]:
