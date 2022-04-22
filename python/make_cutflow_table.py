@@ -8,6 +8,75 @@ import ROOT
 ### pdfcrop --margins '0 0' <filename>.pdf
 ### mv <filename-crop>.pdf <filename>.pdf 
 
+def print_header(fout,allsamples=[],allsampleLabels=[],doSoverB=False):
+    fout.write('\\documentclass{article}\n')  
+    fout.write('\\usepackage{adjustbox}\n')
+    fout.write('\\usepackage{multirow}\n')
+    fout.write('\\thispagestyle{empty}\n')
+    fout.write('\\begin{document}\n')
+    #fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 100 GeV.}')
+    fout.write('\\begin{table*}[h]\n')
+    fout.write('\\footnotesize\n')
+    fout.write('\\begin{adjustbox}{width=\\textwidth}\n')
+    fout.write('\\begin{tabular}{|l')
+    if not doSoverB:
+        for i in range(len(allsamples)):
+            # Add one cell for absolute yield and one cell for efficiency
+            fout.write('|c|c')
+        fout.write('|}\n')
+        fout.write('\\hline\n')
+        fout.write('Selection ')
+        for i in range(len(allsamples)):
+            fout.write('& \\multicolumn{2}{|c|}{'+allsampleLabels[i].replace("_"," ")+'}')
+        fout.write('\\\\\n')
+        for i in range(len(allsamples)):
+            fout.write('& Yield & Eff. (\%)')
+    else:
+        for i in range(len(allsamples)):
+            # Add one cell for absolute yield and one cell for s/sqrt(b), except for total SM:
+            if "Total SM" not in allsamples[i]:
+                fout.write('|c|c')
+            else:
+                fout.write('|c')
+        fout.write('|}\n')
+        fout.write('\\hline\n')
+        fout.write('Selection ')
+        for i in range(len(allsamples)):
+            if "Total SM" not in allsamples[i]:
+                fout.write('& \\multicolumn{2}{|c|}{'+allsampleLabels[i].replace("_"," ")+'}')
+            else:
+                fout.write('& '+allsampleLabels[i])                
+        fout.write('\\\\\n')
+        for i in range(len(allsamples)):
+            if "Total SM" not in allsamples[i]:
+                fout.write('& Yield & S/$\\sqrt{\\mathrm{B}}$')
+            else:
+                fout.write('& Yield')
+    fout.write('\\\\\n')
+    fout.write('\\hline\n')
+    fout.write('\\hline\n')
+
+def print_footer(fout):
+    fout.write('\\end{tabular}\n')
+    fout.write('\\end{adjustbox}\n')
+    fout.write('\\end{table*}\n')
+    fout.write('\\end{document}\n')
+
+def reformat_label(tlabel):
+    tlabel = tlabel.replace("pT","$p_{\\mathrm{T}}$")
+    tlabel = tlabel.replace("dR","$\\Delta$R")
+    tlabel = tlabel.replace("&","and")
+    tlabel = tlabel.replace("|eta|","$|\\eta|$")
+    tlabel = tlabel.replace("m_{#mu#mu}","m(ll)")
+    tlabel = tlabel.replace("N_{b-tag}","N$_{\\mathrm{b-tag}}$")
+    tlabel = tlabel.replace("p_{T}","p$_{\\mathrm{T}}$")
+    tlabel = tlabel.replace("#geq","$\\geq$")
+    tlabel = tlabel.replace("=","$=$")
+    tlabel = tlabel.replace(">","$>$")
+    tlabel = tlabel.replace("<","$<$")
+    tlabel = tlabel.replace("$$","$ $")
+    return tlabel
+
 def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/", extension="", doBkgTable=True, doSignalTable=False, doSoverB=False, doSignalOnlyTable=False):
 
     if not os.path.exists(outdir):
@@ -185,47 +254,13 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
         allyields = allyields+sigyields
         alleffs = alleffs+sigeffs
 
-    fout = open(outdir+"/"+cutflow+"_"+year+tabletype+"_"+extension+".tex",'w')
+    fout = open(outdir+"/"+cutflow+"_"+year+tabletype+extension+".tex",'w')
 
     if not doSoverB:
-        fout.write('\\documentclass{article}\n')  
-        fout.write('\\usepackage{adjustbox}\n')
-        fout.write('\\usepackage{multirow}\n')
-        fout.write('\\thispagestyle{empty}\n')
-        fout.write('\\begin{document}\n')
-        #fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 100 GeV.}')
-        fout.write('\\begin{table*}[h]\n')
-        fout.write('\\footnotesize\n')
-        fout.write('\\begin{adjustbox}{width=\\textwidth}\n')
-        fout.write('\\begin{tabular}{|l')
-        for i in range(len(allsamples)):
-            # Add one cell for absolute yield and one cell for efficiency
-            fout.write('|c|c')
-        fout.write('|}\n')
-        fout.write('\\hline\n')
-        fout.write('Selection ')
-        for i in range(len(allsamples)):
-            fout.write('& \\multicolumn{2}{|c|}{'+allsampleLabels[i].replace("_"," ")+'}')
-        fout.write('\\\\\n')
-        for i in range(len(allsamples)):
-            fout.write('& Yield & Eff. (\%)')
-        fout.write('\\\\\n')
-        fout.write('\\hline\n')
-        fout.write('\\hline\n')
+        print_header(fout,allsamples,allsampleLabels,doSoverB)
         for c in range(nCuts):
             tlabel = cutlabels[c]
-            tlabel = tlabel.replace("pT","$p_{\\mathrm{T}}$")
-            tlabel = tlabel.replace("dR","$\\Delta$R")
-            tlabel = tlabel.replace("&","and")
-            tlabel = tlabel.replace("|eta|","$|\\eta|$")
-            tlabel = tlabel.replace("m_{#mu#mu}","m(ll)")
-            tlabel = tlabel.replace("N_{b-tag}","N$_{\\mathrm{b-tag}}$")
-            tlabel = tlabel.replace("p_{T}","p$_{\\mathrm{T}}$")
-            tlabel = tlabel.replace("#geq","$\\geq$")
-            tlabel = tlabel.replace("=","$=$")
-            tlabel = tlabel.replace(">","$>$")
-            tlabel = tlabel.replace("<","$<$")
-            tlabel = tlabel.replace("$$","$ $")
+            tlabel = reformat_label(tlabel)
             if "skim" in tlabel and len(skimLabel)==1:
                 tlabel = skimLabel[0]
             if "skim" in tlabel and len(skimLabel)>1:
@@ -247,59 +282,13 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
                     fout.write('& %.2E & %.2E'%(allyields[i][c],100.0*alleffs[i][c]))
                 fout.write('\\\\\n')
                 fout.write('\\hline\n')
-        fout.write('\\end{tabular}\n')
-        fout.write('\\end{adjustbox}\n')
-        fout.write('\\end{table*}\n')
-        fout.write('\\end{document}\n')
+        print_footer(fout)
 
     else:
-        fout.write('\\documentclass{article}\n')  
-        fout.write('\\usepackage{adjustbox}\n')
-        fout.write('\\usepackage{multirow}\n')
-        fout.write('\\thispagestyle{empty}\n')
-        fout.write('\\begin{document}\n')
-        #fout.write('{\\tiny{Skim: $\\geq 2\\mu$, $\\geq 1\\mu$ with p$_\\mathrm{T}>50$ GeV and $\\geq$ 1 pair with m(ll) $>$ 100 GeV.}')
-        fout.write('\\begin{table*}[h]\n')
-        fout.write('\\footnotesize\n')
-        fout.write('\\begin{adjustbox}{width=\\textwidth}\n')
-        fout.write('\\begin{tabular}{|l')
-        for i in range(len(allsamples)):
-            # Add one cell for absolute yield and one cell for s/sqrt(b), except for total SM:
-            if "Total SM" not in allsamples[i]:
-                fout.write('|c|c')
-            else:
-                fout.write('|c')
-        fout.write('|}\n')
-        fout.write('\\hline\n')
-        fout.write('Selection ')
-        for i in range(len(allsamples)):
-            if "Total SM" not in allsamples[i]:
-                fout.write('& \\multicolumn{2}{|c|}{'+allsampleLabels[i].replace("_"," ")+'}')
-            else:
-                fout.write('& '+allsampleLabels[i])                
-        fout.write('\\\\\n')
-        for i in range(len(allsamples)):
-            if "Total SM" not in allsamples[i]:
-                fout.write('& Yield & S/$\\sqrt{\\mathrm{B}}$')
-            else:
-                fout.write('& Yield')
-        fout.write('\\\\\n')
-        fout.write('\\hline\n')
-        fout.write('\\hline\n')
+        print_header(fout,allsamples,allsampleLabels,doSoverB)
         for c in range(nCuts):
             tlabel = cutlabels[c]
-            tlabel = tlabel.replace("pT","$p_{\\mathrm{T}}$")
-            tlabel = tlabel.replace("dR","$\\Delta$R")
-            tlabel = tlabel.replace("&","and")
-            tlabel = tlabel.replace("|eta|","$|\\eta|$")
-            tlabel = tlabel.replace("m_{#mu#mu}","m(ll)")
-            tlabel = tlabel.replace("N_{b-tag}","N$_{\\mathrm{b-tag}}$")
-            tlabel = tlabel.replace("p_{T}","p$_{\\mathrm{T}}$")
-            tlabel = tlabel.replace("#geq","$\\geq$")
-            tlabel = tlabel.replace("=","$=$")
-            tlabel = tlabel.replace(">","$>$")
-            tlabel = tlabel.replace("<","$<$")
-            tlabel = tlabel.replace("$$","$ $")
+            tlabel = reformat_label(tlabel)
             if "skim" in tlabel and len(skimLabel)==1:
                 tlabel = skimLabel[0]
                 print tlabel
@@ -335,10 +324,7 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
                         fout.write('& %.2E'%(allyields[i][c]))                        
                 fout.write('\\\\\n')
                 fout.write('\\hline\n')
-        fout.write('\\end{tabular}\n')
-        fout.write('\\end{adjustbox}\n')
-        fout.write('\\end{table*}\n')
-        fout.write('\\end{document}\n')
+        print_footer(fout)
 
     fout.close()
 
