@@ -30,7 +30,7 @@
 
 // #define DEBUG
 
-bool removeSpikes = false;
+bool removeSpikes = true;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -131,15 +131,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   H1(nExtra_lepIsoTracks_sel5,6,0,6,"Number of (additional) lepton (e/#mu) PF candidates");
   H1(nExtra_chhIsoTracks_sel5,6,0,6,"Number of (additional) charged hadron PF candidates");
   H1(dr_trigobj_sel3,50,0,0.5,"min #Delta R (#mu, trigger object)");
-  H1(n_bjets_pF_sel6,6,0,6,"Number of partonFlavor bjets");
-  H1(n_bjets_hF_sel6,6,0,6,"Number of hadronFlavor bjets");
-  H1(n_bjets_both_sel6,6,0,6,"Number of hadronFlavor+partonFlavor bjets");
-  H1(n_non_bjets_sel6,6,0,6,"Number of non-bjets");
-  H1(pt_bjets_pF_sel6,50,0,1000,"p_{T} of partonFlavor bjets [GeV]");
-  H1(pt_bjets_hF_sel6,50,0,1000,"p_{T} of hadronFlavor bjets [GeV]");
-  H1(pt_bjets_both_sel6,50,0,1000,"p_{T} of hadron+partonFlavor bjets [GeV]");
-  H1(pt_leading_bjet_pFhF_sel6,50,0,1000,"p_{T} of leading hF+pF bjet [GeV]");
-  H1(pt_second_bjet_pFhF_sel6,50,0,1000,"p_{T} of subleading hF+pF bjet [GeV]");
+  H1(n_matched_med_bjets_sel7,6,0,6,"Number of matched medium bjets");
+  H1(pt_leading_matched_med_bjet_sel7,90,30,300,"p_{T} of leading matched medium bjet");
+  H1(eta_leading_matched_med_bjet_sel7,65,-2.5,2.5,"#eta of leading matched medium bjet");
+  H1(phi_leading_matched_med_bjet_sel7,65,-3.25,3.25,"#phi of leading matched medium bjet");
+  H1(pt_subleading_matched_med_bjet_sel7,90,30,300,"p_{T} of subleading matched medium bjet");
+  H1(eta_subleading_matched_med_bjet_sel7,65,-2.5,2.5,"#eta of subleading matched medium bjet");
+  H1(phi_subleading_matched_med_bjet_sel7,65,-3.25,3.25,"#phi of subleading matched medium bjet");
+  H1(n_matched_tight_bjets_sel7,6,0,6,"Number of matched tight bjets");
+  H1(pt_leading_matched_tight_bjet_sel7,90,30,300,"p_{T} of leading matched tight bjet");
+  H1(eta_leading_matched_tight_bjet_sel7,65,-2.5,2.5,"#eta of leading matched tight bjet");
+  H1(phi_leading_matched_tight_bjet_sel7,65,-3.25,3.25,"#phi of leading matched tight bjet");
+  H1(pt_subleading_matched_tight_bjet_sel7,90,30,300,"p_{T} of subleading matched tight bjet");
+  H1(eta_subleading_matched_tight_bjet_sel7,65,-2.5,2.5,"#eta of subleading matched tight bjet");
+  H1(phi_subleading_matched_tight_bjet_sel7,65,-3.25,3.25,"#phi of subleading matched tight bjet");
+ 
+  
 
   int nEventsTotal = 0;
   int nEvents_more_leps = 0;
@@ -405,28 +412,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
       icutflow++;
 
-      vector<int> cand_bJets;
-      //vector<int> gen_bjets;
-      vector<int> bjets_hF;
-      vector<int> bjets_pF;
-      vector<int> bjets_pF_and_hF;
-      vector<int> non_bjets;
-      //vector<int> gen_non_bjets;
+      vector<int> cand_med_bJets;
+      vector<int> cand_tight_bJets;
+      vector<int> cand_loose_bJets;
       unsigned int nbtagDeepFlavB = 0;
       //bool mu_jet_sep = true;
       
-      //std::cout << "Number of reco jets = " << nt.nJet() << endl;
-      //std::cout << "Number of gen jets = " << nt.nGenJet() << endl;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
-
-        // Determine number of real b jets using partonFlavor, hadronFlavor, and both
-        bool partonFlavor = ( abs(nt.Jet_partonFlavour().at(jet)) == 5 );
-        bool hadronFlavor = ( abs(nt.Jet_hadronFlavour().at(jet)) == 5 );
-        
-        if ( partonFlavor ) bjets_pF.push_back(jet);
-        if ( hadronFlavor ) bjets_hF.push_back(jet);
-        if ( hadronFlavor && partonFlavor ) bjets_pF_and_hF.push_back(jet);
-        if ( !hadronFlavor && !partonFlavor ) non_bjets.push_back(jet);
 
 	float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
 	float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - nt.Jet_eta().at(jet);
@@ -439,48 +431,70 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
 	if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.2783 && abs(nt.Jet_eta().at(jet)) < 2.5 ) // 0.0490 for loose, 0.7100 for tight
 	  {
-	    cand_bJets.push_back(jet);  // Medium DeepJet WP
-	    //h_btagDeepFlavB_sel6->Fill(nt.Jet_btagDeepFlavB().at(jet),weight*factor);
+	    cand_med_bJets.push_back(jet);
 	  }
-      }
+        if ( nt.Jet_pt().at(jet) > 30 && nt.Jet_jetId().at(jet) > 0 && nt.Jet_btagDeepFlavB().at(jet) > 0.7100 && abs(nt.Jet_eta().at(jet)) < 2.5 ) 
+	  {
+	    cand_tight_bJets.push_back(jet);
+	  }
 
-      // Fill histograms for gen-matched btagged jets
-      h_n_bjets_pF_sel6->Fill(bjets_pF.size(),weight*factor);
-      h_n_bjets_hF_sel6->Fill(bjets_hF.size(),weight*factor);
-      h_n_bjets_both_sel6->Fill(bjets_pF_and_hF.size(),weight*factor);
-      h_n_non_bjets_sel6->Fill(non_bjets.size(),weight*factor);
-
-      // Fill pT histograms for bjets
-      if ( bjets_pF.size() > 0 ){
-	   for ( int i = 0; i < bjets_pF.size(); i++ ){
-		h_pt_bjets_pF_sel6->Fill(nt.Jet_pt().at(bjets_pF[i]),weight*factor);
-	   }
-      }
-      
-      if ( bjets_hF.size() > 0 ){
-           for ( int k = 0; k < bjets_hF.size(); k++ ){
-		h_pt_bjets_hF_sel6->Fill(nt.Jet_pt().at(bjets_hF[k]),weight*factor);
-	   }
-      }
-
-      if ( bjets_pF_and_hF.size() > 0 ){
-           h_pt_leading_bjet_pFhF_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[0]),weight*factor);
-           if ( bjets_pF_and_hF.size() > 1 ) h_pt_second_bjet_pFhF_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[1]),weight*factor);
-           
-           for ( int j = 0; j < bjets_pF_and_hF.size(); j++ ){
-                h_pt_bjets_both_sel6->Fill(nt.Jet_pt().at(bjets_pF_and_hF[j]),weight*factor);
-           }
- 
       }
       
 
-      h_nbtagDeepFlavB_sel6->Fill(cand_bJets.size(),weight*factor);
+      h_nbtagDeepFlavB_sel6->Fill(cand_med_bJets.size(),weight*factor);
       h_mll_pf_sel6->Fill(selectedPair_M,weight*factor);
-      if ( cand_bJets.size() < 1 ) continue;
+      if ( cand_med_bJets.size() < 1 ) continue;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
       icutflow++;
       h_mll_pf_sel7->Fill(selectedPair_M,weight*factor);
+
+      
+      // Perform b jet matching after selecting medium b jets
+      vector<int> matched_med_bjets;
+      for ( int i = 0; i < cand_med_bJets.size(); i++ ){
+            bool med_pF = ( abs(nt.Jet_partonFlavour().at(cand_med_bJets[i])) == 5 );
+            bool med_hF = ( abs(nt.Jet_partonFlavour().at(cand_med_bJets[i])) == 5 );
+            if ( med_hF && med_pF ){
+                 matched_med_bjets.push_back(i);
+	    }
+      }
+      
+      h_n_matched_med_bjets_sel7->Fill(matched_med_bjets.size(),weight*factor);
+      if ( matched_med_bjets.size() > 0 ){
+	   h_pt_leading_matched_med_bjet_sel7->Fill(nt.Jet_pt().at(matched_med_bjets[0]),weight*factor);
+ 	   h_eta_leading_matched_med_bjet_sel7->Fill(nt.Jet_eta().at(matched_med_bjets[0]),weight*factor);
+           h_phi_leading_matched_med_bjet_sel7->Fill(nt.Jet_phi().at(matched_med_bjets[0]),weight*factor);
+	   if ( matched_med_bjets.size() > 1 ){
+                h_pt_subleading_matched_med_bjet_sel7->Fill(nt.Jet_pt().at(matched_med_bjets[1]),weight*factor);
+                h_eta_subleading_matched_med_bjet_sel7->Fill(nt.Jet_eta().at(matched_med_bjets[1]),weight*factor);
+                h_phi_subleading_matched_med_bjet_sel7->Fill(nt.Jet_phi().at(matched_med_bjets[1]),weight*factor);
+	   }
+      }
+
+      // Do the same for tight b jets
+      vector<int> matched_tight_bjets;
+      for ( int i = 0; i < cand_tight_bJets.size(); i++ ){
+            bool tight_pF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
+            bool tight_hF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
+            if ( tight_hF && tight_pF ){
+                 matched_tight_bjets.push_back(i);
+            }
+      }
+
+      h_n_matched_tight_bjets_sel7->Fill(matched_tight_bjets.size(),weight*factor);
+      if ( matched_tight_bjets.size() > 0 ){
+           h_pt_leading_matched_tight_bjet_sel7->Fill(nt.Jet_pt().at(matched_tight_bjets[0]),weight*factor);
+           h_eta_leading_matched_tight_bjet_sel7->Fill(nt.Jet_eta().at(matched_tight_bjets[0]),weight*factor);
+           h_phi_leading_matched_tight_bjet_sel7->Fill(nt.Jet_phi().at(matched_tight_bjets[0]),weight*factor);
+           if ( matched_tight_bjets.size() > 1 ){
+                h_pt_subleading_matched_tight_bjet_sel7->Fill(nt.Jet_pt().at(matched_tight_bjets[1]),weight*factor);
+                h_eta_subleading_matched_tight_bjet_sel7->Fill(nt.Jet_eta().at(matched_tight_bjets[1]),weight*factor);
+                h_phi_subleading_matched_tight_bjet_sel7->Fill(nt.Jet_phi().at(matched_tight_bjets[1]),weight*factor);
+           }
+      }
+ 
+
 
 
       if ( selectedPair_M < 150 ) continue;
@@ -489,23 +503,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       icutflow++;
 
       //Fill pT distributions for the bjets....
-      if ( cand_bJets.size() == 1 ){
-	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
+      if ( cand_med_bJets.size() == 1 ){
+	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_med_bJets[0]),weight*factor);
       }
 
-      if ( cand_bJets.size() > 1 ){
-	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[0]),weight*factor);
-	h_bjet2_pt_sel8->Fill(nt.Jet_pt().at(cand_bJets[1]),weight*factor);
+      if ( cand_med_bJets.size() > 1 ){
+	h_bjet1_pt_sel8->Fill(nt.Jet_pt().at(cand_med_bJets[0]),weight*factor);
+	h_bjet2_pt_sel8->Fill(nt.Jet_pt().at(cand_med_bJets[1]),weight*factor);
       }
 
 
       //Construct mlb pairs from selected muon pair and candidate b jets
       //float m_lb = 0;
       vector<float> m_lb_vec;
-      for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ){
+      for ( int bjet = 0; bjet < cand_med_bJets.size(); bjet++ ){
 	if ( bjet > 2 ) continue;
-	float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
-	float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_bJets[bjet])).M();
+	float m_mu1_b = (nt.Muon_p4().at(leadingMu_idx)+nt.Jet_p4().at(cand_med_bJets[bjet])).M();
+	float m_mu2_b = (nt.Muon_p4().at(subleadingMu_idx)+nt.Jet_p4().at(cand_med_bJets[bjet])).M();
 	m_lb_vec.push_back(m_mu1_b);
 	m_lb_vec.push_back(m_mu2_b);		  
       }
