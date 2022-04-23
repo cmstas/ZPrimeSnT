@@ -5,6 +5,7 @@ import argparse
 import os
 from datetime import date    
 
+
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
@@ -197,9 +198,9 @@ def customize_plot(plot, fillColor, lineColor, lineWidth):
     return plot
 
 
-def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True, plotData=False, doRatio=True, lumi=59.83, year="2018"):
+def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRatio=True, lumi=59.83, year="2018"):
 
-    #labels
+    # Labels
     latex = ROOT.TLatex()
     latex.SetTextFont(42)
     latex.SetTextAlign(31)
@@ -233,7 +234,7 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
     cmsExtra="Simulation"
 
 
-    #get histograms
+    # Get histograms
     plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
 
@@ -265,7 +266,8 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
     if "cutflow" in plotname:
         totalScale = totalSM.GetBinContent(1)
 
-    #build stack
+
+    # Build stack
     stack = ROOT.THStack("stack","")
     for i,sample in enumerate(reversed(plotDict.keys())):
         # Bkg
@@ -273,10 +275,11 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
             if args.shape and totalScale>0.0:
                 curPlots[sample].Scale(1.0/totalScale)
             stack.Add(curPlots[sample])
-    stack.SetTitle(title)
 
+
+    # Signal Scaling
     signalXSecScale = { }
-    if log==False and args.signalScale and not args.shape:
+    if (not logY) and args.signalScale and not args.shape:
         for sample in curPlots.keys():
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
                 mass = sample.split("_")[1].lstrip("M")
@@ -297,7 +300,8 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
                             signalXSecScale[str(mass)]=signalXSecScale[str(mass)]/10.0
                 curPlots[sample].Scale(signalXSecScale[str(mass)])
 
-    #plot legends, ranges
+
+    # Plot legends, ranges
     legend = ROOT.TLegend(0.65,0.65,0.89,0.89)
     if args.extendedLegend:
         legend = ROOT.TLegend(0.55,0.55,0.89,0.89)
@@ -313,7 +317,7 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
-                if log==False and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
+                if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
                     if "cutflow" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].Integral(0,-1),float(signalXSecScale[str(mass)])),"L")
                     else:
@@ -336,14 +340,13 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
                     legend.AddEntry(curPlots[sample], sampleLegend[sample]+" %1.2E"%(curPlots[sample].Integral(0,-1)),"F")
                 else:
                     legend.AddEntry(curPlots[sample], sampleLegend[sample]+" %1.2E"%(curPlots[sample].GetBinContent(1)),"F")
-    
     else:
         for sample in curPlots.keys():
             # Signal
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
-                if log==False and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
+                if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
                     if "cutflow" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%1.1E"%(float(signalXSecScale[str(mass)])),"L")
                     else:
@@ -361,31 +364,41 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
             else:
                 legend.AddEntry(curPlots[sample], sampleLegend[sample],"F")
     
-    #define canvas
+
+    # Define canvas
     canvas = ROOT.TCanvas("canvas","canvas",800,800)
 
     if doRatio==True:
         MCplot = copy.deepcopy(totalSM)
         ratioplot=copy.deepcopy(curPlots["data"])
         ratioplot.Divide(MCplot)
-        ratioplot.SetTitle(";"+title+";Data / MC")
+        ratioplot.SetTitle(";Data / MC")
         pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1)
         pad2 = ROOT.TPad("pad2","pad2",0,0,1,0.3)
         pad1.Draw()
         pad2.Draw()
         pad2.cd()
+        if logX:
+            if ratioplot.GetXaxis().GetBinLowEdge(1)<=0.0:
+                ratioplot.GetXaxis().SetRangeUser(1.0, ratioplot.GetXaxis().GetBinUpEdge(ratioplot.GetNbinsX()))
+            pad2.SetLogx()
         ratioplot.Draw("E0")
-
-    if doRatio==False:
+    else:
         pad1 = ROOT.TPad("pad1","pad1",0,0,1,1)
         pad1.Draw()
 
     pad1.cd()
-    if log==True:
+    if logY:
         pad1.SetLogy()
+    if logX:
+        pad1.SetLogx()
 
-    #plot data,stack, signal, data  
+
+    #plot data, stack, signal, data  
     stack.Draw("HIST")
+    if logX:
+        if stack.GetXaxis().GetBinLowEdge(1)<=0.0:
+            stack.GetXaxis().SetRangeUser(1.0, stack.GetXaxis().GetBinUpEdge(stack.GetXaxis().GetNbins()))
     if "cutflow" in plotname:
         stack.GetXaxis().SetLabelSize(0.023)
     else:
@@ -406,25 +419,26 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
 
     if histMax < stack.GetMaximum(): 
         histMax = stack.GetMaximum()
-    if log==True:
+    if logY:
         histMax = histMax*1e3
         stack.SetMinimum(1e-3)
-        
     stack.SetMaximum(1.1*histMax)
 
     canvas.Update()
-
     legend.Draw()
-
     ROOT.gPad.RedrawAxis()
 
+
+    # Draw CMS headers
     expoffset=0.03
-    if log==True or 1.1*histMax<1000.0:
+    if logY or 1.1*histMax<1000.0:
         expoffset=0
     latex.DrawLatex(0.9, 0.92+expoffset, yearenergy);
     latexCMS.DrawLatex(0.11,0.92+expoffset,"CMS");
     latexCMSExtra.DrawLatex(0.22,0.92+expoffset, cmsExtra);
 
+
+    # Draw selection
     if "cutflow" not in plotname:
         whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
         whichmll = plotname.split("_")[len(plotname.split("_"))-2]
@@ -444,121 +458,32 @@ def draw_plot(sampleDict, plotname="fatjet_msoftdrop", title="myTitle", log=True
             ts = ts+1
             latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), mllbin[whichmll])
 
-    #print and save
+
+    # Print and save
     extension = ""
     if plotData:
         extension = extension+"_mc+data"
     else:
         extension = extension+"_s+b"
-    if log:
+    if logX:
+        extension = extension+"_logX"
+    if logY:
         extension = extension+"_logY"
     if args.shape:
         extension = extension+"_areaNormalized"
     
     canvas.SaveAs(args.outDir + plotname + extension + ".png")
 
-    #if("pt" in plotname or "mll_pf" in plotname):
-    #    canvas.Clear()
-    #    canvas.cd()
-    #    
-    #    if doRatio==True:
-    #        if ratioplot.GetXaxis().GetBinLowEdge(1)<=0.0:
-    #            ratioplot.GetXaxis().SetRangeUser(1.0, ratioplot.GetXaxis().GetBinUpEdge(ratioplot.GetNbinsX()))
-    #        ratioplot.SetTitle(";"+title+";Data / MC")
-    #        pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1)
-    #        pad2 = ROOT.TPad("pad2","pad2",0,0,1,0.3)
-    #        pad1.Draw()
-    #        pad2.Draw()
-    #        pad2.cd()
-    #        pad2.SetLogx()
-    #        ratioplot.Draw("E0")
-
-    #    if doRatio==False:
-    #        pad1 = ROOT.TPad("pad1","pad1",0,0,1,1)
-    #        pad1.Draw()
-    #        
-    #    pad1.cd()
-    #    if log==True:
-    #        pad1.SetLogy()
-    #    pad1.SetLogx()
-    #    
-    #    #plot data,stack, signal, data  
-    #    stack.Draw("HIST")
-    #    if stack.GetXaxis().GetBinLowEdge(1)<=0.0:
-    #        stack.GetXaxis().SetRangeUser(1.0, stack.GetXaxis().GetBinUpEdge(stack.GetXaxis().GetNbins()))
-    #    stack.GetXaxis().SetTitle(totalSM.GetXaxis().GetTitle())
-    #    stack.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
-    #    if args.shape:
-    #        stack.GetYaxis().SetTitle("A.U.")
-    #    stack.GetYaxis().SetLabelSize(0.03)
-    #    stack.GetYaxis().SetMaxDigits(3)
-    #    histMax = 0.0
-    #    for sample in curPlots.keys():
-    #        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
-    #            if histMax < curPlots[sample].GetMaximum(): 
-    #                histMax = curPlots[sample].GetMaximum()
-    #            curPlots[sample].Draw("HIST same")
-    #    if plotData: 
-    #        dataplot.Draw("E0 same")
-
-    #    if histMax < stack.GetMaximum(): 
-    #        histMax = stack.GetMaximum()
-    #    if log==True:
-    #        histMax = histMax*1e3
-    #        stack.SetMinimum(1e-3)
-    #    
-    #    stack.SetMaximum(1.1*histMax)
-
-    #    canvas.Update()
-
-    #    legend.Draw()
-    #    
-    #    ROOT.gPad.RedrawAxis()
-    #    
-    #    latex.DrawLatex(0.9, 0.92+0.03, yearenergy);
-    #    latexCMS.DrawLatex(0.11,0.92+0.03,"CMS");
-    #    latexCMSExtra.DrawLatex(0.22,0.92+0.03, cmsExtra);
-    #    
-    #    whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
-    #    whichmll = plotname.split("_")[len(plotname.split("_"))-2]
-    #    whichsel = plotname.split("_")[len(plotname.split("_"))-3]
-    #    ts = 0
-    #    for s in range(0,nsel[whichsel]+1):
-    #        if '1p' not in whichnb and s==7:
-    #            continue
-    #        if 'inclusive' not in whichmll and s==8:
-    #            continue
-    #            ts = ts+1
-    #        latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), sels[s])
-    #    if '1p' not in whichnb and nsel[whichsel]>=9:
-    #        ts = ts+1
-    #        latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), nbbin[whichnb])
-    #    if 'inclusive' not in whichmll and nsel[whichsel]>=7:
-    #        ts = ts+1
-    #        latexSel.DrawLatex(0.3+3*legoffset, 0.89-ts*(0.028-legoffset), mllbin[whichmll])
-
-    #    #print and save
-    #    extension = ""
-    #    if plotData:
-    #        extension = extension+"_mc+data"
-    #    else:
-    #        extension = extension+"_s+b"
-    #    extension = extension+"_logX"
-    #    if log:
-    #        extension = extension+"_logY"
-    #    if args.shape:
-    #        extension = extension+"_areaNormalized"
-    #        
-    #    canvas.SaveAs(args.outDir + plotname + extension + ".png")
 
 
 # Main
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-#open file
+# Open files
 sampleDict=get_files(samples)
 
+# List of plots
 listofplots = []
 listfile = sampleDict[sampleDict.keys()[0]]
 listkeys = listfile.GetListOfKeys()
@@ -570,6 +495,8 @@ toexclude = []
 for plot in listofplots:
     if plot in toexclude:
         continue
-    title=""
-    draw_plot(sampleDict, plot, title, False, args.data, False, 59.83, "2018")
-    draw_plot(sampleDict, plot, title, True , args.data, False, 59.83, "2018")
+    draw_plot(sampleDict, plot, False, False, args.data, False, 59.83, "2018")
+    draw_plot(sampleDict, plot, True , False, args.data, False, 59.83, "2018")
+    if("pt" in plot or "mll_pf" in plot):
+      draw_plot(sampleDict, plot, False, True, args.data, False, 59.83, "2018")
+      draw_plot(sampleDict, plot, True , True, args.data, False, 59.83, "2018")
