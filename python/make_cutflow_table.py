@@ -8,6 +8,8 @@ import ROOT
 ### pdfcrop --margins '0 0' <filename>.pdf
 ### mv <filename-crop>.pdf <filename>.pdf 
 
+usePunziDefinition = True
+
 def print_header(fout,allsamples=[],allsampleLabels=[],doSoverB=False):
     fout.write('\\documentclass{article}\n')  
     fout.write('\\usepackage{adjustbox}\n')
@@ -49,7 +51,10 @@ def print_header(fout,allsamples=[],allsampleLabels=[],doSoverB=False):
         fout.write('\\\\\n')
         for i in range(len(allsamples)):
             if "Total SM" not in allsamples[i]:
-                fout.write('& Yield & S/$\\sqrt{\\mathrm{B}}$')
+                if not usePunziDefinition:
+                    fout.write('& Yield & S/$\\sqrt{\\mathrm{B}}$')
+                else:
+                    fout.write('& Yield & S/($3/2+\\sqrt{\\mathrm{B}}$)')
             else:
                 fout.write('& Yield')
     fout.write('\\\\\n')
@@ -190,7 +195,11 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
         for b in range(1, nCuts+1):
             tsoverb = 1e9
             if totsm[b-1]>0.0:
-                tsoverb = sigyields[i][b-1]/ROOT.TMath.Sqrt(totsm[b-1])
+                if not usePunziDefinition:
+                    tsoverb = sigyields[i][b-1]/ROOT.TMath.Sqrt(totsm[b-1])
+                else:
+                    # https://arxiv.org/pdf/physics/0308063.pdf
+                    tsoverb = sigyields[i][b-1]/(1.5+ROOT.TMath.Sqrt(totsm[b-1]))
             soverb[i].append(tsoverb)
 
     canDoSignalTable = False
