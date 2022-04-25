@@ -101,6 +101,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
 
   H1(cutflow,20,0,20,"");
+  H1(btag_bins,7,0,7,"");
+  H1(reg1_matched_btag,5,0,5,"");
+  H1(reg2_matched_btag,5,0,5,"");
+  H1(reg3_matched_btag,5,0,5,"");
+  H1(reg4_matched_btag,5,0,5,"");
+  H1(reg5_matched_btag,5,0,5,"");
 
   // Define histo info maps
   map<TString, int> nbins { };
@@ -279,6 +285,78 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"bjet2_eta", 3});
   title.insert({"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"});
 
+  /*
+  nbins.insert({"n_matched_med_bjets",5});
+  low.insert({"n_matched_med_bjets", 0});
+  high.insert({"n_matched_med_bjets", 5});
+  title.insert({"n_matched_med_bjets", "Number of matched medium candidate bjets"});
+
+  nbins.insert({"n_matched_tight_bjets",5});
+  low.insert({"n_matched_tight_bjets", 0});
+  high.insert({"n_matched_tight_bjets", 5});
+  title.insert({"n_matched_tight_bjets", "Number of matched tight candidate bjets"});
+ 
+  nbins.insert({"pt_leading_matched_med_bjet",200});
+  low.insert({"pt_leading_matched_med_bjet", 0});
+  high.insert({"pt_leading_matched_med_bjet", 1000});
+  title.insert({"pt_leading_matched_med_bjet", "p_{T} (leading matched medium candidate bjet) [GeV]"});
+
+  nbins.insert({"pt_leading_matched_tight_bjet",200});
+  low.insert({"pt_leading_matched_tight_bjet", 0});
+  high.insert({"pt_leading_matched_tight_bjet", 1000});
+  title.insert({"pt_leading_matched_tight_bjet", "p_{T} (leading matched tight candidate bjet) [GeV]"});
+
+  nbins.insert({"pt_subleading_matched_med_bjet",200});
+  low.insert({"pt_subleading_matched_med_bjet", 0});
+  high.insert({"pt_subleading_matched_med_bjet", 1000});
+  title.insert({"pt_subleading_matched_med_bjet", "p_{T} (subleading matched medium candidate bjet) [GeV]"});
+
+  nbins.insert({"pt_subleading_matched_tight_bjet",200});
+  low.insert({"pt_subleading_matched_tight_bjet", 0});
+  high.insert({"pt_subleading_matched_tight_bjet", 1000});
+  title.insert({"pt_subleading_matched_tight_bjet", "p_{T} (subleading matched tight candidate bjet) [GeV]"});
+ 
+  nbins.insert({"eta_leading_matched_med_bjet", 60});
+  low.insert({"eta_leading_matched_med_bjet", -3});
+  high.insert({"eta_leading_matched_med_bjet", 3});
+  title.insert({"eta_leading_matched_med_bjet", "#eta (leading matched medium candidate bjet)"});
+
+  nbins.insert({"eta_leading_matched_tight_bjet", 60});
+  low.insert({"eta_leading_matched_tight_bjet", -3});
+  high.insert({"eta_leading_matched_tight_bjet", 3});
+  title.insert({"eta_leading_matched_tight_bjet", "#eta (leading matched tight candidate bjet)"});
+
+  nbins.insert({"eta_subleading_matched_med_bjet", 60});
+  low.insert({"eta_subleading_matched_med_bjet", -3});
+  high.insert({"eta_subleading_matched_med_bjet", 3});
+  title.insert({"eta_subleading_matched_med_bjet", "#eta (subleading matched medium candidate bjet)"});
+
+  nbins.insert({"eta_subleading_matched_tight_bjet", 60});
+  low.insert({"eta_subleading_matched_tight_bjet", -3});
+  high.insert({"eta_subleading_matched_tight_bjet", 3});
+  title.insert({"eta_subleading_matched_tight_bjet", "#eta (subleading matched tight candidate bjet)"});
+  
+  nbins.insert({"phi_leading_matched_med_bjet", 65});
+  low.insert({"phi_leading_matched_med_bjet", -3.25});
+  high.insert({"phi_leading_matched_med_bjet", 3.25});
+  title.insert({"phi_leading_matched_med_bjet", "#phi (leading matched medium candidate bjet)"});
+
+  nbins.insert({"phi_leading_matched_tight_bjet", 65});
+  low.insert({"phi_leading_matched_tight_bjet", -3.25});
+  high.insert({"phi_leading_matched_tight_bjet", 3.25});
+  title.insert({"phi_leading_matched_tight_bjet", "#phi (leading matched tight candidate bjet)"});
+
+  nbins.insert({"phi_subleading_matched_med_bjet", 65});
+  low.insert({"phi_subleading_matched_med_bjet", -3.25});
+  high.insert({"phi_subleading_matched_med_bjet", 3.25});
+  title.insert({"phi_subleading_matched_med_bjet", "#phi (subleading matched medium candidate bjet)"});
+
+  nbins.insert({"phi_subleading_matched_tight_bjet", 65});
+  low.insert({"phi_subleading_matched_tight_bjet", -3.25});
+  high.insert({"phi_subleading_matched_tight_bjet", 3.25});
+  title.insert({"phi_subleading_matched_tight_bjet", "#phi (subleading matched tight candidate bjet)"});
+  */
+
   nbins.insert({"min_mlb", 200});
   low.insert({"min_mlb", 0});
   high.insert({"min_mlb", 2000});
@@ -433,6 +511,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
       plot_names.push_back("dPhi_ll_MET");
+      plot_names.push_back("n_matched_med_bjets");
+      plot_names.push_back("n_matched_tight_bjets");
+      plot_names.push_back("pt_leading_matched_med_bjet");
+      plot_names.push_back("pt_leading_matched_tight_bjet"); 
+      plot_names.push_back("pt_subleading_matched_med_bjet");
+      plot_names.push_back("pt_subleading_matched_tight_bjet"); 
+      plot_names.push_back("eta_leading_matched_med_bjet");
+      plot_names.push_back("eta_leading_matched_tight_bjet");
+      plot_names.push_back("eta_subleading_matched_med_bjet");
+      plot_names.push_back("eta_subleading_matched_tight_bjet");
+      plot_names.push_back("phi_leading_matched_med_bjet");
+      plot_names.push_back("phi_leading_matched_tight_bjet");
+      plot_names.push_back("phi_subleading_matched_med_bjet");
+      plot_names.push_back("phi_subleading_matched_tight_bjet");      
       //
       plot_names_2b.push_back("bjet2_pt");
       plot_names_2b.push_back("bjet2_eta");
@@ -1019,6 +1111,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       vector<int> cand_bJets;
+      vector<int> cand_tight_bJets;
       unsigned int nbtagDeepFlavB = 0;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
         float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
@@ -1035,8 +1128,42 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
 	  cand_bJets.push_back(jet);  // Medium DeepJet WP
 	}
+        if ( nt.Jet_pt().at(jet) > 20 &&
+	     nt.Jet_jetId().at(jet) > 0 && 
+	     nt.Jet_btagDeepFlavB().at(jet) > 0.7100 && 
+	     fabs(nt.Jet_eta().at(jet)) < 2.5) {
+          cand_tight_bJets.push_back(jet);
+        }
       }
+
+      
       if ( cand_bJets.size() < 1 ) continue;
+
+      /*
+
+      // Perform b jet matching after selecting medium b jets
+      vector<int> matched_med_bjets;
+      for ( int i = 0; i < cand_bJets.size(); i++ ){
+            bool med_pF = ( abs(nt.Jet_partonFlavour().at(cand_bJets[i])) == 5 );
+            bool med_hF = ( abs(nt.Jet_partonFlavour().at(cand_bJets[i])) == 5 );
+            if ( med_hF && med_pF ){
+                 matched_med_bjets.push_back(i);
+            }
+      }
+
+
+      // Perform b jet matching after selecting tight b jets
+      vector<int> matched_tight_bjets;
+      for ( int i = 0; i < cand_tight_bJets.size(); i++ ){
+            bool tight_pF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
+            bool tight_hF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
+            if ( tight_hF && tight_pF ){
+                 matched_tight_bjets.push_back(i);
+            }
+      }
+
+      */
+
       float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
       float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
       float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
@@ -1098,6 +1225,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("bjet1_eta");
       variable.insert({"bjet1_eta", bjet1_eta});
 
+      plot_names.push_back("nbtagDeepFlavB_tight");
+      variable.insert({"nbtagDeepFlavB_tight", cand_tight_bJets.size()});
+      
+      
       if ( cand_bJets.size() > 1 ) {
 
 	plot_names.push_back("bjet2_pt");
@@ -1111,7 +1242,95 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
 	plot_names.push_back("max_mbb");
 	variable.insert({"max_mbb", max_mbb});
+ 
+      }
 
+
+      // Define the four regions of interest: 1 Medium b jet, >1 medium b jet, 1 tight b jet + no other jets, 1 tight b jet + >0 medium b jets, 2 tight b jets.... 
+
+
+      // Region 1: 1 medium b jet
+      if ( cand_bJets.size() == 1 && cand_tight_bJets.size() == 0 ){
+           h_btag_bins->Fill(1,weight*factor);
+           if ( abs(nt.Jet_hadronFlavour().at(cand_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[0])) == 5 ){
+	        h_reg1_matched_btag->Fill(1,weight*factor); 	
+	   }    
+           else{
+                h_reg1_matched_btag->Fill(2,weight*factor);
+           }   
+      }
+      else if ( cand_bJets.size() == 2 && cand_tight_bJets.size() == 0 ){  // Region 2: 2 medium b jets
+           h_btag_bins->Fill(2,weight*factor);
+           bool reg2_first_matched = ( abs(nt.Jet_partonFlavour().at(cand_bJets[0])) == 5 && abs(nt.Jet_hadronFlavour().at(cand_bJets[0])) == 5);
+           bool reg2_second_matched = ( abs(nt.Jet_partonFlavour().at(cand_bJets[1])) == 5 && abs(nt.Jet_hadronFlavour().at(cand_bJets[1])) == 5);
+           if ( reg2_first_matched && reg2_second_matched ){
+                h_reg2_matched_btag->Fill(1,weight*factor);
+           }
+           else if( reg2_first_matched && !reg2_second_matched ){
+                h_reg2_matched_btag->Fill(2,weight*factor);
+           }
+           else if( !reg2_first_matched && reg2_second_matched ){
+                h_reg2_matched_btag->Fill(3,weight*factor);
+           }
+           else{
+                h_reg2_matched_btag->Fill(4,weight*factor);
+           }
+      }
+      else if ( cand_tight_bJets.size() == 1 && cand_bJets.size() == 1 ){  // Region 3: 1 tight b, no other jets
+           h_btag_bins->Fill(3,weight*factor);
+           if ( abs(nt.Jet_hadronFlavour().at(cand_tight_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_tight_bJets[0])) == 5 ){
+                h_reg3_matched_btag->Fill(1,weight*factor);
+           }
+           else{
+                h_reg3_matched_btag->Fill(2,weight*factor);
+           }     
+      }
+      else if ( cand_tight_bJets.size() == 1 && cand_bJets.size() == 2 ){  // Region 4: 1 tight b + 1 medium b
+           h_btag_bins->Fill(4,weight*factor);
+           bool reg4_tight_matched = ( abs(nt.Jet_hadronFlavour().at(cand_tight_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_tight_bJets[0])) == 5 );
+           // Determine which medium b tag is matched to the tight b tag
+           if ( cand_tight_bJets[0] == cand_bJets[0] ){
+                bool reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[1])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[1])) == 5 );
+           }
+           else{
+                bool reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[0])) == 5 ); 
+           }
+
+           
+           if ( reg4_tight_matched && reg4_medium_matched ){
+                h_reg4_matched_btag->Fill(1,weight*factor);
+	   }    
+           else if ( reg4_tight_matched && !reg4_medium_matched ){
+                h_reg4_matched_btag->Fill(2,weight*factor);
+           }
+           else if ( !reg4_tight_matched && reg4_medium_matched ){
+                h_reg4_matched_btag->Fill(3,weight*factor);
+           }
+           else{
+                h_reg4_matched_btag->Fill(4,weight*factor);
+           }
+
+      }
+      else if ( cand_tight_bJets.size() == 2 && cand_bJets.size() == 2 ){  // Region 5: 2 tight b jets
+           h_btag_bins->Fill(5,weight*factor);
+           bool reg5_first_matched = ( abs(nt.Jet_hadronFlavour().at(cand_tight_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_tight_bJets[0])) == 5 );
+           bool reg5_second_matched = ( abs(nt.Jet_hadronFlavour().at(cand_tight_bJets[1])) == 5 && abs(nt.Jet_partonFlavour().at(cand_tight_bJets[1])) == 5 );
+           if ( reg5_first_matched && reg5_second_matched ){
+                h_reg5_matched_btag->Fill(1,weight*factor);
+           }
+           else if ( reg5_first_matched && !reg5_second_matched ){
+                h_reg5_matched_btag->Fill(2,weight*factor);
+           }
+           else if ( !reg5_first_matched && reg5_second_matched ){
+                h_reg5_matched_btag->Fill(3,weight*factor);
+           }
+           else{
+                h_reg5_matched_btag->Fill(4,weight*factor);
+           }
+
+      }
+      else {
+           h_btag_bins->Fill(6,weight*factor);
       }
 
       plot_names.push_back("min_mlb");
