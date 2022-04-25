@@ -1289,11 +1289,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
            h_btag_bins->Fill(4,weight*factor);
            bool reg4_tight_matched = ( abs(nt.Jet_hadronFlavour().at(cand_tight_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_tight_bJets[0])) == 5 );
            // Determine which medium b tag is matched to the tight b tag
+           bool reg4_medium_matched;
            if ( cand_tight_bJets[0] == cand_bJets[0] ){
-                bool reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[1])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[1])) == 5 );
+                reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[1])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[1])) == 5 );
            }
            else{
-                bool reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[0])) == 5 ); 
+                reg4_medium_matched = ( abs(nt.Jet_hadronFlavour().at(cand_bJets[0])) == 5 && abs(nt.Jet_partonFlavour().at(cand_bJets[0])) == 5 ); 
            }
 
            
