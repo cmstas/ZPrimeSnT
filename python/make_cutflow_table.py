@@ -357,9 +357,22 @@ bkgsamples=['ttbar','tW','ttX','ZToMuMu','VV']
 bkgsampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
 
 # Signal
-sigsamples=['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
-sigsampleLabels=["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y3 (1500 GeV)","Y3 (2000 GeV)"]
-signalname = "Y3"
+sigsamples=[]
+sigsampleLabels=[]
+# For tables of 'standard' signals across mass points, it is enough to change signalname below; accepted values: "Y3", "DY3", "DYp3", "B3mL2"
+signalname = "Y3" 
+if signalname=="Y3":
+    sigsamples=['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
+elif signalname=="DY3":
+    sigsamples=['DY3_M200','DY3_M400','DY3_M700','DY3_M1000','DY3_M1500','DY3_M2000']
+elif signalname=="DYp3":
+    sigsamples=['DYp3_M200','DYp3_M400','DYp3_M700','DYp3_M1000','DYp3_M1500','DYp3_M2000']
+elif signalname=="B3mL2":
+    sigsamples=['B3mL2_M200','B3mL2_M400','B3mL2_M700','B3mL2_M1000','B3mL2_M1500','B3mL2_M2000']
+else:
+    print "Signal is unknown: please, explicitly set your sigsamples and sigsampleLabels lists"
+    exit()
+sigsampleLabels=["%s (%s GeV)"%(i.split("_")[0],i.split("_")[1].replace("M","")) for i in sigsamples]
 
 # SM + signal
 samples=bkgsamples+sigsamples
@@ -377,4 +390,3 @@ for cutflow in listofcutflows:
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension=signalname)
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension=signalname)
-
