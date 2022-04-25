@@ -129,7 +129,7 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
         else:
             subsamples.append(samples[i])
 
-        if "Y3_M" in samples[i]:
+        if "Y3_M" in samples[i] or "DY3_M" in samples[i] or "DYp3_M" in samples[i] or "B3mL2_M" in samples[i]:
             issignal.append(True)
             sigsamples.append(samples[i])
             siglabels.append(sampleLabels[i])
