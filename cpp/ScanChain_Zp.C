@@ -329,6 +329,15 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   const int nMllBins = mllbin.size();
   bool mllbinsel[nMllBins];
 
+  map<TString, TString> mllbinlabel;
+  mllbinlabel["mllinclusive"]="m_{#mu#mu} > 0 GeV";
+  mllbinlabel["mll150to250"]="150 < m_{#mu#mu} < 250 GeV";
+  mllbinlabel["mll200to600"]="200 < m_{#mu#mu} < 600 GeV";
+  mllbinlabel["mll500to900"]="500 < m_{#mu#mu} < 900 GeV";
+  mllbinlabel["mll700to1300"]="700 <m_{#mu#mu} < 1300 GeV";
+  mllbinlabel["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV";
+  mllbinlabel["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV";
+
   // Define number of b-tag bins
   vector<TString> nbtag = { };
   nbtag.push_back("nBTag1p");
@@ -338,6 +347,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   }
   const int nBTagBins = nbtag.size();
   bool nbtagsel[nBTagBins];
+
+  map<TString, TString> nbtagbinlabel;
+  nbtagbinlabel["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)";
+  nbtagbinlabel["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, medium WP)";
+  nbtagbinlabel["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, medium WP)";
+
+  // Define cutflow histograms in bins of mll and number of b-tags
+  map<TString, TH1F*> slicedcutflows;
+  for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+    for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+      TString plot_name = TString("cutflow_")+mllbin[imll]+TString("_")+nbtag[inb];
+      TString slice = mllbin[imll]+TString("_")+nbtag[inb];
+      HTemp(plot_name,20,0,20,"");
+      slicedcutflows[slice] = h_temp;
+    }
+  }
 
   // Define selection
   vector<TString> selection = { };
@@ -463,8 +488,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
     // Before any cuts
     int icutflow = 0;
+    TString label = "Total";
+    TString slicedlabel = label;
     h_cutflow->Fill(icutflow,xsec*lumi);
-    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Total");
+    h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+    for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+      for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	TString slice = mllbin[imll]+"_"+nbtag[inb];
+	slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
+	slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+      }
+    }
 
     for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
@@ -519,22 +553,49 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       // After skim
       icutflow = 1;
+      label = "After skim";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"After skim");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
 
       // HLT selection
       if ( (year=="2016nonAPV" || year=="2016APV") && !( nt.HLT_Mu50() || nt.HLT_TkMu50() ) ) continue;
       if ( (year=="2017" || year=="2018") && !(nt.HLT_Mu50() || nt.HLT_OldMu100() || nt.HLT_TkMu100()) ) continue;
+      label = "HLT";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"HLT");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
 
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // Fill histos: sel0
+      label = ">0 good PVs";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 good PVs");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       TString sel = "sel0";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -574,8 +635,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( !id_req ) continue;
       // Fill histos: sel1
+      label = ">1 muons w/ highPt ID";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ highPt ID");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel1";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -586,8 +656,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( !pt_req ) continue;
       // Fill histos: sel2
+      label = ">1 muons w/ pT>53 GeV & |eta|<2.4";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ pT>53 GeV & |eta|<2.4");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel2";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -598,8 +677,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( !iso_req ) continue;
       // Fill histos: sel3
+      label = ">1 muons w/ track iso./pT<0.1";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">1 muons w/ track iso./pT<0.1");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel3";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -627,8 +715,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
       // Fill histos: sel4
+      label = ">0 HLT match (dR<0.02)";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 HLT match (dR<0.02)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel4";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -713,8 +810,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       variable.insert({"nCand_Muons", cand_muons_pf.size()});
 
       // Fill histos: sel5
+      label = "Muon pair (OS, !Z)";
+      slicedlabel = "Muon pair (OS), ";
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Muon pair (OS, !Z)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  TString tlabel = slicedlabel+mllbinlabel[mllbin[imll]];
+	  if ( mllbinsel[imll] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,tlabel);
+	}
+      }
       icutflow++;
       // Look for a third isolated lepton and then veto the event if it is found
       // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
@@ -870,13 +978,33 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       if ( extra_muons.size() > 0 || extra_electrons.size() > 0 ) continue;
+      label = "Third lepton veto";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"Third lepton veto");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  if ( mllbinsel[imll] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
 
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
+      label = "IsoTrack veto";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"IsoTrack veto");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  if ( mllbinsel[imll] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
 
       // Fill histos: sel6
@@ -1011,8 +1139,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       // Fill histos: sel7
+      label = ">0 b-tag (medium WP)";
+      slicedlabel = "";
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,">0 b-tag (medium WP)");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  TString tlabel = slicedlabel+nbtagbinlabel[nbtag[inb]];
+	  if ( mllbinsel[imll] && nbtagsel[inb] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,tlabel);
+	}
+      }
       icutflow++;
       sel = "sel7";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1030,8 +1169,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( selectedPair_M < 150 ) continue;
       // Fill histos: sel8
+      label = "m(ll)>150 GeV";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"m(ll)>150 GeV");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  if ( mllbinsel[imll] && nbtagsel[inb] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel8";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1047,8 +1196,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       
       if ( min_mlb < 175.0 ) continue;
+      label = "min m(lb)>175 GeV";
+      slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,"min m(lb)>175 GeV");
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	  TString slice = mllbin[imll]+"_"+nbtag[inb];
+	  if ( mllbinsel[imll] && nbtagsel[inb] )
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+	}
+      }
       icutflow++;
       sel = "sel9";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1062,8 +1221,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
-      h_cutflow->GetXaxis()->SetRangeUser(0,icutflow);
-      h_cutflow->GetXaxis()->SetLabelSize(0.025);
 
     } // Event loop
 
@@ -1072,7 +1229,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   } // File loop
   bar.finish();
 
-  // Avoid histograms with negative bin content (due to negative GEN weights)
+  // Avoid histograms with unphysical negative bin content (due to negative GEN weights)
   map<TString, TH1F*>::iterator it;
   for ( it = histos.begin(); it != histos.end(); it++ ) {
     for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ ) { 
