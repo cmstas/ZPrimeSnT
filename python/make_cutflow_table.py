@@ -235,13 +235,13 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
 
     tabletype = ""
     if doSoverB:
-        tabletype=tabletype+"_SoverB"
+        tabletype=tabletype+"SoverB"
     if doBkgTable:
-        tabletype=tabletype+"_bkg"
+        tabletype=tabletype+"bkg"
     if doSignalTable:
-        tabletype=tabletype+"_sig"
+        tabletype=tabletype+"sig"
     if doSignalOnlyTable:
-        tabletype=tabletype+"_sigOnly"
+        tabletype=tabletype+"sigOnly"
 
     allsamples = []
     allsampleLabels = []
@@ -263,7 +263,10 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
         allyields = allyields+sigyields
         alleffs = alleffs+sigeffs
 
-    fout = open(outdir+"/"+cutflow+"_"+year+tabletype+extension+".tex",'w')
+    foutname = cutflow+"_"+year+"_"+tabletype
+    if extension != "":
+        foutname = foutname+"_"+extension
+    fout = open(outdir+"/"+foutname+".tex",'w')
 
     if not doSoverB:
         print_header(fout,allsamples,allsampleLabels,doSoverB)
@@ -356,6 +359,7 @@ bkgsampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu
 # Signal
 sigsamples=['Y3_M200','Y3_M400','Y3_M700','Y3_M1000','Y3_M1500','Y3_M2000']
 sigsampleLabels=["Y3 (200 GeV)","Y3 (400 GeV)","Y3 (700 GeV)","Y3 (1000 GeV)","Y3 (1500 GeV)","Y3 (2000 GeV)"]
+signalname = "Y3"
 
 # SM + signal
 samples=bkgsamples+sigsamples
@@ -370,7 +374,7 @@ for cutflow in listofcutflows:
     if cutflow in toexclude:
         continue
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=True,doSignalTable=False,doSoverB=False,doSignalOnlyTable=False)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False,extension="_Y3")
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension="_Y3")
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension="_Y3")
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension=signalname)
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension=signalname)
 
