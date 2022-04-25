@@ -265,6 +265,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"nbtagDeepFlavB", 5});
   title.insert({"nbtagDeepFlavB", "Number of b-tags (medium WP)"});
 
+  nbins.insert({"nbtagDeepFlavB_tight", 5});
+  low.insert({"nbtagDeepFlavB_tight", 0});
+  high.insert({"nbtagDeepFlavB_tight", 5});
+  title.insert({"nbtagDeepFlavB_tight", "Number of b-tags (tight WP)"}); 
+
   nbins.insert({"bjet1_pt", 200});
   low.insert({"bjet1_pt", 0});
   high.insert({"bjet1_pt", 1000});
@@ -500,6 +505,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     }
     if (isel==7) {
       plot_names.push_back("nbtagDeepFlavB");
+      plot_names.push_back("nbtagDeepFlavB_tight");
       plot_names.push_back("bjet1_pt");
       plot_names.push_back("bjet1_eta");
       plot_names.push_back("bjet2_pt");
@@ -511,6 +517,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_lb_MET");
       plot_names.push_back("minDPhi_llb_MET");
       plot_names.push_back("dPhi_ll_MET");
+      /*
       plot_names.push_back("n_matched_med_bjets");
       plot_names.push_back("n_matched_tight_bjets");
       plot_names.push_back("pt_leading_matched_med_bjet");
@@ -524,7 +531,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("phi_leading_matched_med_bjet");
       plot_names.push_back("phi_leading_matched_tight_bjet");
       plot_names.push_back("phi_subleading_matched_med_bjet");
-      plot_names.push_back("phi_subleading_matched_tight_bjet");      
+      plot_names.push_back("phi_subleading_matched_tight_bjet");
+      */      
       //
       plot_names_2b.push_back("bjet2_pt");
       plot_names_2b.push_back("bjet2_eta");
@@ -1138,31 +1146,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       
       if ( cand_bJets.size() < 1 ) continue;
-
-      /*
-
-      // Perform b jet matching after selecting medium b jets
-      vector<int> matched_med_bjets;
-      for ( int i = 0; i < cand_bJets.size(); i++ ){
-            bool med_pF = ( abs(nt.Jet_partonFlavour().at(cand_bJets[i])) == 5 );
-            bool med_hF = ( abs(nt.Jet_partonFlavour().at(cand_bJets[i])) == 5 );
-            if ( med_hF && med_pF ){
-                 matched_med_bjets.push_back(i);
-            }
-      }
-
-
-      // Perform b jet matching after selecting tight b jets
-      vector<int> matched_tight_bjets;
-      for ( int i = 0; i < cand_tight_bJets.size(); i++ ){
-            bool tight_pF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
-            bool tight_hF = ( abs(nt.Jet_partonFlavour().at(cand_tight_bJets[i])) == 5 );
-            if ( tight_hF && tight_pF ){
-                 matched_tight_bjets.push_back(i);
-            }
-      }
-
-      */
 
       float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
       float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
