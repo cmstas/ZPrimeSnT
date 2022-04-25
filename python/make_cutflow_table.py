@@ -365,10 +365,12 @@ listofcutflows = []
 listofcutflows = getListOfCutflows()
 toexclude = []
 
+###make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/", extension="", doBkgTable=True, doSignalTable=False, doSoverB=False, doSignalOnlyTable=False)
 for cutflow in listofcutflows:
     if cutflow in toexclude:
         continue
     make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=True,doSignalTable=False,doSoverB=False,doSignalOnlyTable=False)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False)
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False,extension="_Y3")
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension="_Y3")
+    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension="_Y3")
+
