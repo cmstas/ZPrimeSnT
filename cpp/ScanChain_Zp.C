@@ -55,42 +55,69 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   float xsec = 1.0;
   bool isMC = true;
 
+  if ( process.Contains("data") )            xsec = 1.0; // fb
   // SM processes and cross-sections:
-  if ( process == "ttbar" )               xsec = 87310.0; // fb
-  if ( process == "DY" )                  xsec = 5765400.0; // fb
-  if ( process == "ZToMuMu_50_120" )      xsec = 2112904.0; // fb
-  if ( process == "ZToMuMu_120_200" )     xsec = 20553.0; // fb
-  if ( process == "ZToMuMu_200_400" )     xsec = 2886.0; // fb
-  if ( process == "ZToMuMu_400_800" )     xsec = 251.7; // fb
-  if ( process == "ZToMuMu_800_1400" )    xsec = 17.07; // fb
-  if ( process == "ZToMuMu_1400_2300" )   xsec = 1.366; // fb
-  if ( process == "ZToMuMu_2300_3500" )   xsec = 0.08178; // fb
-  if ( process == "ZToMuMu_3500_4500" )   xsec = 0.003191; // fb
-  if ( process == "ZToMuMu_4500_6000" )   xsec = 0.0002787; // fb
-  if ( process == "ZToMuMu_6000_Inf" )    xsec = 0.000009569; // fb
-  if ( process == "WW" )                  xsec = 118700.0; // fb 
-  if ( process == "WZ" )                  xsec = 47130.0; // fb
-  if ( process == "ZZ" )                  xsec = 16523.0; // fb
-  if ( process == "tW" )                  xsec = 19550; // fb
-  if ( process == "tbarW" )               xsec = 19550; // fb
-  if ( process == "TTW" )                 xsec = 204.3; // fb
-  if ( process == "TTZ" )                 xsec = 252.9; // fb
-  if ( process == "TTHToNonbb" )          xsec = 507.5*(1-0.575); // fb
-  if ( process == "TTHTobb" )             xsec = 507.5*0.575; // fb
-
+  else if ( process == "ttbar" )             xsec = 87310.0; // fb
+  else if ( process == "DY" )                xsec = 5765400.0; // fb
+  else if ( process == "ZToMuMu_50_120" )    xsec = 2112904.0; // fb
+  else if ( process == "ZToMuMu_120_200" )   xsec = 20553.0; // fb
+  else if ( process == "ZToMuMu_200_400" )   xsec = 2886.0; // fb
+  else if ( process == "ZToMuMu_400_800" )   xsec = 251.7; // fb
+  else if ( process == "ZToMuMu_800_1400" )  xsec = 17.07; // fb
+  else if ( process == "ZToMuMu_1400_2300" ) xsec = 1.366; // fb
+  else if ( process == "ZToMuMu_2300_3500" ) xsec = 0.08178; // fb
+  else if ( process == "ZToMuMu_3500_4500" ) xsec = 0.003191; // fb
+  else if ( process == "ZToMuMu_4500_6000" ) xsec = 0.0002787; // fb
+  else if ( process == "ZToMuMu_6000_Inf" )  xsec = 0.000009569; // fb
+  else if ( process == "WW" )                xsec = 118700.0; // fb 
+  else if ( process == "WZ" )                xsec = 47130.0; // fb
+  else if ( process == "ZZ" )                xsec = 16523.0; // fb
+  else if ( process == "tW" )                xsec = 19550; // fb
+  else if ( process == "tbarW" )             xsec = 19550; // fb
+  else if ( process == "TTW" )               xsec = 204.3; // fb
+  else if ( process == "TTZ" )               xsec = 252.9; // fb
+  else if ( process == "TTHToNonbb" )        xsec = 507.5*(1-0.575); // fb
+  else if ( process == "TTHTobb" )           xsec = 507.5*0.575; // fb
   // Signal processes and cross-sections:
-  if ( year == "2018" )
-    {
-      lumi = 59.83; // fb-1
-      if ( process == "Y3_M100" )     xsec = 0.0211369709127*1000; // fb
-      if ( process == "Y3_M200" )     xsec = 0.01597959*1000; // fb
-      if ( process == "Y3_M400" )     xsec = 0.00290934734735*1000; // fb
-      if ( process == "Y3_M700" )     xsec = 0.000614377054108*1000; // fb
-      if ( process == "Y3_M1000" )    xsec = 0.000192622380952*1000; // fb
-      if ( process == "Y3_M1500" )    xsec = 3.636946e-05*1000; // fb
-      if ( process == "Y3_M2000" )    xsec = 8.253412e-06*1000; // fb
-    }
+  else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000;
+  else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000;
+  else if ( process == "Y3_M400"  )    xsec = 0.0029093405*1000;
+  else if ( process == "Y3_M700"  )    xsec = 0.0006143530*1000;
+  else if ( process == "Y3_M1000" )    xsec = 0.0001919544*1000;
+  else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000;
+  else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000;
 
+  else if ( process == "DY3_M100"  )   xsec = 0.0337049425*1000;
+  else if ( process == "DY3_M200"  )   xsec = 0.0127905600*1000;
+  else if ( process == "DY3_M400"  )   xsec = 0.0038605973*1000;
+  else if ( process == "DY3_M700"  )   xsec = 0.0009411330*1000;
+  else if ( process == "DY3_M1000" )   xsec = 0.0003003987*1000;
+  else if ( process == "DY3_M1500" )   xsec = 0.0000595791*1000;
+  else if ( process == "DY3_M2000" )   xsec = 0.0000154994*1000;
+
+  else if ( process == "DYp3_M100"  )  xsec = 0.0313425200*1000;
+  else if ( process == "DYp3_M200"  )  xsec = 0.0091705403*1000;
+  else if ( process == "DYp3_M400"  )  xsec = 0.0025317413*1000;
+  else if ( process == "DYp3_M700"  )  xsec = 0.0006051238*1000;
+  else if ( process == "DYp3_M1000" )  xsec = 0.0001939990*1000;
+  else if ( process == "DYp3_M1500" )  xsec = 0.0000367774*1000;
+  else if ( process == "DYp3_M2000" )  xsec = 0.0000082788*1000;
+
+  else if ( process == "B3mL2_M100"  ) xsec = 0.2895163696*1000;
+  else if ( process == "B3mL2_M200"  ) xsec = 0.1236243250*1000;
+  else if ( process == "B3mL2_M400"  ) xsec = 0.0307822425*1000;
+  else if ( process == "B3mL2_M700"  ) xsec = 0.0071884160*1000;
+  else if ( process == "B3mL2_M1000" ) xsec = 0.0022984062*1000;
+  else if ( process == "B3mL2_M1500" ) xsec = 0.0004383351*1000;
+  else if ( process == "B3mL2_M2000" ) xsec = 0.0001029249*1000;
+  else
+  {
+    cout<<"Non-valid process: Exiting!"<<endl;
+    return 1;
+  }
+
+
+  if ( year == "2018" )       lumi = 59.83; // fb-1
   if ( year == "2017" )       lumi = 41.48; // fb-1
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
