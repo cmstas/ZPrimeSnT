@@ -12,11 +12,13 @@ today= date.today().strftime("%b-%d-%Y")
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
-parser.add_argument("--data", action="store_true", default=False, help="Plot data")
-parser.add_argument("--signalMass", default=[], action="append", help="Signal masspoints to plot. Default: All")
+parser.add_argument("--data", default=False, action="store_true", help="Plot data")
+parser.add_argument("--signalMass", action="append", default=[], help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
-parser.add_argument("--shape", action="store_true", default=False, help="Shape normalization")
-parser.add_argument("--extendedLegend", action="store_true", default=False, help="Write integrals in TLegend")
+parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
+parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
+parser.add_argument("--selections", default=["sel9"], action="append", help="List of selections to be plotted. Default: only final selection ('sel9')")
+parser.add_argument("--onlyInclusiveMll", default=True, action="store_true", help="Plot only distributions inclusive in mll. Default: True")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -29,6 +31,13 @@ os.system('cp '+args.inDir+'../../utils/index.php '+args.outDir)
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
 
+massToExclude=[]
+if len(args.signalMass)>2:
+    for i,m in enumerate(args.signalMass):
+        if i==0 or i==len(args.signalMass)-1:
+            continue
+        else:
+            massToExclude.append(str(m))
 
 # Selection
 sels = []
@@ -75,6 +84,9 @@ mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 samples=[]
 # data to be added
 samples.append("Y3")
+#samples.append("DY3")
+#samples.append("DYp3")
+#samples.append("B3mL2")
 samples.append("ZToMuMu")
 samples.append("ttbar")
 samples.append("tW")
@@ -90,6 +102,9 @@ samples.append("WZ")
 sampleFillColor=dict()
 # data to be added
 sampleFillColor["Y3"]       = None
+sampleFillColor["DY3"]      = None
+sampleFillColor["DYp3"]     = None
+sampleFillColor["B3mL2"]    = None
 sampleFillColor["ZToMuMu"]  = ROOT.kGreen+1
 sampleFillColor["ttbar"]    = ROOT.kAzure+1
 sampleFillColor["ST_tW"]    = ROOT.kAzure+2
@@ -100,7 +115,10 @@ sampleFillColor["WZ"]       = ROOT.kOrange-1
 
 sampleLineColor=dict()
 # data to be added
-sampleLineColor["Y3"]       = ROOT.kViolet-9
+sampleLineColor["Y3"]       = ROOT.kViolet
+sampleLineColor["DY3"]      = ROOT.kMagenta
+sampleLineColor["DYp3"]     = ROOT.kRed
+sampleLineColor["B3mL2"]    = ROOT.kCyan
 sampleLineColor["ZToMuMu"]  = None
 sampleLineColor["ttbar"]    = None
 sampleLineColor["ST_tW"]    = None
@@ -112,6 +130,9 @@ sampleLineColor["WZ"]       = None
 sampleLineWidth=dict()
 # data to be added
 sampleLineWidth["Y3"]       = 2
+sampleLineWidth["DY3"]      = 2
+sampleLineWidth["DYp3"]     = 2
+sampleLineWidth["B3mL2"]    = 2
 sampleLineWidth["ZToMuMu"]  = 0
 sampleLineWidth["ttbar"]    = 0
 sampleLineWidth["ST_tW"]    = 0
@@ -122,6 +143,9 @@ sampleLineWidth["WZ"]       = 0
 
 sampleLegend=dict()
 sampleLegend["Y3"]       = "Y3"
+sampleLegend["DY3"]      = "DY3"
+sampleLegend["DYp3"]     = "DYp3"
+sampleLegend["B3mL2"]    = "B3mL2"
 sampleLegend["data"]     = "data"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
@@ -132,51 +156,79 @@ sampleLegend["ZZ"]       = "ZZ"
 sampleLegend["WZ"]       = "WZ"
 
 
-def get_files(samples):
+def get_files(samples,year):
 
     sampleDict=OrderedDict()
 
-    for i,sample in enumerate(samples):
-        if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
-            for mass in args.signalMass: 
-                 sampleDict[sample+"_M"+str(mass)]=ROOT.TFile(args.inDir+"output_"+sample+"_M"+str(mass)+"_2018.root")
-        elif sample=="ZToMuMu":
-            for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
-                sampleDict[sample+"_"+m1+"_"+m2]=ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_2018.root")
-        else:
-            sampleDict[sample]=ROOT.TFile(args.inDir+"output_"+sample+"_2018.root")
-
+    if year!="all":
+        tyear=year
+        for i,sample in enumerate(samples):
+            if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
+                for mass in args.signalMass:
+                    if (sample+"_M"+str(mass)) not in sampleDict.keys():
+                        sampleDict[sample+"_M"+str(mass)]=[]
+                    sampleDict[sample+"_M"+str(mass)].append(ROOT.TFile(args.inDir+"output_"+sample+"_M"+str(mass)+"_"+tyear+".root"))
+            elif sample=="ZToMuMu":
+                for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
+                    if sample not in sampleDict.keys():
+                        sampleDict[sample]=[]
+                    sampleDict[sample].append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_"+tyear+".root"))
+            else:
+                if sample not in sampleDict.keys():
+                    sampleDict[sample]=[]
+                sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
+    else:
+        years=["2016","2016APV","2017","2018"]
+        for tyear in years:
+            for i,sample in enumerate(samples):
+                if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
+                    for mass in args.signalMass:
+                        if (sample+"_M"+str(mass)) not in sampleDict.keys():
+                            sampleDict[sample+"_M"+str(mass)]=[]
+                        sampleDict[sample+"_M"+str(mass)].append(ROOT.TFile(args.inDir+"output_"+sample+"_M"+str(mass)+"_"+tyear+".root"))
+                elif sample=="ZToMuMu":
+                    for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
+                        if sample not in sampleDict.keys():
+                            sampleDict[sample]=[]
+                        sampleDict[sample].append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_"+tyear+".root"))
+                else:
+                    if sample not in sampleDict.keys():
+                        sampleDict[sample]=[]
+                    sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
     return sampleDict
 
 
 def get_plots(sampleDict, plotname):
     plotDict=OrderedDict()
 
-    ZToMuMuPlot=None
-    ST_tWPlot=None
-    TTXPlot=None
-    for i,sample in enumerate(sampleDict.keys()):
-        inFile = sampleDict[sample]
-        if "ZToMuMu" in sample:
-            if not ZToMuMuPlot:
-                ZToMuMuPlot = copy.deepcopy(inFile.Get(plotname))
-            else:
-                ZToMuMuPlot.Add(inFile.Get(plotname))
-            plotDict["ZToMuMu"] = ZToMuMuPlot
-        elif sample=="tW" or sample=="tbarW":
-            if not ST_tWPlot:
-                ST_tWPlot = copy.deepcopy(inFile.Get(plotname))
-            else:
-                ST_tWPlot.Add(inFile.Get(plotname))
-            plotDict["ST_tW"] = ST_tWPlot
-        elif sample=="TTW" or sample=="TTZ" or sample=="TTHToNonbb" or sample=="TTHTobb":
-            if not TTXPlot:
-                TTXPlot = copy.deepcopy(inFile.Get(plotname))
-            else:
-                TTXPlot.Add(inFile.Get(plotname))
-            plotDict["TTX"] = TTXPlot
+    groupedSamples = OrderedDict()
+    tempGroups = OrderedDict()
+    tempGroups["ST_tW"] = ["tW","tbarW"]
+    tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
+    for sample in sampleDict.keys():
+        if sample in tempGroups["ST_tW"]:
+            if "ST_tW" not in groupedSamples.keys():
+                groupedSamples["ST_tW"]=[]
+            groupedSamples["ST_tW"].append(sample)
+        elif sample in tempGroups["TTX"]:
+            if "TTX" not in groupedSamples.keys():
+                groupedSamples["TTX"]=[]
+            groupedSamples["TTX"].append(sample)
         else:
-            plotDict[sample] = inFile.Get(plotname)
+            groupedSamples[sample] = [sample]
+
+    for gsample in groupedSamples.keys():
+        tplot=None
+        for sample in groupedSamples[gsample]:
+            for tsample in sampleDict.keys():
+                if sample not in tsample:
+                    continue
+                for inFile in sampleDict[tsample]:
+                    if not tplot:
+                        tplot = copy.deepcopy(inFile.Get(plotname))
+                    else:
+                        tplot.Add(inFile.Get(plotname))
+        plotDict[gsample] = tplot
 
     return plotDict
 
@@ -234,6 +286,14 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     cmsExtra="Simulation"
 
 
+    if "cutflow" not in plotname:
+        thissel = plotname.split("_")[len(plotname.split("_"))-3]
+        if thissel not in args.selections:
+            return(0)
+        thismll = plotname.split("_")[len(plotname.split("_"))-2]
+        if args.onlyInclusiveMll and 'inclusive' not in thismll:
+            return(0)
+        
     # Get histograms
     plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
@@ -244,7 +304,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
             model = sample.split("_")[0]
             mass = sample.split("_")[1].lstrip("M")
-            curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model]))
+            if "mll_pf" not in plotname and mass in massToExclude:
+                continue
+            if "mll_pf" not in plotname:
+                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model]))
+            else:
+                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model]))                
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
                     curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -310,7 +375,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     legend.SetFillColor(0)
     legend.SetFillStyle(0)
     #legend.SetTextSize(0.02)
-
+    
     if args.extendedLegend:
         for sample in curPlots.keys():
             # Signal
@@ -318,7 +383,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
-                    if "cutflow" not in plotname:
+                    if "cutflow" not in plotname and "mll_pf" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].Integral(0,-1),float(signalXSecScale[str(mass)])),"L")
                     else:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].GetBinContent(1),float(signalXSecScale[str(mass)])),"L")
@@ -341,6 +406,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 else:
                     legend.AddEntry(curPlots[sample], sampleLegend[sample]+" %1.2E"%(curPlots[sample].GetBinContent(1)),"F")
     else:
+        entryExists = OrderedDict()
         for sample in curPlots.keys():
             # Signal
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
@@ -352,9 +418,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                     else:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%1.1E"%(float(signalXSecScale[str(mass)])),"L")
                 else:
-                    if "cutflow" not in plotname:
+                    if "cutflow" not in plotname and "mll_pf" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV)","L")
-                    else:
+                    elif "mll_pf" in plotname and model not in entryExists.keys():
+                        legend.AddEntry(curPlots[sample],sampleLegend[model],"L")
+                        entryExists[model]=True
+                    elif "mll_pf" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV)","L")
             # Data
             elif sample=="data": 
@@ -372,7 +441,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         MCplot = copy.deepcopy(totalSM)
         ratioplot=copy.deepcopy(curPlots["data"])
         ratioplot.Divide(MCplot)
-        ratioplot.SetTitle(";Data / MC")
+        ratioplot.SetTitle(";;Data / MC")
         pad1 = ROOT.TPad("pad1","pad1",0,0.3,1,1)
         pad2 = ROOT.TPad("pad2","pad2",0,0,1,0.3)
         pad1.Draw()
@@ -414,7 +483,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if histMax < curPlots[sample].GetMaximum(): 
                 histMax = curPlots[sample].GetMaximum()
             curPlots[sample].Draw("HIST same")
-    if plotData: 
+    if plotData:
         curPlots["data"].Draw("E0 same")
 
     if histMax < stack.GetMaximum(): 
@@ -480,12 +549,13 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
+year="2018"
+lumi=59.83
 # Open files
-sampleDict=get_files(samples)
-
+sampleDict=get_files(samples,year)
 # List of plots
 listofplots = []
-listfile = sampleDict[sampleDict.keys()[0]]
+listfile = sampleDict[sampleDict.keys()[0]][0]
 listkeys = listfile.GetListOfKeys()
 size = listkeys.GetSize()
 for i in range(0,size):
@@ -495,8 +565,8 @@ toexclude = []
 for plot in listofplots:
     if plot in toexclude:
         continue
-    draw_plot(sampleDict, plot, False, False, args.data, False, 59.83, "2018")
-    draw_plot(sampleDict, plot, True , False, args.data, False, 59.83, "2018")
+    draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
+    draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
     if("pt" in plot or "mll_pf" in plot):
-      draw_plot(sampleDict, plot, False, True, args.data, False, 59.83, "2018")
-      draw_plot(sampleDict, plot, True , True, args.data, False, 59.83, "2018")
+      draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
+      draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
