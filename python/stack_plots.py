@@ -82,7 +82,8 @@ mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
 # Samples
 samples=[]
-# data to be added
+if args.data:
+    samples.append("data")
 samples.append("Y3")
 #samples.append("DY3")
 #samples.append("DYp3")
@@ -100,7 +101,7 @@ samples.append("ZZ")
 samples.append("WZ")
 
 sampleFillColor=dict()
-# data to be added
+sampleFillColor["data"]     = None
 sampleFillColor["Y3"]       = None
 sampleFillColor["DY3"]      = None
 sampleFillColor["DYp3"]     = None
@@ -114,7 +115,7 @@ sampleFillColor["ZZ"]       = ROOT.kOrange-2
 sampleFillColor["WZ"]       = ROOT.kOrange-1
 
 sampleLineColor=dict()
-# data to be added
+sampleLineColor["data"]     = ROOT.kBlack
 sampleLineColor["Y3"]       = ROOT.kViolet
 sampleLineColor["DY3"]      = ROOT.kMagenta
 sampleLineColor["DYp3"]     = ROOT.kRed
@@ -128,7 +129,7 @@ sampleLineColor["ZZ"]       = None
 sampleLineColor["WZ"]       = None
 
 sampleLineWidth=dict()
-# data to be added
+sampleLineWidth["data"]     = 2
 sampleLineWidth["Y3"]       = 2
 sampleLineWidth["DY3"]      = 2
 sampleLineWidth["DYp3"]     = 2
@@ -142,11 +143,11 @@ sampleLineWidth["ZZ"]       = 0
 sampleLineWidth["WZ"]       = 0
 
 sampleLegend=dict()
+sampleLegend["data"]     = "Data"
 sampleLegend["Y3"]       = "Y3"
 sampleLegend["DY3"]      = "DY3"
 sampleLegend["DYp3"]     = "DYp3"
 sampleLegend["B3mL2"]    = "B3mL2"
-sampleLegend["data"]     = "data"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
 sampleLegend["ST_tW"]    = "tW"
@@ -200,7 +201,6 @@ def get_files(samples,year):
 
 def get_plots(sampleDict, plotname):
     plotDict=OrderedDict()
-
     groupedSamples = OrderedDict()
     tempGroups = OrderedDict()
     tempGroups["ST_tW"] = ["tW","tbarW"]
@@ -396,9 +396,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             elif sample=="data": 
                 if plotData:
                     if "cutflow" not in plotname:
-                        legend.AddEntry(curPlots[sample],sampleLegend[sample]+" %1.2E"%(curPlots[sample].Integral(0,-1)),"PL")
+                        legend.AddEntry(curPlots[sample],sampleLegend[sample]+" %1.2E"%(curPlots[sample].Integral(0,-1)),"EPL")
                     else:
-                        legend.AddEntry(curPlots[sample],sampleLegend[sample]+" %1.2E"%(curPlots[sample].GetBinContent(1)),"PL")
+                        legend.AddEntry(curPlots[sample],sampleLegend[sample]+" %1.2E"%(curPlots[sample].GetBinContent(1)),"EPL")
             # Bkg 
             else:
                 if "cutflow" not in plotname:
@@ -428,7 +428,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             # Data
             elif sample=="data": 
                 if plotData:
-                    legend.AddEntry(curPlots[sample],sampleLegend[sample],"PL")
+                    legend.AddEntry(curPlots[sample],sampleLegend[sample],"EPL")
             # Bkg
             else:
                 legend.AddEntry(curPlots[sample], sampleLegend[sample],"F")
@@ -550,7 +550,8 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
 year="2018"
-lumi=59.83
+#lumi=59.83
+lumi=2.4
 # Open files
 sampleDict=get_files(samples,year)
 # List of plots
