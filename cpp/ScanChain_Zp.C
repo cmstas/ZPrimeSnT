@@ -485,14 +485,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
       if(isel<5) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0];
 	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
 	histos[name] = h_temp;
       }
       else if(isel>=5 && isel<7) {
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString plot_name = plot_names[iplot];
-	  TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll]+"_"+nbtag[0];
+	  TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll];
 	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
 	  histos[name] = h_temp;
 	}
@@ -671,7 +671,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       TString sel = "sel0";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+sel+"_"+mllbin[0];
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -721,7 +721,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel1";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+sel+"_"+mllbin[0];
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -742,7 +742,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel2";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+sel+"_"+mllbin[0];
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -763,7 +763,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel3";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+sel+"_"+mllbin[0];
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -801,7 +801,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       sel = "sel4";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0]+"_"+nbtag[0];
+	TString name = plot_name+"_"+sel+"_"+mllbin[0];
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
@@ -1033,7 +1033,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[0];
+	  TString name = plot_name+"_"+sel+"_"+mllbin[imll];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(variable[plot_name],weight*factor);
 	}
@@ -1042,7 +1042,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ ) {
 	TString plot_name = extra_plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
+	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(extra_variable[plot_name],weight*factor);
 	}
@@ -1083,7 +1083,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll]+"_"+nbtag[0];
+	  TString name = plot_name+"_"+sel+= "_"+mllbin[imll];
 	  if ( mllbinsel[imll] )
 	    histos[name]->Fill(variable[plot_name],weight*factor);
 	}
