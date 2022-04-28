@@ -39,11 +39,11 @@ if len(args.signalMass)>3:
         else:
             massToExclude.append(str(m))
 
-# Only for test on Run2018B (2.4/fb)
+# Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
 testLumi = -1.0
 if args.data:
-    testLumi=2.4
+    testLumi=7.050180294
 
 # Selection
 sels = []

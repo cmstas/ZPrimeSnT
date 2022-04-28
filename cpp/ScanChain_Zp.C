@@ -535,16 +535,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     TString slicedlabel = label;
     if ( isMC )
       h_cutflow->Fill(icutflow,xsec*lumi);
-    else
-      h_cutflow->Fill(icutflow,tree->GetEntriesFast());
     h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
     for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	TString slice = mllbin[imll]+"_"+nbtag[inb];
 	if ( isMC )
 	  slicedcutflows[slice]->Fill(icutflow,tree->GetEntriesFast());
-	else
-	  slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
 	slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
       }
     }
@@ -567,6 +563,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if ( !isMC )
 	if ( !(goodrun(runnb, lumiblock)) )
 	  continue;
+
+      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
+      if ( !isMC )
+	if ( runnb >= 319077 )
+	  continue;
+
+      // For data, fill "total" in cutflow after golden JSON
+      if ( !isMC ) {
+	h_cutflow->Fill(icutflow,weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	    TString slice = mllbin[imll]+"_"+nbtag[inb];
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  }
+	}
+      }
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
