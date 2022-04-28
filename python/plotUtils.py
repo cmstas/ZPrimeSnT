@@ -161,8 +161,8 @@ def GetEfficRatioGraph(hnum, hden, g_ratio):
     for i in range(1, hnum.GetNbinsX()+1):
         x = hnum.GetBinCenter(i)
         xerr = hnum.GetBinWidth(i) / 2.0
-        num = int(hnum.GetBinContent(i))
-        den = int(hden.GetBinContent(i))        
+        num = hnum.GetBinContent(i)
+        den = hden.GetBinContent(i)
         if den > 0:
             val = float(num)/den
             errup = ROOT.TEfficiency.ClopperPearson(den, num, level, 1) - val
