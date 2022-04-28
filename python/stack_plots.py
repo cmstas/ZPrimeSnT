@@ -32,15 +32,15 @@ if len(args.signalMass)==0:
     args.signalMass = [200,400,700,1000,1500,2000]
 
 massToExclude=[]
-if len(args.signalMass)>2:
+if len(args.signalMass)>3:
     for i,m in enumerate(args.signalMass):
-        if i==0 or i==len(args.signalMass)-1:
+        if i%2==0:
             continue
         else:
             massToExclude.append(str(m))
 
-scaleToLumi=1.0
 # Only for test on Run2018B (2.4/fb)
+scaleToTestLumi = 1.0
 testLumi = -1.0
 if args.data:
     testLumi=2.4
@@ -169,7 +169,10 @@ def get_files(samples,year):
     sampleDict=OrderedDict()
 
     if year!="all":
-        tyear=year
+        years=[year]
+    else:
+        years=["2016nonAPV","2016APV","2017","2018"]
+    for tyear in years:
         for i,sample in enumerate(samples):
             if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
                 for mass in args.signalMass:
@@ -185,24 +188,6 @@ def get_files(samples,year):
                 if sample not in sampleDict.keys():
                     sampleDict[sample]=[]
                 sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
-    else:
-        years=["2016nonAPV","2016APV","2017","2018"]
-        for tyear in years:
-            for i,sample in enumerate(samples):
-                if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
-                    for mass in args.signalMass:
-                        if (sample+"_M"+str(mass)) not in sampleDict.keys():
-                            sampleDict[sample+"_M"+str(mass)]=[]
-                        sampleDict[sample+"_M"+str(mass)].append(ROOT.TFile(args.inDir+"output_"+sample+"_M"+str(mass)+"_"+tyear+".root"))
-                elif sample=="ZToMuMu":
-                    for m1,m2 in zip(["50","120","200","400","800","1400","2300","3500","4500","6000"],["120","200","400","800","1400","2300","3500","4500","6000","Inf"]): 
-                        if sample not in sampleDict.keys():
-                            sampleDict[sample]=[]
-                        sampleDict[sample].append(ROOT.TFile(args.inDir+"output_ZToMuMu_"+m1+"_"+m2+"_"+tyear+".root"))
-                else:
-                    if sample not in sampleDict.keys():
-                        sampleDict[sample]=[]
-                    sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
     return sampleDict
 
 
@@ -299,6 +284,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latexSel.SetNDC(True)
 
     if testLumi>0.0:
+        scaleToTestLumi = testLumi/lumi
         lumi = testLumi
 
     yearenergy=""
@@ -336,7 +322,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             else:
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model]))                
             if testLumi>0.0:
-                curPlots[sample].Scale(testLumi/59.38)
+                curPlots[sample].Scale(scaleToTestLumi)
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
                     curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -350,7 +336,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         else:
             curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample]))
             if testLumi>0.0:
-                curPlots[sample].Scale(testLumi/59.38)
+                curPlots[sample].Scale(scaleToTestLumi)
             if not totalSM:
                 totalSM = curPlots[sample].Clone("totalSM")
             else:
