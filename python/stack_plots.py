@@ -55,9 +55,9 @@ sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
 sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
 sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
 sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
+sels.append("m_{#mu#mu}>150 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)")
-sels.append("m_{#mu#mu}>150 GeV")
 sels.append("min m_{#mu b}>175 GeV")
 
 nsel=dict()
@@ -261,17 +261,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latex = ROOT.TLatex()
     latex.SetTextFont(42)
     latex.SetTextAlign(31)
-    latex.SetTextSize(0.05)
+    latex.SetTextSize(0.04)
     latex.SetNDC(True)
 
     latexCMS = ROOT.TLatex()
     latexCMS.SetTextFont(61)
-    latexCMS.SetTextSize(0.06)
+    latexCMS.SetTextSize(0.05)
     latexCMS.SetNDC(True)
 
     latexCMSExtra = ROOT.TLatex()
     latexCMSExtra.SetTextFont(52)
-    latexCMSExtra.SetTextSize(0.05)
+    latexCMSExtra.SetTextSize(0.04)
     latexCMSExtra.SetNDC(True)
 
     legoffset = 0.0
@@ -298,10 +298,18 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         cmsExtra="Simulation"
 
     if "cutflow" not in plotname:
-        thissel = plotname.split("_")[len(plotname.split("_"))-3]
+        thissel=""
+        if "sel8" in plotname or "sel9" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-3]
+        else:
+            thissel = plotname.split("_")[len(plotname.split("_"))-2]
         if thissel not in args.selections:
             return(0)
-        thismll = plotname.split("_")[len(plotname.split("_"))-2]
+        thismll=""
+        if "sel8" in plotname or "sel9" in plotname:
+            thismll = plotname.split("_")[len(plotname.split("_"))-2]
+        else:
+            thismll = plotname.split("_")[len(plotname.split("_"))-1]
         if args.onlyInclusiveMll and 'inclusive' not in thismll:
             return(0)
         
@@ -382,9 +390,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
 
     # Plot legends, ranges
-    legend = ROOT.TLegend(0.7,0.6,0.91,0.91)
+    legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
     if args.extendedLegend:
-        legend = ROOT.TLegend(0.6,0.6,0.91,0.91)
+        legend = ROOT.TLegend(0.6,0.6,0.89,0.89)
     legend.SetLineColor(0)
     legend.SetLineWidth(0)
     legend.SetFillColor(0)
@@ -600,16 +608,23 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     expoffset=0.03
     if logY or 1.1*histMax<1000.0:
         expoffset=0
-    latex.DrawLatex(0.95, 0.95+expoffset, yearenergy);
-    latexCMS.DrawLatex(0.11,0.95+expoffset,"CMS");
-    latexCMSExtra.DrawLatex(0.22,0.95+expoffset, cmsExtra);
+    latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
+    latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
+    latexCMSExtra.DrawLatex(0.22,0.91+expoffset, cmsExtra);
 
 
     # Draw selection
     if "cutflow" not in plotname:
-        whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
-        whichmll = plotname.split("_")[len(plotname.split("_"))-2]
-        whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+        whichnb  = ""
+        whichmll = ""
+        whichsel = ""
+        if "sel8" in plotname or "sel9" in plotname:
+            whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
+            whichmll = plotname.split("_")[len(plotname.split("_"))-2]
+            whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+        else:
+            whichmll = plotname.split("_")[len(plotname.split("_"))-1]
+            whichsel = plotname.split("_")[len(plotname.split("_"))-2]
         ts = 0
         for s in range(0,nsel[whichsel]+1):
             if '1p' not in whichnb and s==7:
@@ -617,13 +632,13 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if 'inclusive' not in whichmll and s==8:
                 continue
             ts = ts+1
-            latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
-        if '1p' not in whichnb and nsel[whichsel]>=9:
+            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
+        if '1p' not in whichnb and nsel[whichsel]>=10:
             ts = ts+1
-            latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), nbbin[whichnb])
+            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
         if 'inclusive' not in whichmll and nsel[whichsel]>=7:
             ts = ts+1
-            latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
+            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
 
 
     # Print and save
