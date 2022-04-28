@@ -55,7 +55,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   float xsec = 1.0;
   bool isMC = true;
 
-  if ( process.Contains("data") )            xsec = 1.0; // fb
+  if ( process.Contains("data") ) {
+    xsec = 1.0; // fb
+    isMC = false;
+  }
   // SM processes and cross-sections:
   else if ( process == "ttbar" )             xsec = 87310.0; // fb
   else if ( process == "DY" )                xsec = 5765400.0; // fb
@@ -122,7 +125,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
 
-  factor = xsec*lumi/genEventSumw;
+  if ( isMC )
+    factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
@@ -137,9 +141,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Define histos
   nbins.insert({"pfmet_pt", 120});
-  low.insert({"pfmet_pt", 0});
-  high.insert({"pfmet_pt", 600});
-  title.insert({"pfmet_pt", "PF MET p_{T} [GeV]"});
+  low.insert({"pfmet_pt", 5});
+  high.insert({"pfmet_pt", 605});
+  title.insert({"pfmet_pt", "PF MET [GeV]"});
 
   nbins.insert({"pfmet_phi", 65});
   low.insert({"pfmet_phi", -3.25});
@@ -147,16 +151,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
 
   nbins.insert({"puppimet_pt", 120});
-  low.insert({"puppimet_pt", 0});
-  high.insert({"puppimet_pt", 600});
-  title.insert({"puppimet_pt", "PUPPI MET p_{T} [GeV]"});
+  low.insert({"puppimet_pt", 5});
+  high.insert({"puppimet_pt", 605});
+  title.insert({"puppimet_pt", "PUPPI MET [GeV]"});
 
   nbins.insert({"puppimet_phi", 65});
   low.insert({"puppimet_phi", -3.25});
   high.insert({"puppimet_phi", 3.25});
   title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
 
-  nbins.insert({"mll_pf", 240});
+  nbins.insert({"mll_pf", 480});
   low.insert({"mll_pf", 100});
   high.insert({"mll_pf", 2500});
   title.insert({"mll_pf", "m_{ll} [GeV]"});
@@ -207,8 +211,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"nExtra_muons", "Number of additional #mu's"});
 
   nbins.insert({"mu3_pt", 200});
-  low.insert({"mu3_pt", 0});
-  high.insert({"mu3_pt", 1000});
+  low.insert({"mu3_pt", 5});
+  high.insert({"mu3_pt", 1005});
   title.insert({"mu3_pt", "p_{T} (third #mu) [GeV]"});
 
   nbins.insert({"mu3_eta", 60});
@@ -227,8 +231,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"nExtra_electrons", "Number of electrons"});
 
   nbins.insert({"ele_extra_pt", 200});
-  low.insert({"ele_extra_pt", 0});
-  high.insert({"ele_extra_pt", 1000});
+  low.insert({"ele_extra_pt", 5});
+  high.insert({"ele_extra_pt", 1005});
   title.insert({"ele_extra_pt", "p_{T} (extra electron) [GeV]"});
 
   nbins.insert({"ele_extra_eta", 60});
@@ -247,8 +251,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
 
   nbins.insert({"lepIsoTrack_extra_pt", 200});
-  low.insert({"lepIsoTrack_extra_pt", 0});
-  high.insert({"lepIsoTrack_extra_pt", 1000});
+  low.insert({"lepIsoTrack_extra_pt", 5});
+  high.insert({"lepIsoTrack_extra_pt", 1005});
   title.insert({"lepIsoTrack_extra_pt", "p_{T} (extra lepton isoTrack) [GeV]"});
 
   nbins.insert({"lepIsoTrack_extra_eta", 60});
@@ -267,8 +271,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
 
   nbins.insert({"chhIsoTrack_extra_pt", 200});
-  low.insert({"chhIsoTrack_extra_pt", 0});
-  high.insert({"chhIsoTrack_extra_pt", 1000});
+  low.insert({"chhIsoTrack_extra_pt", 5});
+  high.insert({"chhIsoTrack_extra_pt", 1005});
   title.insert({"chhIsoTrack_extra_pt", "p_{T} (extra ch. hadron isoTrack) [GeV]"});
 
   nbins.insert({"chhIsoTrack_extra_eta", 60});
@@ -286,9 +290,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"nbtagDeepFlavB", 5});
   title.insert({"nbtagDeepFlavB", "Number of b-tags (medium WP)"});
 
-  nbins.insert({"bjet1_pt", 200});
+  nbins.insert({"bjet1_pt", 300});
   low.insert({"bjet1_pt", 0});
-  high.insert({"bjet1_pt", 1000});
+  high.insert({"bjet1_pt", 1500});
   title.insert({"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"});
 
   nbins.insert({"bjet1_eta", 60});
@@ -296,9 +300,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"bjet1_eta", 3});
   title.insert({"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"});
 
-  nbins.insert({"bjet2_pt", 200});
+  nbins.insert({"bjet2_pt", 300});
   low.insert({"bjet2_pt", 0});
-  high.insert({"bjet2_pt", 1000});
+  high.insert({"bjet2_pt", 1500});
   title.insert({"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"});
 
   nbins.insert({"bjet2_eta", 60});
@@ -306,19 +310,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"bjet2_eta", 3});
   title.insert({"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"});
 
-  nbins.insert({"min_mlb", 200});
+  nbins.insert({"min_mlb", 300});
   low.insert({"min_mlb", 0});
-  high.insert({"min_mlb", 2000});
+  high.insert({"min_mlb", 1500});
   title.insert({"min_mlb", "min m_{lb} [GeV]"});
 
-  nbins.insert({"min_mbb", 200});
+  nbins.insert({"min_mbb", 300});
   low.insert({"min_mbb", 0});
-  high.insert({"min_mbb", 2000});
+  high.insert({"min_mbb", 1500});
   title.insert({"min_mbb", "min m_{bb} [GeV]"});
 
-  nbins.insert({"max_mbb", 200});
+  nbins.insert({"max_mbb", 300});
   low.insert({"max_mbb", 0});
-  high.insert({"max_mbb", 2000});
+  high.insert({"max_mbb", 1500});
   title.insert({"max_mbb", "max m_{bb} [GeV]"});
 
   nbins.insert({"minDPhi_b_MET", 32});
@@ -517,12 +521,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     int icutflow = 0;
     TString label = "Total";
     TString slicedlabel = label;
-    h_cutflow->Fill(icutflow,xsec*lumi);
+    if ( isMC )
+      h_cutflow->Fill(icutflow,xsec*lumi);
+    else
+      h_cutflow->Fill(icutflow,tree->GetEntriesFast());
     h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
     for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	TString slice = mllbin[imll]+"_"+nbtag[inb];
-	slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
+	if ( isMC )
+	  slicedcutflows[slice]->Fill(icutflow,tree->GetEntriesFast());
+	else
+	  slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
 	slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
       }
     }
@@ -532,7 +542,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       nt.GetEntry(event);
       tree->LoadTree(event);
 
-      float weight = genWeight();
+      float weight = 1.0;
+      if ( isMC )
+	weight = genWeight();
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
