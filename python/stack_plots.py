@@ -49,7 +49,7 @@ if args.data:
 sels = []
 sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
 sels.append("HLT selection")
-sels.append("N_{good PV}#geq 1")
+sels.append("N_{good PV}#geq 1 & MET filters")
 sels.append("N_{highPt ID #mu}#geq 2")
 sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
 sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
