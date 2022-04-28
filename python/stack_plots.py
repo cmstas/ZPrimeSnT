@@ -263,12 +263,8 @@ def customize_plot(plot, fillColor, lineColor, lineWidth):
     plot.SetLineWidth(lineWidth)
     #plot.Sumw2()
 
-    if tempLumi>0.0:
-        # 2018 lumi =  59.83/fb
-        plot.Scale(59.83/tempLumi)
-    
     ### Rebin fine-binned histograms
-    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0
+    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
         plot.Rebin(3)
 
     return plot
@@ -302,8 +298,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latexSel.SetTextSize(0.02-0.1*legoffset)
     latexSel.SetNDC(True)
 
-    if tempLumi>0.0:
-        lumi = tempLumi
+    if testLumi>0.0:
+        lumi = testLumi
 
     yearenergy=""
     if year!="all":
@@ -339,6 +335,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model]))
             else:
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model]))                
+            if testLumi>0.0:
+                curPlots[sample].Scale(testLumi/59.38)
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
                     curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -351,6 +349,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         # Bkg
         else:
             curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample]))
+            if testLumi>0.0:
+                curPlots[sample].Scale(testLumi/59.38)
             if not totalSM:
                 totalSM = curPlots[sample].Clone("totalSM")
             else:
@@ -533,6 +533,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
         line = ROOT.TLine(h_axis.GetXaxis().GetBinLowEdge(1), 1.0, h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()), 1.0)
 
+        pads.append(ROOT.TPad("1","1",0.0,0.18,1.0,1.0))
+        pads.append(ROOT.TPad("2","2",0.0,0.0,1.0,0.19))
+        pads[0].SetTopMargin(0.08)
+        pads[0].SetBottomMargin(0.13)
+        pads[0].SetRightMargin(0.05)
+        pads[0].SetLeftMargin(0.10)
         pads[1].SetRightMargin(0.05)
         pads[1].SetLeftMargin(0.10)
         pads[0].Draw()
