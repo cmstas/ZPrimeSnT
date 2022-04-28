@@ -39,6 +39,12 @@ if len(args.signalMass)>2:
         else:
             massToExclude.append(str(m))
 
+scaleToLumi=1.0
+# Only for test on Run2018B (2.4/fb)
+testLumi = -1.0
+if args.data:
+    testLumi=2.4
+
 # Selection
 sels = []
 sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
@@ -180,7 +186,7 @@ def get_files(samples,year):
                     sampleDict[sample]=[]
                 sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
     else:
-        years=["2016","2016APV","2017","2018"]
+        years=["2016nonAPV","2016APV","2017","2018"]
         for tyear in years:
             for i,sample in enumerate(samples):
                 if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
@@ -257,6 +263,10 @@ def customize_plot(plot, fillColor, lineColor, lineWidth):
     plot.SetLineWidth(lineWidth)
     #plot.Sumw2()
 
+    if tempLumi>0.0:
+        # 2018 lumi =  59.83/fb
+        plot.Scale(59.83/tempLumi)
+    
     ### Rebin fine-binned histograms
     if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0
         plot.Rebin(3)
@@ -291,6 +301,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latexSel.SetTextFont(42)
     latexSel.SetTextSize(0.02-0.1*legoffset)
     latexSel.SetNDC(True)
+
+    if tempLumi>0.0:
+        lumi = tempLumi
 
     yearenergy=""
     if year!="all":
@@ -643,8 +656,7 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
 year="2018"
-#lumi=59.83
-lumi=2.4
+lumi=59.83
 # Open files
 sampleDict=get_files(samples,year)
 # List of plots
