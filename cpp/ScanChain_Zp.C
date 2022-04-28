@@ -415,9 +415,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel3"); // Relative track isolation < 0.1
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
-  selection.push_back("sel6"); // No extra lepton / isoTrack
-  selection.push_back("sel7"); // NbTag >= 1 (medium WP)
-  selection.push_back("sel8"); // Mmumu > 150 GeV
+  selection.push_back("sel6"); // Mmumu > 150 GeV
+  selection.push_back("sel7"); // No extra lepton / isoTrack
+  selection.push_back("sel8"); // NbTag >= 1 (medium WP)
   selection.push_back("sel9"); // minMlb > 175 GeV
 
   vector<TString> plot_names = { };
@@ -439,7 +439,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu2_trkRelIso");
       plot_names.push_back("nCand_Muons");
+    }
       // Add also extra plots before third lepton/isotrack veto
+    if (isel==6) {
       plot_names.push_back("nExtra_muons"); ++nExtraHistos;
       plot_names.push_back("nExtra_electrons"); ++nExtraHistos;
       plot_names.push_back("nExtra_lepIsoTracks"); ++nExtraHistos;
@@ -458,12 +460,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
     }
     // Third lepton/isotrack veto
-    if (isel==6) {
+    if (isel==7) {
       // Remove plots added for thid lepton/isotrack veto
       for (int e=0; e<nExtraHistos; ++e)
 	plot_names.pop_back();
     }
-    if (isel==7) {
+    if (isel==8) {
       plot_names.push_back("nbtagDeepFlavB");
       plot_names.push_back("bjet1_pt");
       plot_names.push_back("bjet1_eta");
@@ -489,7 +491,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
 	histos[name] = h_temp;
       }
-      else if(isel>=5 && isel<7) {
+      else if(isel>=5 && isel<8) {
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  TString plot_name = plot_names[iplot];
 	  TString name = plot_name+"_"+selection[isel]+"_"+mllbin[imll];
@@ -497,7 +499,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  histos[name] = h_temp;
 	}
       }
-      else if(isel>=7) {
+      else if(isel>=8) {
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	    TString plot_name = plot_names[iplot];
@@ -895,6 +897,32 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
       icutflow++;
+      sel = "sel5";
+      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+        TString plot_name = plot_names[iplot];
+        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+          TString name = plot_name+"_"+sel+"_"+mllbin[imll];
+          if ( mllbinsel[imll] )
+            histos[name]->Fill(variable[plot_name],weight*factor);
+        }
+      }
+
+      if ( selectedPair_M < 150 ) continue;
+      // Fill histos: sel6
+      label = "m(ll)>150 GeV";
+      slicedlabel = label;
+      h_cutflow->Fill(icutflow,weight*factor);
+      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+        for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+          TString slice = mllbin[imll]+"_"+nbtag[inb];
+          if ( mllbinsel[imll] )
+            slicedcutflows[slice]->Fill(icutflow,weight*factor);
+          slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+        }
+      }
+      icutflow++;
+
       // Look for a third isolated lepton and then veto the event if it is found
       // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
       vector<int> extra_muons;
@@ -1028,8 +1056,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	extra_variable.insert({"chhIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_chh[0])});
       }
 
-      // Fill standard histos for sel5
-      sel = "sel5";
+      // Fill standard histos for sel6
+      sel = "sel6";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -1038,7 +1066,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	    histos[name]->Fill(variable[plot_name],weight*factor);
 	}
       }
-      // Now fill extra histos for sel5 (before third lepton/isotrack veto)
+      // Now fill extra histos for sel6 (before third lepton/isotrack veto)
       for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ ) {
 	TString plot_name = extra_plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -1078,8 +1106,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       icutflow++;
 
-      // Fill histos: sel6
-      sel = "sel6";
+      // Fill histos: sel7
+      sel = "sel7";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -1159,7 +1187,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi()));
 
-      // Add histos: sel7
+      // Add histos: sel8
       plot_names.push_back("nbtagDeepFlavB");
       variable.insert({"nbtagDeepFlavB", cand_bJets.size()});
 
@@ -1209,7 +1237,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	else nbtagsel[2] = false;
       }
 
-      // Fill histos: sel7
+      // Fill histos: sel8
       label = ">0 b-tag (medium WP)";
       slicedlabel = "";
       h_cutflow->Fill(icutflow,weight*factor);
@@ -1224,7 +1252,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
       icutflow++;
-      sel = "sel7";
+      sel = "sel8";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	//if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
@@ -1237,35 +1265,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
 
-
-      if ( selectedPair_M < 150 ) continue;
-      // Fill histos: sel8
-      label = "m(ll)>150 GeV";
-      slicedlabel = label;
-      h_cutflow->Fill(icutflow,weight*factor);
-      h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
-      for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	  TString slice = mllbin[imll]+"_"+nbtag[inb];
-	  if ( mllbinsel[imll] && nbtagsel[inb] )
-	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
-	  slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
-	}
-      }
-      icutflow++;
-      sel = "sel8";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	//if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	    TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
-	    if ( mllbinsel[imll] && nbtagsel[inb] ) 
-	      histos[name]->Fill(variable[plot_name],weight*factor);
-	  }
-	}
-      }
-      
       if ( min_mlb < 175.0 ) continue;
       label = "min m(lb)>175 GeV";
       slicedlabel = label;
