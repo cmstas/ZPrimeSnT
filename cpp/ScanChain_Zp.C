@@ -15,6 +15,7 @@
 #include "../NanoCORE/Base.h"
 #include "../NanoCORE/tqdm.h"
 #include "../NanoCORE/XYMETCorrection_withUL17andUL18andUL16.h"
+#include "../NanoCORE/Tools/goodrun.h"
 #include "../NanoCORE/ZPrimeTools.cc"
 
 #include <iostream>
@@ -124,6 +125,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   if ( year == "2017" )       lumi = 41.48; // fb-1
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
+
+  if ( !isMC ) {
+    if ( year == "2016APV" )
+      set_goodrun_file_json("../utils/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt");
+    if ( year == "2016nonAPV" )
+      set_goodrun_file_json("../utils/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt");
+    if ( year == "2017" )
+      set_goodrun_file_json("../utils/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt");
+    if ( year == "2018" )
+      set_goodrun_file_json("../utils/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt");
+  }
 
   if ( isMC )
     factor = xsec*lumi/genEventSumw;
@@ -523,16 +535,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     TString slicedlabel = label;
     if ( isMC )
       h_cutflow->Fill(icutflow,xsec*lumi);
-    else
-      h_cutflow->Fill(icutflow,tree->GetEntriesFast());
     h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
     for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	TString slice = mllbin[imll]+"_"+nbtag[inb];
 	if ( isMC )
 	  slicedcutflows[slice]->Fill(icutflow,tree->GetEntriesFast());
-	else
-	  slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
 	slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
       }
     }
@@ -548,7 +556,29 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
+      int lumiblock = nt.luminosityBlock();
       int npv = nt.PV_npvs();
+
+      // Apply Golden JSON
+      if ( !isMC )
+	if ( !(goodrun(runnb, lumiblock)) )
+	  continue;
+
+      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
+      if ( !isMC )
+	if ( runnb >= 319077 )
+	  continue;
+
+      // For data, fill "total" in cutflow after golden JSON
+      if ( !isMC ) {
+	h_cutflow->Fill(icutflow,weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	    TString slice = mllbin[imll]+"_"+nbtag[inb];
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  }
+	}
+      }
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
