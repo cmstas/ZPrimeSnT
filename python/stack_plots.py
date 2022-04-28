@@ -679,6 +679,6 @@ for plot in listofplots:
         continue
     draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
     draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
-    if("pt" in plot or "mll_pf" in plot):
+    if("pt" in plot or "mll_pf" in plot or "mlb" in plot):
       draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
       draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
