@@ -261,17 +261,26 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latex = ROOT.TLatex()
     latex.SetTextFont(42)
     latex.SetTextAlign(31)
-    latex.SetTextSize(0.04)
+    if args.data:
+        latex.SetTextSize(0.05)
+    else:
+        latex.SetTextSize(0.04)
     latex.SetNDC(True)
 
     latexCMS = ROOT.TLatex()
     latexCMS.SetTextFont(61)
-    latexCMS.SetTextSize(0.05)
+    if args.data:
+        latexCMS.SetTextSize(0.06)
+    else:
+        latexCMS.SetTextSize(0.05)
     latexCMS.SetNDC(True)
 
     latexCMSExtra = ROOT.TLatex()
     latexCMSExtra.SetTextFont(52)
-    latexCMSExtra.SetTextSize(0.04)
+    if args.data:
+        latexCMSExtra.SetTextSize(0.05)
+    else:
+        latexCMSExtra.SetTextSize(0.04)
     latexCMSExtra.SetNDC(True)
 
     legoffset = 0.0
@@ -390,9 +399,15 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
 
     # Plot legends, ranges
-    legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
+    if args.data:
+        legend = ROOT.TLegend(0.7,0.6,0.91,0.91)
+    else:
+        legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
     if args.extendedLegend:
-        legend = ROOT.TLegend(0.6,0.6,0.89,0.89)
+        if args.data:
+            legend = ROOT.TLegend(0.6,0.6,0.91,0.91)
+        else:
+            legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
     legend.SetLineColor(0)
     legend.SetLineWidth(0)
     legend.SetFillColor(0)
@@ -608,9 +623,14 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     expoffset=0.03
     if logY or 1.1*histMax<1000.0:
         expoffset=0
-    latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
-    latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
-    latexCMSExtra.DrawLatex(0.22,0.91+expoffset, cmsExtra);
+    if args.data:
+        latex.DrawLatex(0.95, 0.93+expoffset, yearenergy);
+        latexCMS.DrawLatex(0.11,0.93+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.22,0.93+expoffset, cmsExtra);
+    else:
+        latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
+        latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.22,0.91+expoffset, cmsExtra);
 
 
     # Draw selection
@@ -632,13 +652,22 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if 'inclusive' not in whichmll and s==8:
                 continue
             ts = ts+1
-            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
+            if args.data:
+                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
+            else:
+                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
         if '1p' not in whichnb and nsel[whichsel]>=10:
             ts = ts+1
-            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
+            if args.data:
+                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), nbbin[whichnb])
+            else:
+                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
         if 'inclusive' not in whichmll and nsel[whichsel]>=7:
             ts = ts+1
-            latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
+            if args.data:
+                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
+            else:
+                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
 
 
     # Print and save
