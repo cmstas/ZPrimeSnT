@@ -624,9 +624,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if logY or 1.1*histMax<1000.0:
         expoffset=0
     if args.data:
-        latex.DrawLatex(0.95, 0.93+expoffset, yearenergy);
-        latexCMS.DrawLatex(0.11,0.93+expoffset,"CMS");
-        latexCMSExtra.DrawLatex(0.22,0.93+expoffset, cmsExtra);
+        latex.DrawLatex(0.95, 0.94+expoffset, yearenergy);
+        latexCMS.DrawLatex(0.11,0.94+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.22,0.94+expoffset, cmsExtra);
     else:
         latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
         latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
