@@ -657,7 +657,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // MET filters: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#UL_data
-      if ( process.Contains("data") && !( nt.Flag_goodVertices()>=1 && nt.Flag_globalSuperTightHalo2016Filter()>=1 && nt.Flag_HBHENoiseFilter()>=1 && nt.Flag_HBHENoiseIsoFilter()>=1 && nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 && nt.Flag_BadPFMuonFilter()>=1 && nt.Flag_BadPFMuonDzFilter()>=1 && nt.Flag_eeBadScFilter()>=1 && ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) ) ) continue;
+      if ( // process.Contains("data") &&
+	   !( nt.Flag_goodVertices()>=1 &&
+	      nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
+	      nt.Flag_HBHENoiseFilter()>=1 &&
+	      nt.Flag_HBHENoiseIsoFilter()>=1 &&
+	      nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
+	      nt.Flag_BadPFMuonFilter()>=1 &&
+	      nt.Flag_BadPFMuonDzFilter()>=1 &&
+	      nt.Flag_eeBadScFilter()>=1 &&
+	      ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
+	      ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
+	   ) continue;
       // Fill histos: sel0
       label = ">0 good PVs & MET Filters";
       slicedlabel = label;
