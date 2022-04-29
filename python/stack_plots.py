@@ -313,7 +313,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             thismll = plotname.split("_")[len(plotname.split("_"))-2]
         else:
             thismll = plotname.split("_")[len(plotname.split("_"))-1]
-        if not args.plotMllSlices and 'inclusive' not in thismll:
+        if not args.plotMllSlices and ('inclusive' not in thismll or ("cutflow" in plotname and "mll" in plotname)):
             return(0)
         
     # Get histograms
@@ -485,6 +485,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if logX and MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
         h_axis.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
         h_axis_ratio.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+    if "cutflow" in plotname:
+        h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
+        h_axis_ratio.GetYaxis().SetNdivisions(505)
 
     if plotData:
         doRatio=True
@@ -526,7 +529,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis_ratio.SetMinimum(0.0)
         h_axis_ratio.SetMaximum(2.0)
         h_axis_ratio.SetTitle(";;Data / MC")
-        h_axis_ratio.GetYaxis().SetNdivisions(505)
         h_axis_ratio.GetYaxis().SetTitleSize(0.16)
         h_axis_ratio.GetYaxis().SetTitleOffset(0.25)
         if logY:
