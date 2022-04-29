@@ -571,6 +571,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	if ( runnb >= 319077 )
 	  continue;
 
+      icutflow=0;
       // For data, fill "total" in cutflow after golden JSON
       if ( !isMC ) {
 	h_cutflow->Fill(icutflow,weight*factor);
@@ -581,6 +582,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
+      icutflow++;
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
@@ -623,7 +625,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       bar.progress(nEventsTotal, nEventsChain);
 
       // After skim
-      icutflow = 1;
       label = "After skim";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
