@@ -18,10 +18,10 @@
   samples.push_back("data");
   sample_names.insert({"data", "SingleMuon"});
   sample_prod.insert({"data", { { "2018",       {
-						 //"Run2018A-UL2018_MiniAODv2_NanoAODv9-v2",
-						 "Run2018B-UL2018_MiniAODv2_NanoAODv9-v2",
-						 //"Run2018C-UL2018_MiniAODv2_NanoAODv9-v2",
-						 //"Run2018D-UL2018_MiniAODv2_NanoAODv9-v1"
+						 //"Run2018A-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						 "Run2018B-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						 //"Run2018C-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						 //"Run2018D-UL2018_MiniAODv2_NanoAODv9_GT36-v1"
 						} },
                                 { "2017",       {
 						 "Run2017B-UL2017_MiniAODv2_NanoAODv9-v1",
