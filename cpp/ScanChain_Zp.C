@@ -663,11 +663,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      nt.Flag_HBHENoiseIsoFilter()>=1 &&
 	      nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
 	      nt.Flag_BadPFMuonFilter()>=1 &&
-	      //( process.Contains("ZToMuMu") ? 1 : nt.Flag_BadPFMuonDzFilter()>=1 ) && // Temporary fix, while no v9 for ZToMuMu MC
 	      nt.Flag_BadPFMuonDzFilter()>=1 &&
 	      nt.Flag_eeBadScFilter()>=1 &&
 	      ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
-	      //( (year=="2016" || process.Contains("ZToMuMu")) ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) ) // Temporary fix, while no v9 for ZToMuMu MC
 	      ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
 	   ) continue;
       // Fill histos: sel0
