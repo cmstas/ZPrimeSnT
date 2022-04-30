@@ -57,7 +57,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   bool isMC = true;
 
   if ( process.Contains("data") ) {
-    xsec = 1.0; // fb
     isMC = false;
   }
   // SM processes and cross-sections:
@@ -571,6 +570,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	if ( runnb >= 319077 )
 	  continue;
 
+      icutflow=0;
       // For data, fill "total" in cutflow after golden JSON
       if ( !isMC ) {
 	h_cutflow->Fill(icutflow,weight*factor);
@@ -581,6 +581,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
+      icutflow++;
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
@@ -623,7 +624,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       bar.progress(nEventsTotal, nEventsChain);
 
       // After skim
-      icutflow = 1;
       label = "After skim";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
@@ -656,7 +656,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // MET filters: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#UL_data
-      if ( process.Contains("data") && !( nt.Flag_goodVertices()>=1 && nt.Flag_globalSuperTightHalo2016Filter()>=1 && nt.Flag_HBHENoiseFilter()>=1 && nt.Flag_HBHENoiseIsoFilter()>=1 && nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 && nt.Flag_BadPFMuonFilter()>=1 && nt.Flag_BadPFMuonDzFilter()>=1 && nt.Flag_eeBadScFilter()>=1 && ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) ) ) continue;
+      if ( // process.Contains("data") &&
+	   !( nt.Flag_goodVertices()>=1 &&
+	      nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
+	      nt.Flag_HBHENoiseFilter()>=1 &&
+	      nt.Flag_HBHENoiseIsoFilter()>=1 &&
+	      nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
+	      nt.Flag_BadPFMuonFilter()>=1 &&
+	      nt.Flag_BadPFMuonDzFilter()>=1 &&
+	      nt.Flag_eeBadScFilter()>=1 &&
+	      ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
+	      ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
+	   ) continue;
       // Fill histos: sel0
       label = ">0 good PVs & MET Filters";
       slicedlabel = label;
@@ -769,17 +780,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
-      // Trigger object finding
+      // Trigger object finding (match: dR<0.02)
       bool atLeastSelectedMu_matchedToTrigObj = false;
       vector<bool> muMatchedToTrigObj;
       for ( int n = 0; n < nt.nTrigObj(); n++ ) {
         if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
         if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
         for ( auto i_cand_muons_pf : cand_muons_pf ) {
-          float deta = nt.TrigObj_eta().at(n) - nt.Muon_eta().at(i_cand_muons_pf);
-          float dphi = TVector2::Phi_mpi_pi(nt.TrigObj_phi().at(n) - nt.Muon_phi().at(i_cand_muons_pf));
-          float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-          if ( dr < 0.02 ) {
+	  if ( IsMatched( nt.Muon_eta().at(i_cand_muons_pf), nt.Muon_phi().at(i_cand_muons_pf), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
             muMatchedToTrigObj.push_back(true);
             atLeastSelectedMu_matchedToTrigObj = true;
           }
@@ -816,7 +824,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
           if ( nt.Muon_pdgId().at(cand_muons_pf[i]) + nt.Muon_pdgId().at(cand_muons_pf[j]) != 0 ) continue; // Opposite sign, same flavor
           if ( !(muMatchedToTrigObj[i] || muMatchedToTrigObj[j]) ) continue; // At least one muon in pair matched to HLT
           TVector3 mu_2(nt.Muon_p4().at(cand_muons_pf[j]).Px(),nt.Muon_p4().at(cand_muons_pf[j]).Py(),nt.Muon_p4().at(cand_muons_pf[j]).Pz());
-          if ( !(IsSeparated( mu_1,mu_2 ) ) ) continue; // 3D angle between muons > pi - 0.02
+          if ( !(IsSeparated( mu_1, mu_2, 0.02 ) ) ) continue; // 3D angle between muons > pi - 0.02
           float m_ll_pf = (nt.Muon_p4().at(cand_muons_pf[i])+nt.Muon_p4().at(cand_muons_pf[j])).M();
           if ( m_ll_pf > 70 && m_ll_pf < 110 ) { // Reject event if it contains dimuon pair compatible with Z mass
             Zboson = true;

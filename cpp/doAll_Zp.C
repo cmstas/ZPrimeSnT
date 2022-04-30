@@ -12,7 +12,6 @@
   vector<TString> samples = { };
   map<TString,TString> sample_names = { };
   map<TString,map<TString,vector<TString>>> sample_prod = { };
-  map<TString,int> sample_useUnderscore = { };
 
   // SingleMuon data
   samples.push_back("data");
@@ -52,7 +51,6 @@
                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  sample_useUnderscore.insert({"ttbar",0});
 
   // DY
   //samples.push_back("DY");
@@ -61,33 +59,18 @@
   //                            { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v2" } }.
   //                            { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
   //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  //sample_useUnderscore.insert({"DY",0});
 
   // ZToMuMu
   vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
   vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
   for ( unsigned int imass=0; imass<lowM.size(); imass++ )
   {
-    samples.push_back("ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass]);
-    sample_names.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass],"ZToMuMu_NNPDF31_TuneCP5_13TeV-powheg-pythia8_M_"+lowM[imass]+"_"+uppM[imass]});
-    if ( lowM[imass]=="50" || lowM[imass]=="200" )
-      sample_prod.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass], { { "2018", { "RunIISummer19UL18NanoAOD-106X_upgrade2018_realistic_v11_L1v1-v1" } } } });
-    else
-      sample_prod.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass], { { "2018", { "RunIISummer19UL18NanoAOD-106X_upgrade2018_realistic_v11_L1v1-v2" } } } });
-    if ( lowM[imass]=="1400" )
-      sample_prod.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass], { { "2017", { "RunIISummer19UL17NanoAOD-106X_mc2017_realistic_v6-v2" } } } });
-    else
-      sample_prod.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass], { { "2017", { "RunIISummer19UL17NanoAOD-106X_mc2017_realistic_v6-v1" } } } });
-    sample_useUnderscore.insert({"ZToMuMu201X_"+lowM[imass]+"_"+uppM[imass],1});
-  }
-
-  for ( unsigned int imass=0; imass<lowM.size(); imass++ )
-  {
-    samples.push_back("ZToMuMu2016_"+lowM[imass]+"_"+uppM[imass]);
-    sample_names.insert({"ZToMuMu2016_"+lowM[imass]+"_"+uppM[imass],"ZToMuMu_M-"+lowM[imass]+"To"+uppM[imass]+"_TuneCP5_13TeV-powheg-pythia8"});
-    sample_prod.insert({"ZToMuMu2016_"+lowM[imass]+"_"+uppM[imass], { { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                                                      { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-    sample_useUnderscore.insert({"ZToMuMu2016_"+lowM[imass]+"_"+uppM[imass],0});
+    samples.push_back("ZToMuMu_"+lowM[imass]+"_"+uppM[imass]);
+    sample_names.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass],"ZToMuMu_M-"+lowM[imass]+"To"+uppM[imass]+"_TuneCP5_13TeV-powheg-pythia8"});
+    sample_prod.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
 
   // VV
@@ -101,7 +84,6 @@
                                    { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                    { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                    { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-    sample_useUnderscore.insert({VV[iVV],0});
   }
 
   // tW
@@ -115,7 +97,6 @@
                                           { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                           { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                           { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-    sample_useUnderscore.insert({top_name[itop],0});
   }
 
   // TTX
@@ -125,7 +106,6 @@
                                { "2017", { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v2" } },
                                { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  sample_useUnderscore.insert({"TTW",0});
 
   samples.push_back("TTZ");
   sample_names.insert({"TTZ","TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8"});
@@ -133,7 +113,6 @@
                                { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  sample_useUnderscore.insert({"TTZ",0});
 
   vector<TString> bb = { "", "Non" };
   for ( unsigned int ibb=0; ibb<bb.size(); ibb++ )
@@ -144,7 +123,6 @@
                                                 { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                                 { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-    sample_useUnderscore.insert({"TTHTo"+bb[ibb]+"bb",0});
   }
 */
   // Signals
@@ -160,7 +138,6 @@
                                                                   { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
                                                                   { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
                                                                   { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
-      sample_useUnderscore.insert({sigModel[imodel]+"_M"+sigMass[imass],0});
     }
   }
 
@@ -178,43 +155,30 @@
     {
       TString sample = samples[isample];
 
-      int useUnderscore = sample_useUnderscore[sample];
-
-      // Account for the mess that is the ZToMuMu samples
-      if ( year.Contains("2016") && sample.Contains("ZToMuMu201X_") ) continue;
-      if ( (year=="2017" || year=="2018") && sample.Contains("ZToMuMu2016_") ) continue;
-      if ( year=="2017" && sample.Contains("ZToMuMu201X_") && ( sample.Contains("120_200") || sample.Contains("400_800") || sample.Contains("3500_4500") || sample.Contains("6000_Inf") ) ) useUnderscore=0;
-
       TString dataformat = "NANOAOD";
       if ( !(sample.Contains("data")) )
 	dataformat+="SIM";
-      vector<TString> dirs = { };
-      for ( unsigned int d=0; d<sample_prod[sample][year].size(); d++ ) {
-	dirs.push_back(baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root");
-      }
 
       TChain *ch_temp = new TChain("Events");
       TChain *chaux_temp = new TChain("Runs");
-      for ( unsigned int d=0; d<dirs.size(); d++ ) {
-	ch_temp->Add(dirs[d]);
-	chaux_temp->Add(dirs[d]);
+      for ( unsigned int d=0; d<sample_prod[sample][year].size(); d++ ) {
+        TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
+        ch_temp->Add(dir);
+        chaux_temp->Add(dir);
       }
-      if ( sample.Contains("ZToMuMu201X_") ) sample.ReplaceAll("ZToMuMu201X_","ZToMuMu_");
-      if ( sample.Contains("ZToMuMu2016_") ) sample.ReplaceAll("ZToMuMu2016_","ZToMuMu_");
       cout<<"Sample: "<<sample<<endl;
 
       if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp,useUnderscore),year,sample);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample);
     }
     cout<<endl;
   }
 }
 
-double getSumOfGenEventSumw(TChain *chaux, bool useUnderscore=false)
+double getSumOfGenEventSumw(TChain *chaux)
 {
   double genEventSumw, sumOfGenEventSumw=0.0;
-  if (useUnderscore) chaux->SetBranchAddress("genEventSumw_",&genEventSumw);
-  else chaux->SetBranchAddress("genEventSumw",&genEventSumw);
+  chaux->SetBranchAddress("genEventSumw",&genEventSumw);
   for (unsigned int run = 0; run < chaux->GetEntriesFast(); run++)
     {
       chaux->GetEntry(run);
