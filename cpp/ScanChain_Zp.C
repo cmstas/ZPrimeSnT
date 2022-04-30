@@ -57,7 +57,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   bool isMC = true;
 
   if ( process.Contains("data") ) {
-    xsec = 1.0; // fb
     isMC = false;
   }
   // SM processes and cross-sections:
