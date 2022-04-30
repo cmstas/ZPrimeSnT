@@ -17,8 +17,8 @@ parser.add_argument("--signalMass", action="append", default=[], help="Signal ma
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
-parser.add_argument("--selections", default=["sel8","sel9"], action="append", help="List of selections to be plotted. Default: only final selection ('sel9')")
-parser.add_argument("--onlyInclusiveMll", default=True, action="store_true", help="Plot only distributions inclusive in mll. Default: True")
+parser.add_argument("--selections", default=["sel9"], action="append", help="List of selections to be plotted. Default: only final selection ('sel9')")
+parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -250,7 +250,10 @@ def customize_plot(plot, fillColor, lineColor, lineWidth):
 
     ### Rebin fine-binned histograms
     if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
-        plot.Rebin(3)
+        if plot.GetNbinsX()%3==0:
+            plot.Rebin(3)
+        else:
+            plot.Rebin(2)
 
     return plot
 
@@ -261,26 +264,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latex = ROOT.TLatex()
     latex.SetTextFont(42)
     latex.SetTextAlign(31)
-    if args.data:
-        latex.SetTextSize(0.05)
-    else:
-        latex.SetTextSize(0.04)
+    latex.SetTextSize(0.04)
     latex.SetNDC(True)
 
     latexCMS = ROOT.TLatex()
     latexCMS.SetTextFont(61)
-    if args.data:
-        latexCMS.SetTextSize(0.06)
-    else:
-        latexCMS.SetTextSize(0.05)
+    latexCMS.SetTextSize(0.04)
     latexCMS.SetNDC(True)
 
     latexCMSExtra = ROOT.TLatex()
     latexCMSExtra.SetTextFont(52)
-    if args.data:
-        latexCMSExtra.SetTextSize(0.05)
-    else:
-        latexCMSExtra.SetTextSize(0.04)
+    latexCMSExtra.SetTextSize(0.04)
     latexCMSExtra.SetNDC(True)
 
     legoffset = 0.0
@@ -319,9 +313,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             thismll = plotname.split("_")[len(plotname.split("_"))-2]
         else:
             thismll = plotname.split("_")[len(plotname.split("_"))-1]
-        if args.onlyInclusiveMll and 'inclusive' not in thismll:
+        if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
-        
+    else:
+        if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname):
+            return(0)
+
     # Get histograms
     plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
@@ -483,10 +480,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     h_axis = ROOT.TH1D()
     h_axis_ratio = ROOT.TH1D()
     h_axis = ROOT.TH1D("h_axis","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+    if "cutflow" in plotname:
+        for b in range(1, curPlots["ttbar"].GetNbinsX()+1):
+            tlabel = curPlots["ttbar"].GetXaxis().GetBinLabel(b)
+            h_axis.GetXaxis().SetBinLabel(b, tlabel)
     h_axis_ratio = ROOT.TH1D("h_axis_ratio","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
     if logX and MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
         h_axis.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
         h_axis_ratio.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+    if "cutflow" in plotname:
+        h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
+        h_axis_ratio.GetYaxis().SetNdivisions(505)
 
     if plotData:
         doRatio=True
@@ -528,7 +532,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis_ratio.SetMinimum(0.0)
         h_axis_ratio.SetMaximum(2.0)
         h_axis_ratio.SetTitle(";;Data / MC")
-        h_axis_ratio.GetYaxis().SetNdivisions(505)
         h_axis_ratio.GetYaxis().SetTitleSize(0.16)
         h_axis_ratio.GetYaxis().SetTitleOffset(0.25)
         if logY:
@@ -623,14 +626,14 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     expoffset=0.03
     if logY or 1.1*histMax<1000.0:
         expoffset=0
-    if args.data:
-        latex.DrawLatex(0.95, 0.94+expoffset, yearenergy);
-        latexCMS.DrawLatex(0.11,0.94+expoffset,"CMS");
-        latexCMSExtra.DrawLatex(0.22,0.94+expoffset, cmsExtra);
+    if doRatio:
+        latex.DrawLatex(0.95, 0.93+expoffset, yearenergy);
+        latexCMS.DrawLatex(0.11,0.93+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.19,0.93+expoffset, cmsExtra);
     else:
         latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
         latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
-        latexCMSExtra.DrawLatex(0.22,0.91+expoffset, cmsExtra);
+        latexCMSExtra.DrawLatex(0.20,0.91+expoffset, cmsExtra);
 
 
     # Draw selection
@@ -647,27 +650,27 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             whichsel = plotname.split("_")[len(plotname.split("_"))-2]
         ts = 0
         for s in range(0,nsel[whichsel]+1):
-            if '1p' not in whichnb and s==7:
-                continue
             if 'inclusive' not in whichmll and s==8:
+                continue
+            if '1p' not in whichnb and s==10:
                 continue
             ts = ts+1
             if args.data:
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
             else:
                 latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
+        if 'inclusive' not in whichmll and nsel[whichsel]>=8:
+            ts = ts+1
+            if args.data:
+                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
+            else:
+                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
         if '1p' not in whichnb and nsel[whichsel]>=10:
             ts = ts+1
             if args.data:
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), nbbin[whichnb])
             else:
                 latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
-        if 'inclusive' not in whichmll and nsel[whichsel]>=7:
-            ts = ts+1
-            if args.data:
-                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
-            else:
-                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
 
 
     # Print and save
