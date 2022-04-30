@@ -1,6 +1,6 @@
 {
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
-  gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
+  gROOT->ProcessLine(".L ScanChain_Zprime_btags.C+");  // Macro that performs the selection
 
 
   vector<TString> years = { };
@@ -91,6 +91,7 @@
   }
 
   // VV
+  /*
   vector<TString> VV = { "WW", "WZ", "ZZ" };
   for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
   {
@@ -145,7 +146,7 @@
                                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
     sample_useUnderscore.insert({"TTHTo"+bb[ibb]+"bb",0});
   }
-
+*/
   // Signals
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
   vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };

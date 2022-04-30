@@ -171,12 +171,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
     for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
+      flag_20T = false;
+      flag_20M = false;
+      flag_30T = false;
+      flag_30M = false;
+
       nt.GetEntry(event);
       tree->LoadTree(event);
 
       float weight = 1.0;
+      wgt = 1.0;
       if ( isMC )
 	weight = genWeight();
+        wgt = genWeight();
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
@@ -296,6 +303,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( selectedPair_M < 150 ) continue;
 
+      m_ll = selectedPair_M;
+
       // Look for a third isolated lepton and then veto the event if it is found
       // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
       vector<int> extra_muons;
@@ -378,7 +387,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
 
 
-      vector<int> cand_bJets;
+      //vector<int> cand_bJets;
+      vector<int> bjet_idx_med_20;
+      vector<int> bjet_idx_tight_20;
+      vector<int> bjet_idx_med_30;
+      vector<int> bjet_idx_tight_30;
       unsigned int nbtagDeepFlavB = 0;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
         float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
@@ -393,63 +406,109 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     fabs(nt.Jet_eta().at(jet))<2.5 && 
 	     nt.Jet_jetId().at(jet) > 0 && 
 	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
-	  cand_bJets.push_back(jet);  // Medium DeepJet WP
+	   //cand_bJets.push_back(jet);  // Medium DeepJet WP
+	   bjet_idx_med_20.push_back(jet);
+           if ( nt.Jet_btagDeepFlavB().at(jet) > 0.7100 ){
+                bjet_idx_tight_20.push_back(jet);
+                if (nt.Jet_pt().at(jet) > 30) bjet_idx_tight_30.push_back(jet);
+           }
+           if ( nt.Jet_pt().at(jet) > 30 ) bjet_idx_med_30.push_back(jet);
 	}
       }
-      if ( cand_bJets.size() < 1 ) continue;
-      float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
-      float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
-      float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
-      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
+      //if ( bjet_p4_med_20.size() < 1 ) continue;
 
       // Construct mlb pairs from selected muon pair and candidate b jets
       auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
       auto subleadingMu_p4 = nt.Muon_p4().at(subleadingMu_idx);
       auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
-      float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9;
-      float min_mlb = 1e9;
-      float min_mbb = 1e9, max_mbb = -1e9;
-      for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ) {
+      
+      if ( bjet_idx_med_20.size() < 1 ) continue;
+      float min_mlb_med_20 = 1e9;
+      //float min_mlb_tight_20 = 1e9;
+      //float min_mlb_med_30 = 1e9;
+      //float min_mlb_tight_30 1e9;
+      for ( int bm2 = 0; bm2 < bjet_idx_med_20.size(); bm2++ ) {
         //if ( bjet > 2 ) continue;
-        auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
+        auto bjet_p4 = nt.Jet_p4().at(bjet_idx_med_20[bm2]);
         float m_mu1_b = (leadingMu_p4+bjet_p4).M();
-        if ( m_mu1_b < min_mlb ) {
-          min_mlb = m_mu1_b;
+        if ( m_mu1_b < min_mlb_med_20 ) {
+          min_mlb_med_20 = m_mu1_b;
         }
         float m_mu2_b = (subleadingMu_p4+bjet_p4).M();
-        if ( m_mu2_b < min_mlb ) {
-          min_mlb = m_mu2_b;
+        if ( m_mu2_b < min_mlb_med_20 ) {
+          min_mlb_med_20 = m_mu2_b;
         }
 
-        float dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
-        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
-        dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
-        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
-
-        float dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
-        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
-        dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
-        if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
-
-        float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - nt.MET_phi()));
-        if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
-
-	for ( int bbjet = bjet+1; bbjet < cand_bJets.size(); bbjet++) {
-	  auto bbjet_p4 = nt.Jet_p4().at(cand_bJets[bbjet]);
-	  float mbb = (bjet_p4+bbjet_p4).M();
-	  if ( mbb < min_mbb ) {
-	    min_mbb = mbb;
-	  }
-	  if ( mbb > max_mbb ) {
-	    max_mbb = mbb;
-	  }
-	}
-
       }
-      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi());
+      
+      float min_mlb_med_30 = -1;
+      if ( bjet_idx_med_30.size() > 0 ){ 
+        min_mlb_med_30 = 1e9;
+      	for ( int bm3 = 0; bm3 < bjet_idx_med_30.size(); bm3++ ){
+        	auto bjet_p4_1 = nt.Jet_p4().at(bjet_idx_med_30[bm3]);
+        	float m_mu1_b_1 = (leadingMu_p4+bjet_p4_1).M();
+        	if ( m_mu1_b_1 < min_mlb_med_30 ) {
+          	min_mlb_med_30 = m_mu1_b_1;
+        	}
+        	float m_mu2_b_1 = (subleadingMu_p4+bjet_p4_1).M();
+        	if ( m_mu2_b_1 < min_mlb_med_30 ) {
+          	min_mlb_med_30 = m_mu2_b_1;
+        	} 
+      	} 
+      }
 
-      if ( min_mlb < 175.0 ) continue;
+      float min_mlb_tight_20 = -1;
+      if ( bjet_idx_tight_20.size() > 0 ){
+         min_mlb_tight_20 = 1e9;
+      	for ( int bt2 = 0; bt2 < bjet_idx_tight_20.size(); bt2++ ){
+        	auto bjet_p4_2 = nt.Jet_p4().at(bjet_idx_tight_20[bt2]);
+        	float m_mu1_b_2 = (leadingMu_p4+bjet_p4_2).M();
+        	if ( m_mu1_b_2 < min_mlb_tight_20 ) {
+          	min_mlb_tight_20 = m_mu1_b_2;
+        	}
+        	float m_mu2_b_2 = (subleadingMu_p4+bjet_p4_2).M();
+        	if ( m_mu2_b_2 < min_mlb_tight_20 ) {
+          	min_mlb_tight_20 = m_mu2_b_2;
+        	}
+      	}	
+      }
 
+      float min_mlb_tight_30 = -1;
+      if ( bjet_idx_tight_30.size() > 0 ){
+        min_mlb_tight_30 = 1e9;
+      	for ( int bt3 = 0; bt3 < bjet_idx_tight_30.size(); bt3++ ){
+       	 	auto bjet_p4_3 = nt.Jet_p4().at(bjet_idx_tight_30[bt3]);
+        	float m_mu1_b_3 = (leadingMu_p4+bjet_p4_3).M();
+        	if ( m_mu1_b_3 < min_mlb_tight_30 ) {
+          	min_mlb_tight_30 = m_mu1_b_3;
+        	}
+        	float m_mu2_b_3 = (subleadingMu_p4+bjet_p4_3).M();
+        	if ( m_mu2_b_3 < min_mlb_tight_30 ) {
+          	min_mlb_tight_30 = m_mu2_b_3;
+        	}
+      	}
+      }
+    
+
+      if ( min_mlb_med_20 > 175 ){
+           // Set corresponding boolean to true
+           flag_20M = true;
+      }
+      if ( min_mlb_med_30 > 175 ){
+           // Set corresponding boolean to true
+           flag_30M = true;
+      }
+      if ( min_mlb_tight_20 > 175 ){
+           // Set corresponding boolean to true
+           flag_20T = true;
+      }
+      if ( min_mlb_tight_30 > 175 ){
+           // Set corresponding boolean to true
+           flag_30T = true; 
+      }
+
+      // Fill the tree
+      tree_out.Fill();    
 
     } // Event loop
 
