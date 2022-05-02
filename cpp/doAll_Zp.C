@@ -46,13 +46,14 @@
 						} } } });
   */
   // ttbar
+  
   samples.push_back("ttbar");
   sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
   sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-
+  
   // DY
   //samples.push_back("DY");
   //sample_names.insert({"DY","DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8"});
@@ -127,8 +128,10 @@
   }
 */
   // Signals
+  
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
   vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
+  
   for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
   {
     for ( unsigned int imass=0; imass<sigMass.size(); imass++ )

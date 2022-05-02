@@ -143,11 +143,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
-  float m_ll, wgt;
+  float m_ll, wgt, weighted_evts;
   bool flag_20T, flag_20M, flag_30T, flag_30M;
   TTree tree_out("tree","");
   tree_out.Branch("m_ll",&m_ll);
   tree_out.Branch("wgt",&wgt);
+  tree_out.Branch("weighted_evts",&weighted_evts);
   tree_out.Branch("flag_20T",&flag_20T);
   tree_out.Branch("flag_20M",&flag_20M);
   tree_out.Branch("flag_30T",&flag_30T);
@@ -184,7 +185,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       wgt = 1.0;
       if ( isMC )
 	weight = genWeight();
-        wgt = weight*factor;
+        wgt = weight;
+        weighted_evts = weight*factor;
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
@@ -416,7 +418,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
            if ( nt.Jet_pt().at(jet) > 30 ) bjet_idx_med_30.push_back(jet);
 	}
       }
-      //if ( bjet_p4_med_20.size() < 1 ) continue;
+ 
+      //std::cout << "Number of M 20 jets = " << bjet_idx_med_20.size() << endl;
+      //std::cout << "Number of T 20 jets = " << bjet_idx_tight_20.size() << endl;
+      //std::cout << "Number of M 30 jets = " << bjet_idx_med_30.size() << endl;
+      //std::cout << "Number of T 30 jets = " << bjet_idx_tight_30.size() << endl;
+     
 
       // Construct mlb pairs from selected muon pair and candidate b jets
       auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
@@ -490,11 +497,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       	}
       }
     
+      
 
-      if ( min_mlb_med_20 > 175 ){
-           // Set corresponding boolean to true
-           flag_20M = true;
-      }
+      if ( min_mlb_med_20 < 175 ) continue;
+      // Set corresponding boolean to true
+      flag_20M = true;
+      
       if ( min_mlb_med_30 > 175 ){
            // Set corresponding boolean to true
            flag_30M = true;
