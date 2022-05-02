@@ -14,6 +14,7 @@
   map<TString,map<TString,vector<TString>>> sample_prod = { };
 
   // SingleMuon data
+  /*
   samples.push_back("data");
   sample_names.insert({"data", "SingleMuon"});
   sample_prod.insert({"data", { { "2018",       {
@@ -43,7 +44,7 @@
 						 "Run2016G-UL2016_MiniAODv2_NanoAODv9-v1",
 						 "Run2016H-UL2016_MiniAODv2_NanoAODv9-v1",
 						} } } });
-
+  */
   // ttbar
   samples.push_back("ttbar");
   sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});

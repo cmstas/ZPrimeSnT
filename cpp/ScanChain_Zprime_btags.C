@@ -126,6 +126,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
 
+  /*
   if ( !isMC ) {
     if ( year == "2016APV" )
       set_goodrun_file_json("../utils/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt");
@@ -136,7 +137,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     if ( year == "2018" )
       set_goodrun_file_json("../utils/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt");
   }
-
+  */
   if ( isMC )
     factor = xsec*lumi/genEventSumw;
 
@@ -144,7 +145,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
   float m_ll, wgt;
   bool flag_20T, flag_20M, flag_30T, flag_30M;
-  TTree tree_out("Slimmed btag output tree","");
+  TTree tree_out("tree","");
   tree_out.Branch("m_ll",&m_ll);
   tree_out.Branch("wgt",&wgt);
   tree_out.Branch("flag_20T",&flag_20T);
@@ -183,7 +184,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       wgt = 1.0;
       if ( isMC )
 	weight = genWeight();
-        wgt = genWeight();
+        wgt = weight*factor;
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
