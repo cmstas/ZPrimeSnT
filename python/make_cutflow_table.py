@@ -378,15 +378,18 @@ sigsampleLabels=["%s (%s GeV)"%(i.split("_")[0],i.split("_")[1].replace("M",""))
 samples=bkgsamples+sigsamples
 sampleLabels=bkgsampleLabels+sigsampleLabels
 
+year="2018"
+indir="./cpp/temp_data/"
+outdir="tables/"
 listofcutflows = []
-listofcutflows = getListOfCutflows()
+listofcutflows = getListOfCutflows(indir+"output_ttbar_"+year+".root")
 toexclude = []
 
 ###make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "./cpp/temp_data/", year = "2018", outdir="tables/", extension="", doBkgTable=True, doSignalTable=False, doSoverB=False, doSignalOnlyTable=False)
 for cutflow in listofcutflows:
     if cutflow in toexclude:
         continue
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=True,doSignalTable=False,doSoverB=False,doSignalOnlyTable=False)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension=signalname)
-    make_cutflow_table(cutflow,samples,sampleLabels,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension=signalname)
+    make_cutflow_table(cutflow,samples,sampleLabels,year=year,indir=indir,outdir=outdir,doBkgTable=True,doSignalTable=False,doSoverB=False,doSignalOnlyTable=False)
+    make_cutflow_table(cutflow,samples,sampleLabels,year=year,indir=indir,outdir=outdir,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=False)
+    make_cutflow_table(cutflow,samples,sampleLabels,year=year,indir=indir,outdir=outdir,doBkgTable=False,doSignalTable=True,doSoverB=False,doSignalOnlyTable=True,extension=signalname)
+    make_cutflow_table(cutflow,samples,sampleLabels,year=year,indir=indir,outdir=outdir,doBkgTable=False,doSignalTable=True,doSoverB=True,doSignalOnlyTable=False,extension=signalname)
