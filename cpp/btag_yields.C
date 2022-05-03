@@ -236,23 +236,39 @@ vector<double> btag_yields(TString process, TString year, double mass){
        double FOM_20T = sumWeights_20T_MW / sqrt(sumWeights_20T_MW_DY+sumWeights_20T_MW_tt);
        double FOM_30T = sumWeights_30T_MW / sqrt(sumWeights_30T_MW_DY+sumWeights_30T_MW_tt); 
 
-       std::cout << "Event yield 20M (signal) = " << sumWeights_20M << endl;
-       std::cout << "Event yield 20M (DY) = " << sumWeights_20M_DY << endl; 
-       std::cout << "Event yield 20M (ttbar) = " << sumWeights_20M_tt << endl;
-       std::cout << "Event yield 20T (signal) = " << sumWeights_20T << endl;
-       std::cout << "Event yield 20T (DY) = " << sumWeights_20T_DY << endl;
-       std::cout << "Event yield 20T (ttbar) = " << sumWeights_20T_tt << endl;
-       std::cout << "Event yield 30M (signal) = " << sumWeights_30M << endl;
-       std::cout << "Event yield 30M (DY) = " << sumWeights_30M_DY << endl;
-       std::cout << "Event yield 30M (ttbar) = " << sumWeights_30M_tt << endl;
-       std::cout << "Event yield 30T (signal) = " << sumWeights_30T << endl;
-       std::cout << "Event yield 30T (DY) = " << sumWeights_30T_DY << endl;
-       std::cout << "Event yield 30T (ttbar) = " << sumWeights_30T_tt << endl;
+       std::cout << "Event yield 20M (signal) = " << sumWeights_20M_MW << endl;
+       std::cout << "Event yield 20T (signal) = " << sumWeights_20T_MW << endl;
+       std::cout << "Event yield 30M (signal) = " << sumWeights_30M_MW << endl;
+       std::cout << "Event yield 30T (signal) = " << sumWeights_30T_MW << endl;
+     
+       std::cout << "Event yield 20M (DY) = " << sumWeights_20M_MW_DY << endl; 
+       std::cout << "Event yield 20T (DY) = " << sumWeights_20T_MW_DY << endl;
+       std::cout << "Event yield 30M (DY) = " << sumWeights_30M_MW_DY << endl;
+       std::cout << "Event yield 30T (DY) = " << sumWeights_30T_MW_DY << endl; 
+       
+       std::cout << "Event yield 20M (ttbar) = " << sumWeights_20M_MW_tt << endl;
+       std::cout << "Event yield 20T (ttbar) = " << sumWeights_20T_MW_tt << endl;
+       std::cout << "Event yield 30M (ttbar) = " << sumWeights_30M_MW_tt << endl;
+       std::cout << "Event yield 30T (ttbar) = " << sumWeights_30T_MW_tt << endl;
 
-       std::cout << "T/M Ratio, 20 GeV, signal = " << sumWeights_20T/sumWeights_20M << endl;
-       std::cout << "T/M Ratio, 30 GeV, signal = " << sumWeights_30T/sumWeights_30M << endl;
-       std::cout << "30/20 Ratio, Medium, signal = " << sumWeights_30M/sumWeights_20M << endl;
-       std::cout << "30/20 Ratio, Tight, signal = " << sumWeights_30T/sumWeights_20T << endl; 
+       std::cout << "T/M Ratio, 20 GeV, signal = " << sumWeights_20T_MW/sumWeights_20M_MW << endl;
+       std::cout << "T/M Ratio, 30 GeV, signal = " << sumWeights_30T_MW/sumWeights_30M_MW << endl;
+       std::cout << "30/20 Ratio, Medium, signal = " << sumWeights_30M_MW/sumWeights_20M_MW << endl;
+       std::cout << "30/20 Ratio, Tight, signal = " << sumWeights_30T_MW/sumWeights_20T_MW << endl; 
+
+       std::cout << "T/M Ratio, 20 GeV, DY = " << sumWeights_20T_MW_DY/sumWeights_20M_MW_DY << endl;
+       std::cout << "T/M Ratio, 30 GeV, DY = " << sumWeights_30T_MW_DY/sumWeights_30M_MW_DY << endl;
+       std::cout << "30/20 Ratio, Medium, DY = " << sumWeights_30M_MW_DY/sumWeights_20M_MW_DY << endl;
+       std::cout << "30/20 Ratio, Tight, DY = " << sumWeights_30T_MW_DY/sumWeights_20T_MW_DY << endl;
+
+       std::cout << "T/M Ratio, 20 GeV, ttbar = " << sumWeights_20T_MW_tt/sumWeights_20M_MW_tt << endl;
+       std::cout << "T/M Ratio, 30 GeV, ttbar = " << sumWeights_30T_MW_tt/sumWeights_30M_MW_tt << endl;
+       std::cout << "30/20 Ratio, Medium, ttbar = " << sumWeights_30M_MW_tt/sumWeights_20M_MW_tt << endl;
+       std::cout << "30/20 Ratio, Tight, ttbar = " << sumWeights_30T_MW_tt/sumWeights_20T_MW_tt << endl;
+
+       std::cout << "Total signal yield after all cuts = " << sumWeights_20M << endl;
+       std::cout << "Total DY yield after all cuts = " << sumWeights_20M_DY << endl;
+       std::cout << "Total ttbar yield after all cuts = " << sumWeights_20M_tt << endl;
 
        FOMs = {FOM_20M,FOM_20T,FOM_30M,FOM_30T};
       
