@@ -481,8 +481,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     h_axis_ratio = ROOT.TH1D()
     h_axis = ROOT.TH1D("h_axis","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
     if "cutflow" in plotname:
-        for b in range(1, curPlots["ttbar"].GetNbinsX()+1):
-            tlabel = curPlots["ttbar"].GetXaxis().GetBinLabel(b)
+        for b in range(1, curPlots[curPlots.keys()[0]].GetNbinsX()+1):
+            tlabel = curPlots[curPlots.keys()[0]].GetXaxis().GetBinLabel(b)
             h_axis.GetXaxis().SetBinLabel(b, tlabel)
     h_axis_ratio = ROOT.TH1D("h_axis_ratio","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
     if logX and MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
