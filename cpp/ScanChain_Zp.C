@@ -32,6 +32,7 @@
 
 // #define DEBUG
 
+bool muonDebug = false;
 bool removeSpikes = true;
 bool doMllBins = true;
 bool doNbTagBins = true;
@@ -196,10 +197,40 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"mu2_eta", 3});
   title.insert({"mu2_eta", "#eta (subleading #mu)"});
 
+  nbins.insert({"mu1_phi", 64});
+  low.insert({"mu1_phi", -3.2});
+  high.insert({"mu1_phi", 3.2});
+  title.insert({"mu1_phi", "#phi (leading #mu)"});
+
+  nbins.insert({"mu2_phi", 64});
+  low.insert({"mu2_phi", -3.2});
+  high.insert({"mu2_phi", 3.2});
+  title.insert({"mu2_phi", "#phi (subleading #mu)"});
+
   nbins.insert({"dPhi_ll", 32});
   low.insert({"dPhi_ll", 0});
   high.insert({"dPhi_ll", 3.2});
   title.insert({"dPhi_ll", "min #Delta#phi(ll)"});
+
+  nbins.insert({"mu1_dxy", 100});
+  low.insert({"mu1_dxy", 0.0});
+  high.insert({"mu1_dxy", 1.0});
+  title.insert({"mu1_dxy", "d_{xy} (leading #mu)"});
+
+  nbins.insert({"mu2_dxy", 100});
+  low.insert({"mu2_dxy", 0.0});
+  high.insert({"mu2_dxy", 1.0});
+  title.insert({"mu2_dxy", "d_{xy} (subleading #mu)"});
+
+  nbins.insert({"mu1_dz", 100});
+  low.insert({"mu1_dz", 0.0});
+  high.insert({"mu1_dz", 1.0});
+  title.insert({"mu1_dz", "d_{z} (leading #mu)"});
+
+  nbins.insert({"mu2_dz", 100});
+  low.insert({"mu2_dz", 0.0});
+  high.insert({"mu2_dz", 1.0});
+  title.insert({"mu2_dz", "d_{z} (subleading #mu)"});
 
   nbins.insert({"mu1_trkRelIso", 50});
   low.insert({"mu1_trkRelIso", 0});
@@ -425,19 +456,42 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   plot_names.push_back("pfmet_phi");
   plot_names.push_back("puppimet_pt");
   plot_names.push_back("puppimet_phi");
+  if ( muonDebug ) {
+    plot_names.push_back("mu1_pt");
+    plot_names.push_back("mu2_pt");
+    plot_names.push_back("mu1_eta");
+    plot_names.push_back("mu2_eta");
+    plot_names.push_back("mu1_phi");
+    plot_names.push_back("mu2_phi");
+    plot_names.push_back("mu1_dxy");
+    plot_names.push_back("mu2_dxy");
+    plot_names.push_back("mu1_dz");
+    plot_names.push_back("mu2_dz");
+    plot_names.push_back("mu1_trkRelIso");
+    plot_names.push_back("mu2_trkRelIso");
+    plot_names.push_back("nCand_Muons");
+  }
   map<TString, TH1F*> histos;
   int nExtraHistos = 0;
   for ( unsigned int isel=0; isel < selection.size(); isel++ ) {
     if (isel==5) {
       plot_names.push_back("mll_pf");
-      plot_names.push_back("mu1_pt");
-      plot_names.push_back("mu2_pt");
-      plot_names.push_back("mu1_eta");
-      plot_names.push_back("mu2_eta");
+      if ( !muonDebug ) {
+        plot_names.push_back("mu1_pt");
+        plot_names.push_back("mu2_pt");
+        plot_names.push_back("mu1_eta");
+        plot_names.push_back("mu2_eta");
+        plot_names.push_back("mu1_phi");
+        plot_names.push_back("mu2_phi");
+        plot_names.push_back("mu1_dxy");
+        plot_names.push_back("mu2_dxy");
+        plot_names.push_back("mu1_dz");
+        plot_names.push_back("mu2_dz");
+        plot_names.push_back("mu1_trkRelIso");
+        plot_names.push_back("mu2_trkRelIso");
+        plot_names.push_back("nCand_Muons");
+      }
       plot_names.push_back("dPhi_ll");
-      plot_names.push_back("mu1_trkRelIso");
-      plot_names.push_back("mu2_trkRelIso");
-      plot_names.push_back("nCand_Muons");
     }
       // Add also extra plots before third lepton/isotrack veto
     if (isel==6) {
@@ -551,6 +605,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       nt.GetEntry(event);
       tree->LoadTree(event);
 
+      nEventsTotal++;
+      bar.progress(nEventsTotal, nEventsChain);
+
       float weight = 1.0;
       if ( isMC )
 	weight = genWeight();
@@ -613,15 +670,53 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("puppimet_phi");
       variable.insert({"puppimet_phi", puppimet_phi});
 
+      if ( muonDebug ) {
+        plot_names.push_back("mu1_pt");
+        variable.insert({"mu1_pt", nt.Muon_pt().at(0)});
+
+        plot_names.push_back("mu2_pt");
+        variable.insert({"mu2_pt", nt.Muon_pt().at(1)});
+
+        plot_names.push_back("mu1_eta");
+        variable.insert({"mu1_eta", nt.Muon_eta().at(0)});
+
+        plot_names.push_back("mu2_eta");
+        variable.insert({"mu2_eta", nt.Muon_eta().at(1)});
+
+        plot_names.push_back("mu1_phi");
+        variable.insert({"mu1_phi", nt.Muon_phi().at(0)});
+
+        plot_names.push_back("mu2_phi");
+        variable.insert({"mu2_phi", nt.Muon_phi().at(1)});
+
+        plot_names.push_back("mu1_dxy");
+        variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(0))});
+
+        plot_names.push_back("mu2_dxy");
+        variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(1))});
+
+        plot_names.push_back("mu1_dz");
+        variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(0))});
+
+        plot_names.push_back("mu2_dz");
+        variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
+
+        plot_names.push_back("mu1_trkRelIso");
+        variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(0)});
+
+        plot_names.push_back("mu2_trkRelIso");
+        variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(1)});
+
+        plot_names.push_back("nCand_Muons");
+        variable.insert({"nCand_Muons", nt.nMuon()});
+      }
+
 
       // Define vector of muon candidate indices here.....
       vector<int> cand_muons_pf_id;
       vector<int> cand_muons_pf_id_and_pteta;
       vector<int> cand_muons_pf;
       //vector<int> cand_muons_tunep;
-
-      nEventsTotal++;
-      bar.progress(nEventsTotal, nEventsChain);
 
       // After skim
       label = "After skim";
@@ -839,7 +934,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         if ( Zboson ) break;
       }
       if ( selectedPair_M < 0.0 || Zboson ) continue;
-      
+        
       mllbinsel[0] = true;
       if (doMllBins) {
 	if ( selectedPair_M > 150. && selectedPair_M < 250)
@@ -866,29 +961,64 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("mll_pf");
       variable.insert({"mll_pf", selectedPair_M});
 
-      plot_names.push_back("mu1_pt");
-      variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)});
+      if ( muonDebug ) {
+        variable["mu1_pt"] = nt.Muon_pt().at(leadingMu_idx);
+        variable["mu2_pt"] = nt.Muon_pt().at(subleadingMu_idx);
+        variable["mu1_eta"] = nt.Muon_eta().at(leadingMu_idx);
+        variable["mu2_eta"] = nt.Muon_eta().at(subleadingMu_idx);
+        variable["mu1_phi"] = nt.Muon_phi().at(leadingMu_idx);
+        variable["mu2_phi"] = nt.Muon_phi().at(subleadingMu_idx);
+        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(leadingMu_idx));
+        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(subleadingMu_idx));
+        variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
+        variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
+        variable["mu1_trkRelIso"] = nt.Muon_tkRelIso().at(leadingMu_idx);
+        variable["mu2_trkRelIso"] = nt.Muon_tkRelIso().at(subleadingMu_idx);
+        variable["nCand_Muons"] = cand_muons_pf.size();
+      }
+      else {
+        plot_names.push_back("mu1_pt");
+        variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)});
 
-      plot_names.push_back("mu2_pt");
-      variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)});
+        plot_names.push_back("mu2_pt");
+        variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)});
 
-      plot_names.push_back("mu1_eta");
-      variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
+        plot_names.push_back("mu1_eta");
+        variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
 
-      plot_names.push_back("mu2_eta");
-      variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
+        plot_names.push_back("mu2_eta");
+        variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
+
+        plot_names.push_back("mu1_phi");
+        variable.insert({"mu1_phi", nt.Muon_phi().at(leadingMu_idx)});
+
+        plot_names.push_back("mu2_phi");
+        variable.insert({"mu2_phi", nt.Muon_phi().at(subleadingMu_idx)});
+
+        plot_names.push_back("mu1_dxy");
+        variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(leadingMu_idx))});
+
+        plot_names.push_back("mu2_dxy");
+        variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(subleadingMu_idx))});
+
+        plot_names.push_back("mu1_dz");
+        variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(leadingMu_idx))});
+
+        plot_names.push_back("mu2_dz");
+        variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
+
+        plot_names.push_back("mu1_trkRelIso");
+        variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
+
+        plot_names.push_back("mu2_trkRelIso");
+        variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)});
+
+        plot_names.push_back("nCand_Muons");
+        variable.insert({"nCand_Muons", cand_muons_pf.size()});
+      }
 
       plot_names.push_back("dPhi_ll");
       variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
-
-      plot_names.push_back("mu1_trkRelIso");
-      variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
-
-      plot_names.push_back("mu2_trkRelIso");
-      variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)});
-
-      plot_names.push_back("nCand_Muons");
-      variable.insert({"nCand_Muons", cand_muons_pf.size()});
 
       // Fill histos: sel5
       label = "Muon pair (OS, !Z)";
