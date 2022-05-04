@@ -14,9 +14,10 @@
 #include "../NanoCORE/Nano.h"
 #include "../NanoCORE/Base.h"
 #include "../NanoCORE/tqdm.h"
+#include "../NanoCORE/ZPrimeTools.cc"
 #include "../NanoCORE/XYMETCorrection_withUL17andUL18andUL16.h"
 #include "../NanoCORE/Tools/goodrun.h"
-#include "../NanoCORE/ZPrimeTools.cc"
+#include "../NanoCORE/Tools/dorky.h"
 
 #include <iostream>
 #include <iomanip>
@@ -33,9 +34,13 @@
 // #define DEBUG
 
 bool muonDebug = false;
+bool useTuneP = true;
+bool usePuppiMET = true;
 bool removeSpikes = true;
+bool removeDataDuplicates = false;
 bool doMllBins = true;
 bool doNbTagBins = true;
+double Zmass = 91.1876;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -49,6 +54,7 @@ struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<
 
 using namespace std;
 using namespace tas;
+using namespace duplicate_removal;
 
 int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
@@ -120,7 +126,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     return 1;
   }
 
-
   if ( year == "2018" )       lumi = 59.83; // fb-1
   if ( year == "2017" )       lumi = 41.48; // fb-1
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
@@ -172,10 +177,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   high.insert({"puppimet_phi", 3.25});
   title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
 
-  nbins.insert({"mll_pf", 480});
-  low.insert({"mll_pf", 100});
-  high.insert({"mll_pf", 2500});
-  title.insert({"mll_pf", "m_{ll} [GeV]"});
+  nbins.insert({"mmumu", 480});
+  low.insert({"mmumu", 100});
+  high.insert({"mmumu", 2500});
+  title.insert({"mmumu", "m_{#mu#mu} [GeV]"});
 
   nbins.insert({"mu1_pt", 200});
   low.insert({"mu1_pt", 0});
@@ -208,9 +213,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   title.insert({"mu2_phi", "#phi (subleading #mu)"});
 
   nbins.insert({"dPhi_ll", 32});
-  low.insert({"dPhi_ll", 0});
+  low.insert({"dPhi_ll", 0.0});
   high.insert({"dPhi_ll", 3.2});
-  title.insert({"dPhi_ll", "min #Delta#phi(ll)"});
+  title.insert({"dPhi_ll", "#Delta#phi(#mu,#mu)"});
+
+  nbins.insert({"dEta_ll", 50});
+  low.insert({"dEta_ll", 0.0});
+  high.insert({"dEta_ll", 5.0});
+  title.insert({"dEta_ll", "#Delta#eta(#mu,#mu)"});
+
+  nbins.insert({"dEta_dPhi_ratio_ll", 50});
+  low.insert({"dEta_dPhi_ratio_ll", -5.0});
+  high.insert({"dEta_dPhi_ratio_ll", 5.0});
+  title.insert({"dEta_dPhi_ratio_ll", "log_{10} |#Delta#eta(#mu,#mu)/#Delta#phi(#mu,#mu)|"});
 
   nbins.insert({"mu1_dxy", 100});
   low.insert({"mu1_dxy", 0.0});
@@ -355,7 +370,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   nbins.insert({"min_mlb", 300});
   low.insert({"min_mlb", 0});
   high.insert({"min_mlb", 1500});
-  title.insert({"min_mlb", "min m_{lb} [GeV]"});
+  title.insert({"min_mlb", "min m_{#mu b} [GeV]"});
 
   nbins.insert({"min_mbb", 300});
   low.insert({"min_mbb", 0});
@@ -375,18 +390,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   nbins.insert({"minDPhi_lb_MET", 32});
   low.insert({"minDPhi_lb_MET", 0});
   high.insert({"minDPhi_lb_MET", 3.2});
-  title.insert({"minDPhi_lb_MET", "min #Delta#phi(lb,MET)"});
+  title.insert({"minDPhi_lb_MET", "min #Delta#phi(#mu b,MET)"});
 
   nbins.insert({"minDPhi_llb_MET", 32});
   low.insert({"minDPhi_llb_MET", 0});
   high.insert({"minDPhi_llb_MET", 3.2});
-  title.insert({"minDPhi_llb_MET", "min #Delta#phi(llb,MET)"});
+  title.insert({"minDPhi_llb_MET", "min #Delta#phi(#mu#mu b,MET)"});
 
   nbins.insert({"dPhi_ll_MET", 32});
   low.insert({"dPhi_ll_MET", 0});
   high.insert({"dPhi_ll_MET", 3.2});
-  title.insert({"dPhi_ll_MET", "min #Delta#phi(ll,MET)"});
-
+  title.insert({"dPhi_ll_MET", "#Delta#phi(#mu#mu,MET)"});
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
@@ -475,7 +489,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   int nExtraHistos = 0;
   for ( unsigned int isel=0; isel < selection.size(); isel++ ) {
     if (isel==5) {
-      plot_names.push_back("mll_pf");
+      plot_names.push_back("mmumu");
       if ( !muonDebug ) {
         plot_names.push_back("mu1_pt");
         plot_names.push_back("mu2_pt");
@@ -492,6 +506,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         plot_names.push_back("nCand_Muons");
       }
       plot_names.push_back("dPhi_ll");
+      plot_names.push_back("dEta_ll");
+      plot_names.push_back("dEta_dPhi_ratio_ll");
     }
       // Add also extra plots before third lepton/isotrack veto
     if (isel==6) {
@@ -568,6 +584,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   }
 
   int nEventsTotal = 0;
+  int nDuplicates = 0;
   int nEventsChain = ch->GetEntries();
   TFile *currentFile = 0;
   TObjArray *listOfFiles = ch->GetListOfFiles();
@@ -613,14 +630,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	weight = genWeight();
       if(removeSpikes && weight*factor>1e2) continue;
 
-      int runnb = nt.run();
-      int lumiblock = nt.luminosityBlock();
+      unsigned int runnb = nt.run();
+      unsigned int lumiblock = nt.luminosityBlock();
+      unsigned long int evtnb = nt.event();
       int npv = nt.PV_npvs();
 
       // Apply Golden JSON
-      if ( !isMC )
+      if ( !isMC ) {
 	if ( !(goodrun(runnb, lumiblock)) )
 	  continue;
+	if ( removeDataDuplicates ) {
+	  DorkyEventIdentifier id(runnb, evtnb, lumiblock);
+	  if ( is_duplicate(id) ){
+	    ++nDuplicates;
+	    continue;
+	  }
+	}
+      }
 
       // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
       if ( !isMC )
@@ -649,6 +675,42 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       double puppimet_pt  = puppimet.first;
       double puppimet_phi = puppimet.second;
 
+      // Account for tunepRelPt if useTuneP
+      vector<LorentzVector> Muon_p4 = {};
+      vector<double> Muon_pt = {};
+      vector<double> Muon_tkRelIso = {};
+      TVector2 pfmet_temp;
+      pfmet_temp.SetMagPhi(pfmet_pt,pfmet_phi);
+      TVector2 puppimet_temp;
+      puppimet_temp.SetMagPhi(puppimet_pt,puppimet_phi);
+      for ( unsigned int im=0; im < nt.nMuon(); im++ ) {
+	Muon_pt.push_back(nt.Muon_pt().at(im));
+	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(im),nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im)));
+	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(im));
+	if ( nt.Muon_highPtId().at(im)>=2 ) {
+	  if ( useTuneP ) {
+	    TVector2 muon_temp;
+	    TVector2 muon_temp_tunep;
+	    muon_temp.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
+	    Muon_pt[im] *= nt.Muon_tunepRelPt().at(im);
+	    Muon_p4[im] = LorentzVector(Muon_pt[im],nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im));
+	    muon_temp_tunep.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
+	    // Correct MET for highPtId muon candidates
+	    pfmet_temp+=muon_temp;
+	    pfmet_temp-=muon_temp_tunep;
+	    puppimet_temp+=muon_temp;
+	    puppimet_temp-=muon_temp_tunep;
+	  }
+	  else {
+	    Muon_tkRelIso[im] *= nt.Muon_tunepRelPt().at(im);
+	  }
+	}
+      }
+      pfmet_pt  = pfmet_temp.Mod();
+      pfmet_phi = TVector2::Phi_mpi_pi(pfmet_temp.Phi());
+      puppimet_pt  = puppimet_temp.Mod();
+      puppimet_phi = TVector2::Phi_mpi_pi(puppimet_temp.Phi());
+
       // Define histo names and variables
       plot_names = { };
       map<TString, float> variable { };
@@ -672,10 +734,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( muonDebug ) {
         plot_names.push_back("mu1_pt");
-        variable.insert({"mu1_pt", nt.Muon_pt().at(0)});
+        variable.insert({"mu1_pt", Muon_pt.at(0)});
 
         plot_names.push_back("mu2_pt");
-        variable.insert({"mu2_pt", nt.Muon_pt().at(1)});
+        variable.insert({"mu2_pt", Muon_pt.at(1)});
 
         plot_names.push_back("mu1_eta");
         variable.insert({"mu1_eta", nt.Muon_eta().at(0)});
@@ -702,10 +764,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
 
         plot_names.push_back("mu1_trkRelIso");
-        variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(0)});
+        variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(0)});
 
         plot_names.push_back("mu2_trkRelIso");
-        variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(1)});
+        variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(1)});
 
         plot_names.push_back("nCand_Muons");
         variable.insert({"nCand_Muons", nt.nMuon()});
@@ -713,10 +775,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
 
       // Define vector of muon candidate indices here.....
-      vector<int> cand_muons_pf_id;
-      vector<int> cand_muons_pf_id_and_pteta;
-      vector<int> cand_muons_pf;
-      //vector<int> cand_muons_tunep;
+      vector<int> cand_muons_id;
+      vector<int> cand_muons_id_pteta;
+      vector<int> cand_muons;
 
       // After skim
       label = "After skim";
@@ -790,18 +851,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ) {
         bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
         bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
-        bool mu_pt_pf = ( nt.Muon_pt().at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-        bool mu_relIso = ( nt.Muon_tkRelIso().at(mu) < 0.1 );
+        bool mu_pt = ( Muon_pt.at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
+        bool mu_relIso = ( Muon_tkRelIso.at(mu) < 0.1 );
 	      
         if ( mu_trk_and_global && mu_id ) {
           nMu_id++;
-          cand_muons_pf_id.push_back(mu);
-          if ( mu_pt_pf ) {
+          cand_muons_id.push_back(mu);
+          if ( mu_pt ) {
             nMu_pt++;
-            cand_muons_pf_id_and_pteta.push_back(mu);
+            cand_muons_id_pteta.push_back(mu);
             if ( mu_relIso ) {
               nMu_iso++;
-              cand_muons_pf.push_back(mu);
+              cand_muons.push_back(mu);
             }
           }
         }
@@ -827,6 +888,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       icutflow++;
       sel = "sel1";
+      if ( muonDebug ) {
+        variable["mu1_pt"] = Muon_pt.at(cand_muons_id[0]);
+        variable["mu2_pt"] = Muon_pt.at(cand_muons_id[1]);
+        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id[0]);
+        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id[1]);
+        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id[0]);
+        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id[1]);
+        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[0]));
+        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[1]));
+        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[0]));
+        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[1]));
+        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[0]);
+        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[1]);
+        variable["nCand_Muons"] = cand_muons.size();
+      }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+sel+"_"+mllbin[0];
@@ -848,6 +924,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       icutflow++;
       sel = "sel2";
+      if ( muonDebug ) {
+        variable["mu1_pt"] = Muon_pt.at(cand_muons_id_pteta[0]);
+        variable["mu2_pt"] = Muon_pt.at(cand_muons_id_pteta[1]);
+        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[0]);
+        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[1]);
+        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[0]);
+        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[1]);
+        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[0]));
+        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[1]));
+        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[0]));
+        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[1]));
+        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]);
+        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]);
+        variable["nCand_Muons"] = cand_muons.size();
+      }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+sel+"_"+mllbin[0];
@@ -869,6 +960,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
       icutflow++;
       sel = "sel3";
+      if ( muonDebug ) {
+        variable["mu1_pt"] = Muon_pt.at(cand_muons[0]);
+        variable["mu2_pt"] = Muon_pt.at(cand_muons[1]);
+        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons[0]);
+        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons[1]);
+        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons[0]);
+        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons[1]);
+        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[0]));
+        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[1]));
+        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons[0]));
+        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons[1]));
+        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons[0]);
+        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons[1]);
+        variable["nCand_Muons"] = cand_muons.size();
+      }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+sel+"_"+mllbin[0];
@@ -881,8 +987,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( int n = 0; n < nt.nTrigObj(); n++ ) {
         if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
         if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
-        for ( auto i_cand_muons_pf : cand_muons_pf ) {
-	  if ( IsMatched( nt.Muon_eta().at(i_cand_muons_pf), nt.Muon_phi().at(i_cand_muons_pf), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
+        for ( auto i_cand_muons : cand_muons ) {
+	  if ( IsMatched( nt.Muon_eta().at(i_cand_muons), nt.Muon_phi().at(i_cand_muons), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
             muMatchedToTrigObj.push_back(true);
             atLeastSelectedMu_matchedToTrigObj = true;
           }
@@ -913,22 +1019,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       int leadingMu_idx = -1, subleadingMu_idx = -1;
       float selectedPair_M = -1.0;
       bool Zboson = false;
-      for ( unsigned int i=0; i<cand_muons_pf.size(); i++ ) {
-        TVector3 mu_1(nt.Muon_p4().at(cand_muons_pf[i]).Px(),nt.Muon_p4().at(cand_muons_pf[i]).Py(),nt.Muon_p4().at(cand_muons_pf[i]).Pz());
-        for ( unsigned int j=i+1; j<cand_muons_pf.size(); j++ ) {
-          if ( nt.Muon_pdgId().at(cand_muons_pf[i]) + nt.Muon_pdgId().at(cand_muons_pf[j]) != 0 ) continue; // Opposite sign, same flavor
+      for ( unsigned int i=0; i<cand_muons.size(); i++ ) {
+        TVector3 mu_1(Muon_p4.at(cand_muons[i]).Px(),Muon_p4.at(cand_muons[i]).Py(),Muon_p4.at(cand_muons[i]).Pz());
+        for ( unsigned int j=i+1; j<cand_muons.size(); j++ ) {
+          if ( nt.Muon_pdgId().at(cand_muons[i]) + nt.Muon_pdgId().at(cand_muons[j]) != 0 ) continue; // Opposite sign, same flavor
           if ( !(muMatchedToTrigObj[i] || muMatchedToTrigObj[j]) ) continue; // At least one muon in pair matched to HLT
-          TVector3 mu_2(nt.Muon_p4().at(cand_muons_pf[j]).Px(),nt.Muon_p4().at(cand_muons_pf[j]).Py(),nt.Muon_p4().at(cand_muons_pf[j]).Pz());
+          TVector3 mu_2(Muon_p4.at(cand_muons[j]).Px(),Muon_p4.at(cand_muons[j]).Py(),Muon_p4.at(cand_muons[j]).Pz());
           if ( !(IsSeparated( mu_1, mu_2, 0.02 ) ) ) continue; // 3D angle between muons > pi - 0.02
-          float m_ll_pf = (nt.Muon_p4().at(cand_muons_pf[i])+nt.Muon_p4().at(cand_muons_pf[j])).M();
-          if ( m_ll_pf > 70 && m_ll_pf < 110 ) { // Reject event if it contains dimuon pair compatible with Z mass
+          float m_ll = (Muon_p4.at(cand_muons[i])+Muon_p4.at(cand_muons[j])).M();
+          if ( fabs(m_ll - Zmass)<20.0 ) { // Reject event if it contains dimuon pair compatible with Z mass (within 20 GeV)
             Zboson = true;
             continue;
           }
           if ( selectedPair_M < 0.0 ) {
-            leadingMu_idx = cand_muons_pf[i];
-            subleadingMu_idx = cand_muons_pf[j];
-            selectedPair_M = m_ll_pf;
+            leadingMu_idx = cand_muons[i];
+            subleadingMu_idx = cand_muons[j];
+            selectedPair_M = m_ll;
           }
         }
         if ( Zboson ) break;
@@ -958,12 +1064,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       // Add histos: sel5
-      plot_names.push_back("mll_pf");
-      variable.insert({"mll_pf", selectedPair_M});
+      plot_names.push_back("mmumu");
+      variable.insert({"mmumu", selectedPair_M});
 
       if ( muonDebug ) {
-        variable["mu1_pt"] = nt.Muon_pt().at(leadingMu_idx);
-        variable["mu2_pt"] = nt.Muon_pt().at(subleadingMu_idx);
+        variable["mu1_pt"] = Muon_pt.at(leadingMu_idx);
+        variable["mu2_pt"] = Muon_pt.at(subleadingMu_idx);
         variable["mu1_eta"] = nt.Muon_eta().at(leadingMu_idx);
         variable["mu2_eta"] = nt.Muon_eta().at(subleadingMu_idx);
         variable["mu1_phi"] = nt.Muon_phi().at(leadingMu_idx);
@@ -972,16 +1078,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(subleadingMu_idx));
         variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
         variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
-        variable["mu1_trkRelIso"] = nt.Muon_tkRelIso().at(leadingMu_idx);
-        variable["mu2_trkRelIso"] = nt.Muon_tkRelIso().at(subleadingMu_idx);
-        variable["nCand_Muons"] = cand_muons_pf.size();
+        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(leadingMu_idx);
+        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(subleadingMu_idx);
+        variable["nCand_Muons"] = cand_muons.size();
       }
       else {
         plot_names.push_back("mu1_pt");
-        variable.insert({"mu1_pt", nt.Muon_pt().at(leadingMu_idx)});
+        variable.insert({"mu1_pt", Muon_pt.at(leadingMu_idx)});
 
         plot_names.push_back("mu2_pt");
-        variable.insert({"mu2_pt", nt.Muon_pt().at(subleadingMu_idx)});
+        variable.insert({"mu2_pt", Muon_pt.at(subleadingMu_idx)});
 
         plot_names.push_back("mu1_eta");
         variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
@@ -1008,17 +1114,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
 
         plot_names.push_back("mu1_trkRelIso");
-        variable.insert({"mu1_trkRelIso", nt.Muon_tkRelIso().at(leadingMu_idx)});
+        variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(leadingMu_idx)});
 
         plot_names.push_back("mu2_trkRelIso");
-        variable.insert({"mu2_trkRelIso", nt.Muon_tkRelIso().at(subleadingMu_idx)});
+        variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(subleadingMu_idx)});
 
         plot_names.push_back("nCand_Muons");
-        variable.insert({"nCand_Muons", cand_muons_pf.size()});
+        variable.insert({"nCand_Muons", cand_muons.size()});
       }
 
       plot_names.push_back("dPhi_ll");
       variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
+
+      plot_names.push_back("dEta_ll");
+      variable.insert({"dEta_ll", fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) )});
+
+      plot_names.push_back("dEta_dPhi_ratio_ll");
+      variable.insert({"dEta_dPhi_ratio_ll", TMath::Log10( fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) ) / fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) ) )});
 
       // Fill histos: sel5
       label = "Muon pair (OS, !Z)";
@@ -1047,7 +1159,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( selectedPair_M < 150 ) continue;
       // Fill histos: sel6
-      label = "m(ll)>150 GeV";
+      label = "m_{#mu#mu}>150 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1065,10 +1177,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // Muons (using same ID and isolation as for selected muons, to avoid scale factor combinatorics)
       vector<int> extra_muons;
       for ( int i = 0; i < nt.nMuon(); i++ ) {
-        if ( nt.Muon_pt().at(i) > 10. && 
+        if ( Muon_pt.at(i) > 10. &&
 	     fabs(nt.Muon_eta().at(i)) < 2.4 &&
-	     nt.Muon_highPtId().at(i) >= 2 && 
-	     nt.Muon_tkRelIso().at(i) < 0.1 &&
+	     nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
+	     nt.Muon_highPtId().at(i) >= 2 &&
+	     Muon_tkRelIso.at(i) < 0.1 &&
 	     !( i == leadingMu_idx || i == subleadingMu_idx)) {
           extra_muons.push_back(i);
         }
@@ -1079,7 +1192,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( int i = 0; i < nt.nElectron(); i++ ) {
         if ( nt.Electron_pt().at(i) > 10. &&
 	     fabs(nt.Electron_eta().at(i)) < 2.5 &&
-	     nt.Electron_cutBased().at(i) > 0 && 
+	     nt.Electron_cutBased().at(i) > 0 &&
 	     nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
 	     fabs(nt.Electron_dxy().at(i)) < 0.2 &&
 	     fabs(nt.Electron_dz().at(i)) < 0.5 ) {
@@ -1098,10 +1211,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
 	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2) {
           float mindr=1e9;
-          for ( auto i_cand_muons_pf : cand_muons_pf ) {
-            if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
-            float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-            float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+          for ( auto i_cand_muons : cand_muons ) {
+            if (i_cand_muons!=leadingMu_idx && i_cand_muons!=subleadingMu_idx) continue;
+            float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons);
+            float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons));
             float dr = TMath::Sqrt( deta*deta+dphi*dphi );
             if ( dr < mindr ) {
               mindr = dr;
@@ -1122,10 +1235,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	     fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
 	     nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1) {
           float mindr=1e9;
-          for ( auto i_cand_muons_pf : cand_muons_pf ) {
-            if (i_cand_muons_pf!=leadingMu_idx && i_cand_muons_pf!=subleadingMu_idx) continue;
-            float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons_pf);
-            float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons_pf));
+          for ( auto i_cand_muons : cand_muons ) {
+            if (i_cand_muons!=leadingMu_idx && i_cand_muons!=subleadingMu_idx) continue;
+            float deta = nt.IsoTrack_eta().at(i) - nt.Muon_eta().at(i_cand_muons);
+            float dphi = TVector2::Phi_mpi_pi(nt.IsoTrack_phi().at(i) - nt.Muon_phi().at(i_cand_muons));
             float dr = TMath::Sqrt( deta*deta+dphi*dphi );
             if ( dr < mindr ) {
               mindr = dr;
@@ -1152,13 +1265,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( extra_muons.size() > 0 ) {
 	extra_plot_names.push_back("mu3_pt");
-	extra_variable.insert({"mu3_pt", nt.Muon_pt().at(extra_muons[0])});
+	extra_variable.insert({"mu3_pt", Muon_pt.at(extra_muons[0])});
 
 	extra_plot_names.push_back("mu3_eta");
 	extra_variable.insert({"mu3_eta", nt.Muon_eta().at(extra_muons[0])});
 
 	extra_plot_names.push_back("mu3_trkRelIso");
-	extra_variable.insert({"mu3_trkRelIso", nt.Muon_tkRelIso().at(extra_muons[0])});
+	extra_variable.insert({"mu3_trkRelIso", Muon_tkRelIso.at(extra_muons[0])});
       }
 
       if ( extra_electrons.size() > 0 ) {
@@ -1230,7 +1343,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       icutflow++;
 
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
-      label = "IsoTrack veto";
+      label = "Iso. track veto";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1243,7 +1356,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
       icutflow++;
-
       // Fill histos: sel7
       sel = "sel7";
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1280,8 +1392,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
 
       // Construct mlb pairs from selected muon pair and candidate b jets
-      auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
-      auto subleadingMu_p4 = nt.Muon_p4().at(subleadingMu_idx);
+      auto leadingMu_p4 = Muon_p4.at(leadingMu_idx);
+      auto subleadingMu_p4 = Muon_p4.at(subleadingMu_idx);
       auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
       float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9;
       float min_mlb = 1e9;
@@ -1298,17 +1410,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
           min_mlb = m_mu2_b;
         }
 
-        float dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
-        if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
-        dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - nt.MET_phi()));
+        float dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - puppimet_phi));
+        if ( !(usePuppiMET) )
+	  dPhi_b_MET = fabs(TVector2::Phi_mpi_pi(bjet_p4.Phi() - pfmet_phi));
         if ( dPhi_b_MET < minDPhi_b_MET ) minDPhi_b_MET = dPhi_b_MET;
 
-        float dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        float dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - puppimet_phi));
+        if ( !(usePuppiMET) )
+	  dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((leadingMu_p4 + bjet_p4).Phi() - pfmet_phi));
         if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
-        dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - puppimet_phi));
+	if ( !(usePuppiMET) )
+	  dPhi_lb_MET = fabs(TVector2::Phi_mpi_pi((subleadingMu_p4 + bjet_p4).Phi() - pfmet_phi));
         if ( dPhi_lb_MET < minDPhi_lb_MET ) minDPhi_lb_MET = dPhi_lb_MET;
 
-        float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - nt.MET_phi()));
+        float dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - puppimet_phi));
+	if ( !(usePuppiMET) )
+	  dPhi_llb_MET = fabs(TVector2::Phi_mpi_pi((selectedPair_p4 + bjet_p4).Phi() - pfmet_phi));
         if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
 
 	for ( int bbjet = bjet+1; bbjet < cand_bJets.size(); bbjet++) {
@@ -1323,7 +1441,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
 
       }
-      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - nt.MET_phi()));
+      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - puppimet_phi));
+      if ( !(usePuppiMET) )
+	dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - pfmet_phi));
 
       // Add histos: sel8
       plot_names.push_back("nbtagDeepFlavB");
@@ -1374,7 +1494,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	if (cand_bJets.size()>=2) nbtagsel[2] = true;
 	else nbtagsel[2] = false;
       }
-
       // Fill histos: sel8
       label = ">0 b-tag (medium WP)";
       slicedlabel = "";
@@ -1404,7 +1523,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       if ( min_mlb < 175.0 ) continue;
-      label = "min m(lb)>175 GeV";
+      label = "min m_{#mu b}>175 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1436,6 +1555,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   } // File loop
   bar.finish();
+
+  if ( removeDataDuplicates )
+    cout << "Number of duplicates found: " << nDuplicates << endl;
 
   // Avoid histograms with unphysical negative bin content (due to negative GEN weights)
   map<TString, TH1F*>::iterator it;

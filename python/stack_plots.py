@@ -13,11 +13,11 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
 parser.add_argument("--data", default=False, action="store_true", help="Plot data")
-parser.add_argument("--signalMass", action="append", default=[], help="Signal mass points to plot. Default: All")
+parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
-parser.add_argument("--selections", default=["sel9"], action="append", help="List of selections to be plotted. Default: only final selection ('sel9')")
+parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel9')")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
 args = parser.parse_args()
 
@@ -38,6 +38,9 @@ if len(args.signalMass)>3:
             continue
         else:
             massToExclude.append(str(m))
+
+if len(args.selections)==0:
+    args.selections = ["sel9"]
 
 # Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
@@ -135,7 +138,7 @@ sampleLineColor["ZZ"]       = None
 sampleLineColor["WZ"]       = None
 
 sampleLineWidth=dict()
-sampleLineWidth["data"]     = 2
+sampleLineWidth["data"]     = 1
 sampleLineWidth["Y3"]       = 2
 sampleLineWidth["DY3"]      = 2
 sampleLineWidth["DYp3"]     = 2
@@ -147,6 +150,34 @@ sampleLineWidth["TTX"]      = 0
 sampleLineWidth["WW"]       = 0
 sampleLineWidth["ZZ"]       = 0
 sampleLineWidth["WZ"]       = 0
+
+sampleMarkerStyle=dict()
+sampleMarkerStyle["data"]     = 20
+sampleMarkerStyle["Y3"]       = None
+sampleMarkerStyle["DY3"]      = None
+sampleMarkerStyle["DYp3"]     = None
+sampleMarkerStyle["B3mL2"]    = None
+sampleMarkerStyle["ZToMuMu"]  = None
+sampleMarkerStyle["ttbar"]    = None
+sampleMarkerStyle["ST_tW"]    = None
+sampleMarkerStyle["TTX"]      = None
+sampleMarkerStyle["WW"]       = None
+sampleMarkerStyle["ZZ"]       = None
+sampleMarkerStyle["WZ"]       = None
+
+sampleMarkerSize=dict()
+sampleMarkerSize["data"]     = 1.2
+sampleMarkerSize["Y3"]       = None
+sampleMarkerSize["DY3"]      = None
+sampleMarkerSize["DYp3"]     = None
+sampleMarkerSize["B3mL2"]    = None
+sampleMarkerSize["ZToMuMu"]  = None
+sampleMarkerSize["ttbar"]    = None
+sampleMarkerSize["ST_tW"]    = None
+sampleMarkerSize["TTX"]      = None
+sampleMarkerSize["WW"]       = None
+sampleMarkerSize["ZZ"]       = None
+sampleMarkerSize["WZ"]       = None
 
 sampleLegend=dict()
 sampleLegend["data"]     = "Data"
@@ -225,7 +256,7 @@ def get_plots(sampleDict, plotname):
     return plotDict
 
 
-def customize_plot(plot, fillColor, lineColor, lineWidth):
+def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
     error = ROOT.TMath.Sqrt(plot.GetBinError(0)*plot.GetBinError(0)+plot.GetBinError(1)*plot.GetBinError(1))
     plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
     plot.SetBinError(1, error)
@@ -245,7 +276,12 @@ def customize_plot(plot, fillColor, lineColor, lineWidth):
     if lineColor: 
         plot.SetLineColor(lineColor)
         plot.SetMarkerColor(lineColor)
-    plot.SetLineWidth(lineWidth)
+    if lineWidth:
+        plot.SetLineWidth(lineWidth)
+    if markerStyle:
+        plot.SetMarkerStyle(markerStyle)
+    if markerSize:
+        plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
     ### Rebin fine-binned histograms
@@ -329,12 +365,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
             model = sample.split("_")[0]
             mass = sample.split("_")[1].lstrip("M")
-            if "mll_pf" not in plotname and mass in massToExclude:
+            if "mmumu" not in plotname and mass in massToExclude:
                 continue
-            if "mll_pf" not in plotname:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model]))
+            if "mmumu" not in plotname:
+                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
             else:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model]))                
+                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
             if testLumi>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
@@ -345,10 +381,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         # Data
         elif sample=="data": 
             if plotData:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample]))
+                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
         # Bkg
         else:
-            curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample]))
+            curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
             if testLumi>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if not totalSM:
@@ -417,7 +453,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
-                    if "cutflow" not in plotname and "mll_pf" not in plotname:
+                    if "cutflow" not in plotname and "mmumu" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].Integral(0,-1),float(signalXSecScale[str(mass)])),"L")
                     else:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].GetBinContent(1),float(signalXSecScale[str(mass)])),"L")
@@ -452,12 +488,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                     else:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%1.1E"%(float(signalXSecScale[str(mass)])),"L")
                 else:
-                    if "cutflow" not in plotname and "mll_pf" not in plotname:
+                    if "cutflow" not in plotname and "mmumu" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV)","L")
-                    elif "mll_pf" in plotname and model not in entryExists.keys():
+                    elif "mmumu" in plotname and model not in entryExists.keys():
                         legend.AddEntry(curPlots[sample],sampleLegend[model],"L")
                         entryExists[model]=True
-                    elif "mll_pf" not in plotname:
+                    elif "mmumu" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV)","L")
             # Data
             elif sample=="data": 
@@ -712,6 +748,6 @@ for plot in listofplots:
         continue
     draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
     draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
-    if("pt" in plot or "mll_pf" in plot or "mlb" in plot):
+    if("pt" in plot or "mmumu" in plot or "mlb" in plot):
       draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
       draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
