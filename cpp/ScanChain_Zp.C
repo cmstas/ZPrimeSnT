@@ -681,21 +681,25 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       vector<double> Muon_tkRelIso = {};
       TVector2 pfmet_temp;
       pfmet_temp.SetMagPhi(pfmet_pt,pfmet_phi);
+      TVector2 puppimet_temp;
+      puppimet_temp.SetMagPhi(puppimet_pt,puppimet_phi);
       for ( unsigned int im=0; im < nt.nMuon(); im++ ) {
-	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(im),nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im)));
 	Muon_pt.push_back(nt.Muon_pt().at(im));
+	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(im),nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im)));
 	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(im));
 	if ( nt.Muon_highPtId().at(im)>=2 ) {
 	  if ( useTuneP ) {
 	    TVector2 muon_temp;
 	    TVector2 muon_temp_tunep;
 	    muon_temp.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
-	    Muon_p4[im] = LorentzVector(Muon_pt[im],nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im));
 	    Muon_pt[im] *= nt.Muon_tunepRelPt().at(im);
+	    Muon_p4[im] = LorentzVector(Muon_pt[im],nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im));
 	    muon_temp_tunep.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
-	    // Correct PF MET for highPtId muon candidates
+	    // Correct MET for highPtId muon candidates
 	    pfmet_temp+=muon_temp;
 	    pfmet_temp-=muon_temp_tunep;
+	    puppimet_temp+=muon_temp;
+	    puppimet_temp-=muon_temp_tunep;
 	  }
 	  else {
 	    Muon_tkRelIso[im] *= nt.Muon_tunepRelPt().at(im);
@@ -703,7 +707,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
       pfmet_pt  = pfmet_temp.Mod();
-      pfmet_phi = pfmet_temp.Phi();
+      pfmet_phi = TVector2::Phi_mpi_pi(pfmet_temp.Phi());
+      puppimet_pt  = puppimet_temp.Mod();
+      puppimet_phi = TVector2::Phi_mpi_pi(puppimet_temp.Phi());
 
       // Define histo names and variables
       plot_names = { };
