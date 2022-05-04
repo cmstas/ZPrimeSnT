@@ -215,12 +215,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   nbins.insert({"dPhi_ll", 32});
   low.insert({"dPhi_ll", 0.0});
   high.insert({"dPhi_ll", 3.2});
-  title.insert({"dPhi_ll", "min #Delta#phi(#mu,#mu)"});
+  title.insert({"dPhi_ll", "#Delta#phi(#mu,#mu)"});
 
   nbins.insert({"dEta_ll", 50});
   low.insert({"dEta_ll", 0.0});
   high.insert({"dEta_ll", 5.0});
-  title.insert({"dEta_ll", "min #Delta#eta(#mu,#mu)"});
+  title.insert({"dEta_ll", "#Delta#eta(#mu,#mu)"});
 
   nbins.insert({"dEta_dPhi_ratio_ll", 50});
   low.insert({"dEta_dPhi_ratio_ll", -5.0});
@@ -400,7 +400,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   nbins.insert({"dPhi_ll_MET", 32});
   low.insert({"dPhi_ll_MET", 0});
   high.insert({"dPhi_ll_MET", 3.2});
-  title.insert({"dPhi_ll_MET", "min #Delta#phi(#mu#mu,MET)"});
+  title.insert({"dPhi_ll_MET", "#Delta#phi(#mu#mu,MET)"});
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
