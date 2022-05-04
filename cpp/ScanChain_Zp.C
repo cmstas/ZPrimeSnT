@@ -42,6 +42,18 @@ bool doMllBins = true;
 bool doNbTagBins = true;
 double Zmass = 91.1876;
 
+bool doHEMveto = false;
+float HEM_region[4] = {-4.7, -1.4, -1.6, -0.8}; // etalow, etahigh, philow, phihigh
+unsigned int HEM_startRun = 319077; // affects 38.75 out of 59.83 fb-1 in 2018
+unsigned int HEM_fracNum = 1205, HEM_fracDen = 1860; // 38.75/59.83 = 0.648 ~= 1205/1860. Used for figuring out if we should veto MC events
+bool useHEMjets      = true;
+float HEM_jetPtCut = 20.0;  // veto on jets above this threshold
+bool useHEMmuons     = true;
+bool useHEMelectrons = true;
+float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
+bool useHEMisotracks = true;
+float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
+
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
 
@@ -612,7 +624,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	TString slice = mllbin[imll]+"_"+nbtag[inb];
 	if ( isMC )
-	  slicedcutflows[slice]->Fill(icutflow,tree->GetEntriesFast());
+	  slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
 	slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
       }
     }
@@ -626,8 +638,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       bar.progress(nEventsTotal, nEventsChain);
 
       float weight = 1.0;
-      if ( isMC )
-	weight = genWeight();
+      if ( isMC ) {
+	weight = nt.genWeight();
+	// Apply L1 muon pre-firing weight (available in nanoAODv9):
+	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
+	weight *= nt.L1PreFiringWeight_Muon_Nom();
+      }
       if(removeSpikes && weight*factor>1e2) continue;
 
       unsigned int runnb = nt.run();
@@ -647,24 +663,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
-
-      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
-      if ( !isMC )
-	if ( runnb >= 319077 )
-	  continue;
-
-      icutflow=0;
-      // For data, fill "total" in cutflow after golden JSON
-      if ( !isMC ) {
-	h_cutflow->Fill(icutflow,weight*factor);
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	    TString slice = mllbin[imll]+"_"+nbtag[inb];
-	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
-	  }
-	}
-      }
-      icutflow++;
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
@@ -710,6 +708,96 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       pfmet_phi = TVector2::Phi_mpi_pi(pfmet_temp.Phi());
       puppimet_pt  = puppimet_temp.Mod();
       puppimet_phi = TVector2::Phi_mpi_pi(puppimet_temp.Phi());
+
+      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
+      if ( !isMC )
+	if ( runnb >= HEM_startRun )
+	  continue;
+
+      // HEM veto
+      if ( doHEMveto && year == "2018" ) {
+	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC && evtnb % HEM_fracDen < HEM_fracNum ) ) {
+	  // Jets
+	  bool hasHEMjet = false;
+	  if ( useHEMjets )
+	    for ( unsigned int i=0; i < nt.nJet(); i++ ) {
+	      if ( nt.Jet_pt().at(i) < HEM_jetPtCut )
+		break;
+	      if ( nt.Jet_jetId().at(i) > 0 &&
+		   nt.Jet_eta().at(i) > HEM_region[0] && nt.Jet_eta().at(i) < HEM_region[1] &&
+		   nt.Jet_phi().at(i) > HEM_region[2] && nt.Jet_phi().at(i) < HEM_region[3] ) {
+		hasHEMjet = true;
+		break;
+	      }
+	    }
+	  // Muons (using same ID as for analysis)
+	  bool hasHEMmuon = false;
+	  if ( useHEMmuons )
+	    for ( unsigned int i = 0; i < nt.nMuon(); i++ ) {
+	      if ( Muon_pt.at(i) < HEM_lepPtCut )
+		break;
+	      if ( nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
+		   nt.Muon_highPtId().at(i) >= 2 &&
+		   Muon_tkRelIso.at(i) < 0.1 &&
+		   nt.Muon_eta().at(i) > HEM_region[0] && nt.Muon_eta().at(i) < HEM_region[1] &&
+		   nt.Muon_phi().at(i) > HEM_region[2] && nt.Muon_phi().at(i) < HEM_region[3] ) {
+		hasHEMmuon = true;
+		break;
+	      }
+	    }
+	  // Electrons
+	  bool hasHEMelectron = false;
+	  if ( useHEMelectrons )
+	    for ( unsigned int i = 0; i < nt.nElectron(); i++ ) {
+	      if ( nt.Electron_pt().at(i) < HEM_lepPtCut )
+		break;
+	      if ( nt.Electron_cutBased().at(i) > 0 &&
+		   nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
+		   fabs(nt.Electron_dxy().at(i)) < 0.2 &&
+		   fabs(nt.Electron_dz().at(i)) < 0.5 &&
+		   nt.Electron_eta().at(i) > HEM_region[0] && nt.Electron_eta().at(i) < HEM_region[1] &&
+		   nt.Electron_phi().at(i) > HEM_region[2] && nt.Electron_phi().at(i) < HEM_region[3] ) {
+		hasHEMelectron = true;
+		break;
+	      }
+	    }
+	  // IsoTracks (using both PF candidates and highPurity lost tracks)
+	  bool hasHEMisotrack = false;
+	  if ( useHEMisotracks )
+	    for ( unsigned int i = 0; i < nt.nIsoTrack(); i++ ) {
+	      if ( nt.IsoTrack_pt().at(i) < HEM_trkPtCut )
+		break;
+	      if ( (nt.IsoTrack_isPFcand().at(i) || nt.IsoTrack_isHighPurityTrack().at(i)) &&
+		 (abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13 || abs(nt.IsoTrack_pdgId().at(i))==211) &&
+		   fabs(nt.IsoTrack_dxy().at(i)) < 0.2 &&
+		   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+		   (((abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13) && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2) ||
+		    (abs(nt.IsoTrack_pdgId().at(i))==211 && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1)) &&
+		   nt.IsoTrack_eta().at(i) > HEM_region[0] && nt.IsoTrack_eta().at(i) < HEM_region[1] &&
+		   nt.IsoTrack_phi().at(i) > HEM_region[2] && nt.IsoTrack_phi().at(i) < HEM_region[3] ) {
+		hasHEMisotrack = true;
+		break;
+	      }
+	    }
+	  // Apply HEM veto
+	  if( hasHEMjet || hasHEMmuon || hasHEMelectron || hasHEMisotrack ) {
+	    continue;
+	  }
+	}
+      }
+
+      icutflow=0;
+      // For data, fill "total" in cutflow after golden JSON
+      if ( !isMC ) {
+	h_cutflow->Fill(icutflow,weight*factor);
+	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	    TString slice = mllbin[imll]+"_"+nbtag[inb];
+	    slicedcutflows[slice]->Fill(icutflow,weight*factor);
+	  }
+	}
+      }
+      icutflow++;
 
       // Define histo names and variables
       plot_names = { };
@@ -1378,9 +1466,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
         // Reject jets if they are within dR = 0.4 of the candidate leptons
         if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
-        if ( nt.Jet_pt().at(jet) > 20 && 
-	     fabs(nt.Jet_eta().at(jet))<2.5 && 
-	     nt.Jet_jetId().at(jet) > 0 && 
+        if ( nt.Jet_pt().at(jet) > 20 &&
+	     fabs(nt.Jet_eta().at(jet)) < 2.5 &&
+	     nt.Jet_jetId().at(jet) > 0 &&
 	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
 	  cand_bJets.push_back(jet);  // Medium DeepJet WP
 	}
