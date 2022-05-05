@@ -352,7 +352,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
     else:
-        if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname):
+        if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
             return(0)
 
     # Get histograms
