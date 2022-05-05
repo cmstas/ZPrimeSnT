@@ -1566,7 +1566,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         if ( dPhi_llb_MET < minDPhi_llb_MET ) minDPhi_llb_MET = dPhi_llb_MET;
 
         float dPhi_l_b = fabs(TVector2::Phi_mpi_pi(leadingMu_p4.Phi() - bjet_p4.Phi()));
-        if ( dPhi_l_b < minDPhi_lb ) minDPhi_l_b = dPhi_l_b;
+        if ( dPhi_l_b < minDPhi_l_b ) minDPhi_l_b = dPhi_l_b;
         dPhi_l_b = fabs(TVector2::Phi_mpi_pi(subleadingMu_p4.Phi() - bjet_p4.Phi()));
         if ( dPhi_l_b < minDPhi_l_b ) minDPhi_l_b = dPhi_l_b;
 
@@ -1582,9 +1582,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
 
       }
-      float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - puppimet_phi));
-      if ( !(usePuppiMET) )
-	dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - pfmet_phi));
 
       // Add histos: sel8
       plot_names.push_back("nbtagDeepFlavB");
