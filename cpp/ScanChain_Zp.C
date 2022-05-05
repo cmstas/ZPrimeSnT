@@ -508,6 +508,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel7"); // No extra lepton / isoTrack
   selection.push_back("sel8"); // NbTag >= 1 (medium WP)
   selection.push_back("sel9"); // minMlb > 175 GeV
+  selection.push_back("anti_sel9"); // minMlb < 175 GeV, used for ttbar bkg reduction
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_2b = { };
@@ -1770,7 +1771,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
 
-      if ( min_mlb < 175.0 ) continue;
+//      if ( min_mlb < 175.0 ) continue;
+      if (min_mlb > 175.0){
       label = "min m_{#mu b}>175 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
@@ -1795,6 +1797,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      histos[name]->Fill(variable[plot_name],weight*factor);
 	  }
 	}
+      }
+      }
+      else if (min_mlb < 175.0){
+        label = "min m_{#mu b}<175 GeV";
+        slicedlabel = label;
+        sel = "anti_sel9";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+	        TString plot_name = plot_names[iplot];
+	        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	        for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+	        TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
+	        if ( mllbinsel[imll] && nbtagsel[inb] )
+	        histos[name]->Fill(variable[plot_name],weight*factor);
+	  }
+	}
+      }
       }
 
     } // Event loop
