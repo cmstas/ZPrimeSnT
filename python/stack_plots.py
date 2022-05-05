@@ -118,7 +118,7 @@ sampleFillColor["DYp3"]     = None
 sampleFillColor["B3mL2"]    = None
 sampleFillColor["ZToMuMu"]  = ROOT.kGreen+1
 sampleFillColor["ttbar"]    = ROOT.kAzure+1
-sampleFillColor["tW/tZq"]   = ROOT.kAzure+2
+sampleFillColor["tW+tZq"]   = ROOT.kAzure+2
 sampleFillColor["TTX"]      = ROOT.kAzure+4
 sampleFillColor["WW"]       = ROOT.kOrange-3
 sampleFillColor["ZZ"]       = ROOT.kOrange-2
@@ -132,7 +132,7 @@ sampleLineColor["DYp3"]     = ROOT.kRed
 sampleLineColor["B3mL2"]    = ROOT.kCyan
 sampleLineColor["ZToMuMu"]  = None
 sampleLineColor["ttbar"]    = None
-sampleLineColor["tW/tZq"]   = None
+sampleLineColor["tW+tZq"]   = None
 sampleLineColor["TTX"]      = None
 sampleLineColor["WW"]       = None
 sampleLineColor["ZZ"]       = None
@@ -146,7 +146,7 @@ sampleLineWidth["DYp3"]     = 2
 sampleLineWidth["B3mL2"]    = 2
 sampleLineWidth["ZToMuMu"]  = 0
 sampleLineWidth["ttbar"]    = 0
-sampleLineWidth["tW/tZq"]   = 0
+sampleLineWidth["tW+tZq"]   = 0
 sampleLineWidth["TTX"]      = 0
 sampleLineWidth["WW"]       = 0
 sampleLineWidth["ZZ"]       = 0
@@ -160,7 +160,7 @@ sampleMarkerStyle["DYp3"]     = None
 sampleMarkerStyle["B3mL2"]    = None
 sampleMarkerStyle["ZToMuMu"]  = None
 sampleMarkerStyle["ttbar"]    = None
-sampleMarkerStyle["tW/tZq"]   = None
+sampleMarkerStyle["tW+tZq"]   = None
 sampleMarkerStyle["TTX"]      = None
 sampleMarkerStyle["WW"]       = None
 sampleMarkerStyle["ZZ"]       = None
@@ -174,7 +174,7 @@ sampleMarkerSize["DYp3"]     = None
 sampleMarkerSize["B3mL2"]    = None
 sampleMarkerSize["ZToMuMu"]  = None
 sampleMarkerSize["ttbar"]    = None
-sampleMarkerSize["tW/tZq"]   = None
+sampleMarkerSize["tW+tZq"]   = None
 sampleMarkerSize["TTX"]      = None
 sampleMarkerSize["WW"]       = None
 sampleMarkerSize["ZZ"]       = None
@@ -188,7 +188,7 @@ sampleLegend["DYp3"]     = "DYp3"
 sampleLegend["B3mL2"]    = "B3mL2"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
-sampleLegend["tW/tZq"]   = "tW/tZq"
+sampleLegend["tW+tZq"]   = "tW+tZq"
 sampleLegend["TTX"]      = "t#bar{t}X"
 sampleLegend["WW"]       = "WW"
 sampleLegend["ZZ"]       = "ZZ"
@@ -227,13 +227,13 @@ def get_plots(sampleDict, plotname):
     plotDict=OrderedDict()
     groupedSamples = OrderedDict()
     tempGroups = OrderedDict()
-    tempGroups["tW/tZq"] = ["tW","tbarW","tZq"]
+    tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
     tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
     for sample in sampleDict.keys():
-        if sample in tempGroups["tW/tZq"]:
-            if "tW/tZq" not in groupedSamples.keys():
-                groupedSamples["tW/tZq"]=[]
-            groupedSamples["tW/tZq"].append(sample)
+        if sample in tempGroups["tW+tZq"]:
+            if "tW+tZq" not in groupedSamples.keys():
+                groupedSamples["tW+tZq"]=[]
+            groupedSamples["tW+tZq"].append(sample)
         elif sample in tempGroups["TTX"]:
             if "TTX" not in groupedSamples.keys():
                 groupedSamples["TTX"]=[]
