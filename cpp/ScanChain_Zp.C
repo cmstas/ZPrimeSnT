@@ -18,8 +18,10 @@
 #include "../NanoCORE/XYMETCorrection_withUL17andUL18andUL16.h"
 #include "../NanoCORE/Tools/goodrun.h"
 #include "../NanoCORE/Tools/dorky.h"
+#include "../NanoCORE/Tools/puWeight.h"
 
 #include <iostream>
+#include <string>
 #include <iomanip>
 #include <sys/stat.h>
 
@@ -33,15 +35,23 @@
 
 // #define DEBUG
 
+// For testing purposes only
+bool useOnlyRun2018B = true;
+
+// Looper setup flags
 bool muonDebug = false;
+bool doMllBins = false;
+bool doNbTagBins = true;
+//
 bool useTuneP = true;
 bool usePuppiMET = false;
 bool removeSpikes = true;
 bool removeDataDuplicates = false;
-bool doMllBins = true;
-bool doNbTagBins = true;
-double Zmass = 91.1876;
-
+bool applyTopPtWeight = false;
+bool applyPUWeight = true;
+bool varyPUWeightUp = false;
+bool varyPUWeightDown = false;
+//
 bool doHEMveto = false;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
 unsigned int HEM_startRun = 319077; // affects 38.75 out of 59.83 fb-1 in 2018
@@ -53,6 +63,8 @@ bool useHEMelectrons = true;
 float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
 bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
+//
+double Zmass = 91.1876;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -656,6 +668,36 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
 	weight *= nt.L1PreFiringWeight_Muon_Nom();
+
+	if ( applyPUWeight ) {
+	  int nTrueInt = nt.Pileup_nTrueInt();
+	  std::string whichPUWeight = "central";
+	  if ( varyPUWeightUp ) whichPUWeight = "up";
+	  else if ( varyPUWeightDown ) whichPUWeight = "down";
+	  std::string puyear = year.Data();
+	  if ( useOnlyRun2018B ) puyear = "2018B";
+	  weight *= get_puWeight(nTrueInt, puyear, whichPUWeight);
+	}
+
+	// Apply top pT weight:
+	// https://twiki.cern.ch/twiki/bin/view/CMS/TopPtReweighting#TOP_PAG_corrections_based_on_dat
+	if ( applyTopPtWeight && process == "ttbar" ) {
+	  float exp_p0 =  0.0615;
+	  float exp_p1 = -0.0005;
+	  float topweight = 1.0;
+	  float maxtoppt = 500.0;
+	  int ntop = 0;
+	  for ( unsigned int t=0; t<nt.nGenPart(); t++ ) {
+	    if ( ntop >=2 ) break;
+	    if ( abs(nt.GenPart_pdgId().at(t))!=6 or nt.GenPart_status().at(t)!=62 ) continue;
+	    if ( abs(nt.GenPart_pdgId().at(t))==6 ) {
+	      float tpt = std::min(nt.GenPart_pt().at(t), maxtoppt);
+	      topweight *= TMath::Exp( exp_p0 + exp_p1*tpt );
+	      ++ntop;
+	    }
+	  }
+	  weight *= TMath::Sqrt(topweight);
+	}
       }
       if(removeSpikes && weight*factor>1e2) continue;
 
@@ -1520,7 +1562,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
         if ( nt.Jet_pt().at(jet) > 20 &&
 	     fabs(nt.Jet_eta().at(jet)) < 2.5 &&
-	     nt.Jet_jetId().at(jet) > 0 &&
+	     nt.Jet_jetId().at(jet) > 1 &&
 	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
 	  cand_bJets.push_back(jet);  // Medium DeepJet WP
 	}
