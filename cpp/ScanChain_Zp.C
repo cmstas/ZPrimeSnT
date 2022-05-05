@@ -35,7 +35,7 @@
 
 bool muonDebug = false;
 bool useTuneP = true;
-bool usePuppiMET = true;
+bool usePuppiMET = false;
 bool removeSpikes = true;
 bool removeDataDuplicates = false;
 bool doMllBins = true;
@@ -43,7 +43,7 @@ bool doNbTagBins = true;
 double Zmass = 91.1876;
 
 bool doHEMveto = false;
-float HEM_region[4] = {-4.7, -1.4, -1.6, -0.8}; // etalow, etahigh, philow, phihigh
+float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
 unsigned int HEM_startRun = 319077; // affects 38.75 out of 59.83 fb-1 in 2018
 unsigned int HEM_fracNum = 1205, HEM_fracDen = 1860; // 38.75/59.83 = 0.648 ~= 1205/1860. Used for figuring out if we should veto MC events
 bool useHEMjets      = true;
@@ -51,7 +51,7 @@ float HEM_jetPtCut = 20.0;  // veto on jets above this threshold
 bool useHEMmuons     = true;
 bool useHEMelectrons = true;
 float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
-bool useHEMisotracks = true;
+bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
 
 const char* outdir = "temp_data";
@@ -709,83 +709,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       puppimet_pt  = puppimet_temp.Mod();
       puppimet_phi = TVector2::Phi_mpi_pi(puppimet_temp.Phi());
 
-      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
-      if ( !isMC )
-	if ( runnb >= HEM_startRun )
-	  continue;
-
-      // HEM veto
-      if ( doHEMveto && year == "2018" ) {
-	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC && evtnb % HEM_fracDen < HEM_fracNum ) ) {
-	  // Jets
-	  bool hasHEMjet = false;
-	  if ( useHEMjets )
-	    for ( unsigned int i=0; i < nt.nJet(); i++ ) {
-	      if ( nt.Jet_pt().at(i) < HEM_jetPtCut )
-		break;
-	      if ( nt.Jet_jetId().at(i) > 0 &&
-		   nt.Jet_eta().at(i) > HEM_region[0] && nt.Jet_eta().at(i) < HEM_region[1] &&
-		   nt.Jet_phi().at(i) > HEM_region[2] && nt.Jet_phi().at(i) < HEM_region[3] ) {
-		hasHEMjet = true;
-		break;
-	      }
-	    }
-	  // Muons (using same ID as for analysis)
-	  bool hasHEMmuon = false;
-	  if ( useHEMmuons )
-	    for ( unsigned int i = 0; i < nt.nMuon(); i++ ) {
-	      if ( Muon_pt.at(i) < HEM_lepPtCut )
-		break;
-	      if ( nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
-		   nt.Muon_highPtId().at(i) >= 2 &&
-		   Muon_tkRelIso.at(i) < 0.1 &&
-		   nt.Muon_eta().at(i) > HEM_region[0] && nt.Muon_eta().at(i) < HEM_region[1] &&
-		   nt.Muon_phi().at(i) > HEM_region[2] && nt.Muon_phi().at(i) < HEM_region[3] ) {
-		hasHEMmuon = true;
-		break;
-	      }
-	    }
-	  // Electrons
-	  bool hasHEMelectron = false;
-	  if ( useHEMelectrons )
-	    for ( unsigned int i = 0; i < nt.nElectron(); i++ ) {
-	      if ( nt.Electron_pt().at(i) < HEM_lepPtCut )
-		break;
-	      if ( nt.Electron_cutBased().at(i) > 0 &&
-		   nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
-		   fabs(nt.Electron_dxy().at(i)) < 0.2 &&
-		   fabs(nt.Electron_dz().at(i)) < 0.5 &&
-		   nt.Electron_eta().at(i) > HEM_region[0] && nt.Electron_eta().at(i) < HEM_region[1] &&
-		   nt.Electron_phi().at(i) > HEM_region[2] && nt.Electron_phi().at(i) < HEM_region[3] ) {
-		hasHEMelectron = true;
-		break;
-	      }
-	    }
-	  // IsoTracks (using both PF candidates and highPurity lost tracks)
-	  bool hasHEMisotrack = false;
-	  if ( useHEMisotracks )
-	    for ( unsigned int i = 0; i < nt.nIsoTrack(); i++ ) {
-	      if ( nt.IsoTrack_pt().at(i) < HEM_trkPtCut )
-		break;
-	      if ( (nt.IsoTrack_isPFcand().at(i) || nt.IsoTrack_isHighPurityTrack().at(i)) &&
-		 (abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13 || abs(nt.IsoTrack_pdgId().at(i))==211) &&
-		   fabs(nt.IsoTrack_dxy().at(i)) < 0.2 &&
-		   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
-		   (((abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13) && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2) ||
-		    (abs(nt.IsoTrack_pdgId().at(i))==211 && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1)) &&
-		   nt.IsoTrack_eta().at(i) > HEM_region[0] && nt.IsoTrack_eta().at(i) < HEM_region[1] &&
-		   nt.IsoTrack_phi().at(i) > HEM_region[2] && nt.IsoTrack_phi().at(i) < HEM_region[3] ) {
-		hasHEMisotrack = true;
-		break;
-	      }
-	    }
-	  // Apply HEM veto
-	  if( hasHEMjet || hasHEMmuon || hasHEMelectron || hasHEMisotrack ) {
-	    continue;
-	  }
-	}
-      }
-
       icutflow=0;
       // For data, fill "total" in cutflow after golden JSON
       if ( !isMC ) {
@@ -912,6 +835,98 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
 	      ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
 	   ) continue;
+
+      // Apply extra noise cleaning
+      if ( !usePuppiMET ) {
+	if( isinf(pfmet_pt) || isnan(pfmet_pt) )
+	  continue;
+      }
+      else {
+	if ( isinf(puppimet_pt) || isnan(puppimet_pt) )
+	  continue;
+      }
+      if ( nt.nJet()>0 && nt.Jet_pt().at(0)>13000.0 )
+	continue;
+      if ( nt.nMuon()>0 && Muon_pt.at(0)>13000.0 )
+	continue;
+
+      // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
+      if ( !isMC )
+	if ( runnb >= HEM_startRun )
+	  continue;
+
+      // HEM15/16 veto
+      if ( doHEMveto && year == "2018" ) {
+	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC && evtnb % HEM_fracDen < HEM_fracNum ) ) {
+	  // Jets
+	  bool hasHEMjet = false;
+	  if ( useHEMjets )
+	    for ( unsigned int i=0; i < nt.nJet(); i++ ) {
+	      if ( nt.Jet_pt().at(i) < HEM_jetPtCut )
+		break;
+	      if ( nt.Jet_jetId().at(i) > 0 &&
+		   nt.Jet_eta().at(i) > HEM_region[0] && nt.Jet_eta().at(i) < HEM_region[1] &&
+		   nt.Jet_phi().at(i) > HEM_region[2] && nt.Jet_phi().at(i) < HEM_region[3] ) {
+		hasHEMjet = true;
+		break;
+	      }
+	    }
+	  // Muons (using same ID as for analysis)
+	  bool hasHEMmuon = false;
+	  if ( useHEMmuons )
+	    for ( unsigned int i = 0; i < nt.nMuon(); i++ ) {
+	      if ( Muon_pt.at(i) < HEM_lepPtCut )
+		break;
+	      if ( nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
+		   nt.Muon_highPtId().at(i) >= 2 &&
+		   Muon_tkRelIso.at(i) < 0.1 &&
+		   nt.Muon_eta().at(i) > HEM_region[0] && nt.Muon_eta().at(i) < HEM_region[1] &&
+		   nt.Muon_phi().at(i) > HEM_region[2] && nt.Muon_phi().at(i) < HEM_region[3] ) {
+		hasHEMmuon = true;
+		break;
+	      }
+	    }
+	  // Electrons
+	  bool hasHEMelectron = false;
+	  if ( useHEMelectrons )
+	    for ( unsigned int i = 0; i < nt.nElectron(); i++ ) {
+	      if ( nt.Electron_pt().at(i) < HEM_lepPtCut )
+		break;
+	      if ( nt.Electron_cutBased().at(i) > 0 &&
+		   nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
+		   fabs(nt.Electron_dxy().at(i)) < 0.2 &&
+		   fabs(nt.Electron_dz().at(i)) < 0.5 &&
+		   nt.Electron_eta().at(i) > HEM_region[0] && nt.Electron_eta().at(i) < HEM_region[1] &&
+		   nt.Electron_phi().at(i) > HEM_region[2] && nt.Electron_phi().at(i) < HEM_region[3] ) {
+		hasHEMelectron = true;
+		break;
+	      }
+	    }
+	  // IsoTracks (using both PF candidates and highPurity lost tracks)
+	  bool hasHEMisotrack = false;
+	  if ( useHEMisotracks )
+	    for ( unsigned int i = 0; i < nt.nIsoTrack(); i++ ) {
+	      if ( nt.IsoTrack_pt().at(i) < HEM_trkPtCut )
+		break;
+	      if ( (nt.IsoTrack_isPFcand().at(i) || nt.IsoTrack_isHighPurityTrack().at(i)) &&
+		 (abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13 || abs(nt.IsoTrack_pdgId().at(i))==211) &&
+		   fabs(nt.IsoTrack_dxy().at(i)) < 0.2 &&
+		   fabs(nt.IsoTrack_dz().at(i)) < 0.1 &&
+		   (((abs(nt.IsoTrack_pdgId().at(i))==11 || abs(nt.IsoTrack_pdgId().at(i))==13) && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.2) ||
+		    (abs(nt.IsoTrack_pdgId().at(i))==211 && nt.IsoTrack_pfRelIso03_chg().at(i) < 0.1)) &&
+		   nt.IsoTrack_eta().at(i) > HEM_region[0] && nt.IsoTrack_eta().at(i) < HEM_region[1] &&
+		   nt.IsoTrack_phi().at(i) > HEM_region[2] && nt.IsoTrack_phi().at(i) < HEM_region[3] ) {
+		hasHEMisotrack = true;
+		break;
+	      }
+	    }
+	  // Apply HEM veto
+	  if( hasHEMjet || hasHEMmuon || hasHEMelectron || hasHEMisotrack ) {
+	    continue;
+	  }
+	}
+      }
+
       // Fill histos: sel0
       label = ">0 good PVs & MET Filters";
       slicedlabel = label;
