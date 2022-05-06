@@ -949,7 +949,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	      if ( nt.Jet_pt().at(i) < HEM_jetPtCut )
 		break;
 	      // For jets, increase affected area by half of jet cone (i.e., by 0.2)
-	      if ( nt.Jet_jetId().at(i) > 0 &&
+	      if ( nt.Jet_jetId().at(i) > 1 &&
 		   nt.Jet_eta().at(i) > HEM_region[0]-0.2 && nt.Jet_eta().at(i) < HEM_region[1]+0.2 &&
 		   nt.Jet_phi().at(i) > HEM_region[2]-0.2 && nt.Jet_phi().at(i) < HEM_region[3]+0.2 ) {
 		hasHEMjet = true;
