@@ -93,10 +93,12 @@ mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 samples=[]
 if args.data:
     samples.append("data")
+# Signal MC
 samples.append("Y3")
 #samples.append("DY3")
 #samples.append("DYp3")
-#samples.append("B3mL2")
+samples.append("B3mL2")
+# SM MC
 samples.append("ZToMuMu")
 samples.append("ttbar")
 samples.append("tW")
