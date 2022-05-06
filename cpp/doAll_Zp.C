@@ -98,6 +98,14 @@
                                           { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
 
+  // tZq
+  samples.push_back("tZq");
+  sample_names.insert({"tZq","tZq_ll_4f_ckm_NLO_TuneCP5_13TeV-amcatnlo-pythia8"});
+  sample_prod.insert({"tZq", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                               { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                               { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                               { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+
   // TTX
   samples.push_back("TTW");
   sample_names.insert({"TTW","TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8"});
@@ -141,9 +149,9 @@
   }
 
 
-  TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100_allBranches";
+  TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches_allFiles";
+  TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/"+skimPackage;
   TString baseSignalDir = baseDir;
-  TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches";
   for ( int iyear=0; iyear<years.size(); iyear++ )
   {
     TString year = years[iyear];

@@ -96,6 +96,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   else if ( process == "ZZ" )                xsec = 16523.0; // fb
   else if ( process == "tW" )                xsec = 19550; // fb
   else if ( process == "tbarW" )             xsec = 19550; // fb
+  else if ( process == "tZq" )               xsec = 75.8; // fb
   else if ( process == "TTW" )               xsec = 204.3; // fb
   else if ( process == "TTZ" )               xsec = 252.9; // fb
   else if ( process == "TTHToNonbb" )        xsec = 507.5*(1-0.575); // fb

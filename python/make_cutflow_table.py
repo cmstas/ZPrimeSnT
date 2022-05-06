@@ -122,8 +122,8 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
                           'ZToMuMu_6000_Inf']
         elif samples[i]=='VV':
             subsamples = ['WW','WZ','ZZ']
-        elif samples[i]=='tW':
-            subsamples = ['tW','tbarW']
+        elif samples[i]=='tW+tZq':
+            subsamples = ['tW','tbarW',"tZq"]
         elif samples[i]=='ttX':
             subsamples = ['TTW','TTZ','TTHToNonbb','TTHTobb']
         else:
@@ -353,8 +353,8 @@ def getListOfCutflows(infile="./cpp/temp_data/output_ttbar_2018.root"):
     return listofcutflows
 
 # SM backgrounds
-bkgsamples=['ttbar','tW','ttX','ZToMuMu','VV']
-bkgsampleLabels=["t$\\bar{\\mathrm{t}}$","tW","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
+bkgsamples=['ttbar','tW+tZq','ttX','ZToMuMu','VV']
+bkgsampleLabels=["t$\\bar{\\mathrm{t}}$","tW+tZq","t$\\bar{\\mathrm{t}}$X","DY($\\mu\\mu$)","VV (V$=$Z,W)"]
 
 # Signal
 sigsamples=[]
