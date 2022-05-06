@@ -1,39 +1,38 @@
 #include "puWeight.h"
 
-double get_puWeight(const unsigned int nTrueInt, const std::string year, const std::string var="central")
+double get_puWeight(const unsigned int nTrueInt, const TString year, const TString var="central")
 {
-	setWeights();
 	unsigned int npu = nTrueInt;
 	if ( npu < 0 ) npu = 0;
-	if ( npu >= puweight_central_2018.size() ) npu = puweight_central_2018.size()-1;
-	if ( var.compare("central")==0 ) {
-		if ( year.compare("2016nonAPV")==0 ) return puweight_central_2016nonAPV.at(npu);
-		else if ( year.compare("2016APV")==0 ) return puweight_central_2016APV.at(npu);
-		else if ( year.compare("2017")==0 ) return puweight_central_2017.at(npu);
-		else if ( year.compare("2018")==0 ) return puweight_central_2018.at(npu);
-		else if ( year.compare("2018B")==0 ) return puweight_central_2018B.at(npu);
+	if ( npu >= nPUbins ) npu = nPUbins-1;
+	if ( var=="central" ) {
+		if ( year=="2016nonAPV" ) return puweight_central_2016nonAPV[npu];
+		else if ( year=="2016APV" ) return puweight_central_2016APV[npu];
+		else if ( year=="2017" ) return puweight_central_2017[npu];
+		else if ( year=="2018" ) return puweight_central_2018[npu];
+		else if ( year=="2018B" ) return puweight_central_2018B[npu];
 		else {
 			std::cout << "WARNING: unknown year, returning unity piluep weight!" << std::endl;
 			return 1.0;
 		}
 	}
-	else if ( var.compare("up")==0 ) {
-		if ( year.compare("2016nonAPV")==0 ) return puweight_up_2016nonAPV.at(npu);
-		else if ( year.compare("2016APV")==0 ) return puweight_up_2016APV.at(npu);
-		else if ( year.compare("2017")==0 ) return puweight_up_2017.at(npu);
-		else if ( year.compare("2018")==0 ) return puweight_up_2018.at(npu);
-		else if ( year.compare("2018B")==0 ) return puweight_up_2018B.at(npu);
+	else if ( var=="up" ) {
+		if ( year=="2016nonAPV" ) return puweight_up_2016nonAPV[npu];
+		else if ( year=="2016APV" ) return puweight_up_2016APV[npu];
+		else if ( year=="2017" ) return puweight_up_2017[npu];
+		else if ( year=="2018" ) return puweight_up_2018[npu];
+		else if ( year=="2018B" ) return puweight_up_2018B[npu];
 		else {
 			std::cout << "WARNING: unknown year, returning unity piluep weight!" << std::endl;
 			return 1.0;
 		}
 	}
-	else if ( var.compare("down")==0 ) {
-		if ( year.compare("2016nonAPV")==0 ) return puweight_down_2016nonAPV.at(npu);
-		else if ( year.compare("2016APV")==0 ) return puweight_down_2016APV.at(npu);
-		else if ( year.compare("2017")==0 ) return puweight_down_2017.at(npu);
-		else if ( year.compare("2018")==0 ) return puweight_down_2018.at(npu);
-		else if ( year.compare("2018B")==0 ) return puweight_down_2018B.at(npu);
+	else if ( var=="down" ) {
+		if ( year=="2016nonAPV" ) return puweight_down_2016nonAPV[npu];
+		else if ( year=="2016APV" ) return puweight_down_2016APV[npu];
+		else if ( year=="2017" ) return puweight_down_2017[npu];
+		else if ( year=="2018" ) return puweight_down_2018[npu];
+		else if ( year=="2018B" ) return puweight_down_2018B[npu];
 		else {
 			std::cout << "WARNING: unknown year, returning unity piluep weight!" << std::endl;
 			return 1.0;

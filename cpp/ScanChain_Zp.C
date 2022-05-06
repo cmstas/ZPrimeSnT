@@ -21,7 +21,6 @@
 #include "../NanoCORE/Tools/puWeight.h"
 
 #include <iostream>
-#include <string>
 #include <iomanip>
 #include <sys/stat.h>
 
@@ -47,7 +46,7 @@ bool useTuneP = true;
 bool usePuppiMET = false;
 bool removeSpikes = true;
 bool removeDataDuplicates = false;
-bool applyTopPtWeight = false;
+bool applyTopPtWeight = true;
 bool applyPUWeight = true;
 bool varyPUWeightUp = false;
 bool varyPUWeightDown = false;
@@ -628,6 +627,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TIter fileIter(listOfFiles);
   tqdm bar;
 
+  if ( applyPUWeight )
+    set_puWeights();
+
   while ( (currentFile = (TFile*)fileIter.Next()) ) {
     TFile *file = TFile::Open( currentFile->GetTitle() );
     TTree *tree = (TTree*)file->Get("Events");
@@ -670,11 +672,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	weight *= nt.L1PreFiringWeight_Muon_Nom();
 
 	if ( applyPUWeight ) {
-	  int nTrueInt = nt.Pileup_nTrueInt();
-	  std::string whichPUWeight = "central";
+	  unsigned int nTrueInt = nt.Pileup_nTrueInt();
+	  TString whichPUWeight = "central";
 	  if ( varyPUWeightUp ) whichPUWeight = "up";
 	  else if ( varyPUWeightDown ) whichPUWeight = "down";
-	  std::string puyear = year.Data();
+	  TString puyear = year;
 	  if ( useOnlyRun2018B ) puyear = "2018B";
 	  weight *= get_puWeight(nTrueInt, puyear, whichPUWeight);
 	}
@@ -1750,8 +1752,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
     }
   }
-  
+
   fout->Write();
   fout->Close();
+
   return 0;
 }
