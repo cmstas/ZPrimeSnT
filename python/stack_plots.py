@@ -287,7 +287,9 @@ def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSiz
 
     ### Rebin fine-binned histograms
     if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
-        if plot.GetNbinsX()%3==0:
+        if plot.GetNbinsX()%5==0:
+            plot.Rebin(5)
+        elif plot.GetNbinsX()%3==0:
             plot.Rebin(3)
         else:
             plot.Rebin(2)
@@ -413,24 +415,26 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if (not logY) and args.signalScale and not args.shape:
         for sample in curPlots.keys():
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+                model = sample.split("_")[0]
+                if model not in signalXSecScale.keys():
+                    signalXSecScale[model] = { }
                 mass = sample.split("_")[1].lstrip("M")
                 sigIntegral = curPlots[sample].Integral(0,-1)
-                steps = [50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 50000.0]
-                signalXSecScale[str(mass)]=1.0
+                steps = [5.0, 10.0, 50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 50000.0]
+                signalXSecScale[model][str(mass)]=1.0
                 if sigIntegral>0.0 and totalScale>0.0:
                     ratioSMToSig = totalScale / sigIntegral
                     ratioSigToSM = sigIntegral / totalScale
                     for s in steps:
-                        if ratioSMToSig<s:
-                            signalXSecScale[str(mass)]=s/50.0
-                            if ratioSigToSM*(s/50.0) > 1:
-                                signalXSecScale[str(mass)]=signalXSecScale[str(mass)]/10.0
+                        if ratioSigToSM<s and ratioSMToSig>s:
+                            signalXSecScale[model][str(mass)]=s
+                            if ratioSigToSM*s > 1:
+                                signalXSecScale[model][str(mass)]=signalXSecScale[model][str(mass)]/5.0
                     if ratioSMToSig>steps[len(steps)-1]:
-                        signalXSecScale[str(mass)]=5e3
+                        signalXSecScale[model][str(mass)]=5e3
                         if ratioSigToSM*(5e3) > 1:
-                            signalXSecScale[str(mass)]=signalXSecScale[str(mass)]/10.0
-                curPlots[sample].Scale(signalXSecScale[str(mass)])
-
+                            signalXSecScale[model][str(mass)]=signalXSecScale[model][str(mass)]/5.0
+                curPlots[sample].Scale(signalXSecScale[model][str(mass)])
 
     # Plot legends, ranges
     if args.data:
@@ -453,11 +457,11 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
-                if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
+                if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
                     if "cutflow" not in plotname and "mmumu" not in plotname:
-                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].Integral(0,-1),float(signalXSecScale[str(mass)])),"L")
+                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].Integral(0,-1),float(signalXSecScale[model][str(mass)])),"L")
                     else:
-                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].GetBinContent(1),float(signalXSecScale[str(mass)])),"L")
+                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E (x%1.1E)"%(curPlots[sample].GetBinContent(1),float(signalXSecScale[model][str(mass)])),"L")
                 else:
                     if "cutflow" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) %1.2E"%(curPlots[sample].Integral(0,-1)),"L")
@@ -483,11 +487,11 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
-                if (not logY) and args.signalScale and not args.shape and signalXSecScale[str(mass)]>1.5:
+                if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
                     if "cutflow" not in plotname:
-                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%1.1E"%(float(signalXSecScale[str(mass)])),"L")
+                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%d"%(int(signalXSecScale[model][str(mass)])),"L")
                     else:
-                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%1.1E"%(float(signalXSecScale[str(mass)])),"L")
+                        legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV) x%d"%(int(signalXSecScale[model][str(mass)])),"L")
                 else:
                     if "cutflow" not in plotname and "mmumu" not in plotname:
                         legend.AddEntry(curPlots[sample],sampleLegend[model]+" ("+str(mass)+" GeV)","L")
@@ -644,6 +648,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 histMax = curPlots[sample].GetMaximum()
             curPlots[sample].Draw("HIST,SAME")
     if plotData:
+        if histMax < curPlots["data"].GetMaximum():
+            histMax = curPlots["data"].GetMaximum()
         g_data.Draw("P,SAME")
         g_data_clone.Draw("P,SAME")
 
