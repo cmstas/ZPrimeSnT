@@ -19,6 +19,7 @@
 #include "../NanoCORE/Tools/goodrun.h"
 #include "../NanoCORE/Tools/dorky.h"
 #include "../NanoCORE/Tools/puWeight.h"
+#include "../NanoCORE/Tools/muonTriggerSF.h"
 
 #include <iostream>
 #include <iomanip>
@@ -50,6 +51,9 @@ bool applyTopPtWeight = true;
 bool applyPUWeight = true;
 bool varyPUWeightUp = false;
 bool varyPUWeightDown = false;
+bool applyTriggerSF = true;
+bool varyTriggerSFUp = false;
+bool varyTriggerSFDown = false;
 //
 bool doHEMveto = false;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
@@ -63,7 +67,7 @@ float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
 bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
 //
-double Zmass = 91.1876;
+float Zmass = 91.1876;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -619,6 +623,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     }
   }
 
+  if ( applyPUWeight ) set_puWeights();
+  if ( applyTriggerSF ) set_triggerSF();
+
   int nEventsTotal = 0;
   int nDuplicates = 0;
   int nEventsChain = ch->GetEntries();
@@ -626,9 +633,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TObjArray *listOfFiles = ch->GetListOfFiles();
   TIter fileIter(listOfFiles);
   tqdm bar;
-
-  if ( applyPUWeight )
-    set_puWeights();
 
   while ( (currentFile = (TFile*)fileIter.Next()) ) {
     TFile *file = TFile::Open( currentFile->GetTitle() );
@@ -671,6 +675,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
 	weight *= nt.L1PreFiringWeight_Muon_Nom();
 
+	// Apply PU reweight
 	if ( applyPUWeight ) {
 	  unsigned int nTrueInt = nt.Pileup_nTrueInt();
 	  TString whichPUWeight = "central";
@@ -842,7 +847,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
 
-      // Define vector of muon candidate indices here.....
+      // Define vector of muon candidate indices:
       vector<int> cand_muons_id;
       vector<int> cand_muons_id_pteta;
       vector<int> cand_muons;
@@ -864,6 +869,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       // HLT selection
       if ( (year=="2016nonAPV" || year=="2016APV") && !( nt.HLT_Mu50() || nt.HLT_TkMu50() ) ) continue;
       if ( (year=="2017" || year=="2018") && !(nt.HLT_Mu50() || nt.HLT_OldMu100() || nt.HLT_TkMu100()) ) continue;
+
+      // Apply trigger SF:
+      // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018#Trigger_efficiency_AN2
+      // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Trigger_efficiency_AN2
+      if ( isMC && applyTriggerSF )  {
+	TString tvariation = "central";
+	if ( varyTriggerSFUp ) tvariation = "up";
+	else if ( varyTriggerSFDown ) tvariation = "down";
+	float minPt  = 52.0;
+	float maxEta = 2.4; 
+	for ( unsigned int m=0; m < Muon_pt.size(); m++ ) {
+	  if ( Muon_pt.at(m) < minPt ) {
+	    weight *= 0.0;
+	    break;
+	  }
+	  else if ( fabs(nt.Muon_eta().at(m)) < maxEta && nt.Muon_highPtId().at(m) >= 2 ) {
+	    weight *= get_triggerSF(Muon_pt.at(m), nt.Muon_eta().at(m), year, tvariation);
+	  }
+	  break;
+	}
+      }
+
       label = "HLT";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
@@ -1738,6 +1765,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   } // File loop
   bar.finish();
+
+  if ( applyTriggerSF ) reset_triggerSF();
 
   if ( removeDataDuplicates )
     cout << "Number of duplicates found: " << nDuplicates << endl;
