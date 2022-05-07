@@ -123,7 +123,7 @@ def make_cutflow_table(cutflow="cutflow", samples=[], sampleLabels=[], indir = "
         elif samples[i]=='VV':
             subsamples = ['WW','WZ','ZZ']
         elif samples[i]=='tW+tZq':
-            subsamples = ['tW','tbarW',"tZq"]
+            subsamples = ['tW','tbarW','tZq']
         elif samples[i]=='ttX':
             subsamples = ['TTW','TTZ','TTHToNonbb','TTHTobb']
         else:

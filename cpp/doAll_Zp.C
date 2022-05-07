@@ -151,7 +151,6 @@
 
   TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches_allFiles";
   TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/"+skimPackage;
-  TString baseSignalDir = baseDir;
   for ( int iyear=0; iyear<years.size(); iyear++ )
   {
     TString year = years[iyear];
