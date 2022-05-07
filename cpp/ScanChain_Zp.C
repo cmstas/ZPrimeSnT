@@ -886,8 +886,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	  else if ( fabs(nt.Muon_eta().at(m)) < maxEta && nt.Muon_highPtId().at(m) >= 2 ) {
 	    weight *= get_triggerSF(Muon_pt.at(m), nt.Muon_eta().at(m), year, tvariation);
+	    break;
 	  }
-	  break;
 	}
       }
 
