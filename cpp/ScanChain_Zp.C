@@ -19,6 +19,9 @@
 #include "../NanoCORE/Tools/goodrun.h"
 #include "../NanoCORE/Tools/dorky.h"
 #include "../NanoCORE/Tools/puWeight.h"
+#include "../NanoCORE/Tools/muonRecoSF.h"
+#include "../NanoCORE/Tools/muonIDSF.h"
+#include "../NanoCORE/Tools/muonIsoSF.h"
 #include "../NanoCORE/Tools/muonTriggerSF.h"
 
 #include <iostream>
@@ -34,6 +37,7 @@
 #define HTemp(name,nbins,low,high,xtitle) TH1F *h_temp = new TH1F(name,"",nbins,low,high); h_temp->GetXaxis()->SetTitle(xtitle); h_temp->GetYaxis()->SetTitle("Events");
 
 // #define DEBUG
+#define Zmass 91.1876
 
 // For testing purposes only
 bool useOnlyRun2018B = true;
@@ -42,19 +46,23 @@ bool useOnlyRun2018B = true;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
-//
-bool useTuneP = true;
-bool usePuppiMET = false;
+// General flags
 bool removeSpikes = true;
 bool removeDataDuplicates = false;
+bool useTuneP = true;
+bool usePuppiMET = false;
+// Event weights / scale factors
 bool applyTopPtWeight = true;
 bool applyPUWeight = true;
 bool varyPUWeightUp = false;
 bool varyPUWeightDown = false;
+bool applyMuonSF = true;
+bool varyMuonSFUp = false;
+bool varyMuonSFDown = false;
 bool applyTriggerSF = true;
 bool varyTriggerSFUp = false;
 bool varyTriggerSFDown = false;
-//
+// HEM15/16 veto
 bool doHEMveto = false;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
 unsigned int HEM_startRun = 319077; // affects 38.75 out of 59.83 fb-1 in 2018
@@ -67,7 +75,6 @@ float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
 bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
 //
-float Zmass = 91.1876;
 
 const char* outdir = "temp_data";
 int mdir = mkdir(outdir,0755);
@@ -624,6 +631,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   }
 
   if ( applyPUWeight ) set_puWeights();
+  if ( applyMuonSF ) {
+    set_muonRecoSF();
+    set_muonIDSF();
+    set_muonIsoSF();
+  }
   if ( applyTriggerSF ) set_triggerSF();
 
   int nEventsTotal = 0;
@@ -671,6 +683,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float weight = 1.0;
       if ( isMC ) {
 	weight = nt.genWeight();
+	if(removeSpikes && weight*factor>1e2) continue;
+
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
 	weight *= nt.L1PreFiringWeight_Muon_Nom();
@@ -705,8 +719,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	  weight *= TMath::Sqrt(topweight);
 	}
+
       }
-      if(removeSpikes && weight*factor>1e2) continue;
 
       unsigned int runnb = nt.run();
       unsigned int lumiblock = nt.luminosityBlock();
@@ -743,18 +757,35 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       pfmet_temp.SetMagPhi(pfmet_pt,pfmet_phi);
       TVector2 puppimet_temp;
       puppimet_temp.SetMagPhi(puppimet_pt,puppimet_phi);
-      for ( unsigned int im=0; im < nt.nMuon(); im++ ) {
-	Muon_pt.push_back(nt.Muon_pt().at(im));
-	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(im),nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im)));
-	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(im));
-	if ( nt.Muon_highPtId().at(im)>=2 ) {
+      // Muon selection loop
+      int nMu_id = 0;
+      vector<int> cand_muons_id;
+      int nMu_pt = 0;
+      vector<int> cand_muons_id_pteta;
+      int nMu_iso = 0;
+      vector<int> cand_muons;
+      //
+      float triggerSF = -1.0;
+      //
+      for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ) {
+	Muon_pt.push_back(nt.Muon_pt().at(mu));
+	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(mu),nt.Muon_eta().at(mu),nt.Muon_phi().at(mu),nt.Muon_mass().at(mu)));
+	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(mu));
+	//
+        bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
+        bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
+	bool mu_pt = false;
+	bool mu_relIso = false;
+        if ( mu_trk_and_global && mu_id ) {
+          nMu_id++;
+          cand_muons_id.push_back(mu);
 	  if ( useTuneP ) {
 	    TVector2 muon_temp;
 	    TVector2 muon_temp_tunep;
-	    muon_temp.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
-	    Muon_pt[im] *= nt.Muon_tunepRelPt().at(im);
-	    Muon_p4[im] = LorentzVector(Muon_pt[im],nt.Muon_eta().at(im),nt.Muon_phi().at(im),nt.Muon_mass().at(im));
-	    muon_temp_tunep.SetMagPhi(Muon_pt[im],nt.Muon_phi().at(im));
+	    muon_temp.SetMagPhi(Muon_pt[mu],nt.Muon_phi().at(mu));
+	    Muon_pt[mu] *= nt.Muon_tunepRelPt().at(mu);
+	    Muon_p4[mu] = LorentzVector(Muon_pt[mu],nt.Muon_eta().at(mu),nt.Muon_phi().at(mu),nt.Muon_mass().at(mu));
+	    muon_temp_tunep.SetMagPhi(Muon_pt[mu],nt.Muon_phi().at(mu));
 	    // Correct MET for highPtId muon candidates
 	    pfmet_temp+=muon_temp;
 	    pfmet_temp-=muon_temp_tunep;
@@ -762,7 +793,50 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	    puppimet_temp-=muon_temp_tunep;
 	  }
 	  else {
-	    Muon_tkRelIso[im] *= nt.Muon_tunepRelPt().at(im);
+	    Muon_tkRelIso[mu] *= nt.Muon_tunepRelPt().at(mu);
+	  }
+	  mu_pt = ( Muon_pt.at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
+	  mu_relIso = ( Muon_tkRelIso.at(mu) < 0.1 );
+          if ( mu_pt ) {
+            nMu_pt++;
+            cand_muons_id_pteta.push_back(mu);
+            if ( mu_relIso ) {
+              nMu_iso++;
+              cand_muons.push_back(mu);
+            }
+          }
+        }
+	if ( isMC ) {
+	  // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016
+	  // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2017
+	  // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018
+	  if ( applyMuonSF ) {
+	    // Apply muon (RECO, ID, ISO) SFs
+	    TString tvariation = "central";
+	    if ( varyTriggerSFUp ) tvariation = "up";
+	    else if ( varyTriggerSFDown ) tvariation = "down";
+	    weight *= get_muonRecoSF(Muon_p4.at(mu).P(), Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	    if ( mu_id ) {
+	      weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	      if ( mu_relIso ) {
+		weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	      }
+	    }
+	  }
+	  if ( applyTriggerSF && triggerSF < 0.0 ) {
+	    // Apply trigger SF
+	    TString tvariation = "central";
+	    if ( varyTriggerSFUp ) tvariation = "up";
+	    else if ( varyTriggerSFDown ) tvariation = "down";
+	    float minPt  = 52.0;
+	    float maxEta = 2.4; 
+	    if ( Muon_pt.at(mu) < minPt ) {
+	      triggerSF = 0.0;
+	    }
+	    else if ( fabs(nt.Muon_eta().at(mu) ) < maxEta && mu_id ) {
+	      triggerSF = get_triggerSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	    }
+	    else continue;
 	  }
 	}
       }
@@ -847,11 +921,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
 
-      // Define vector of muon candidate indices:
-      vector<int> cand_muons_id;
-      vector<int> cand_muons_id_pteta;
-      vector<int> cand_muons;
-
       // After skim
       label = "After skim";
       slicedlabel = label;
@@ -871,24 +940,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if ( (year=="2017" || year=="2018") && !(nt.HLT_Mu50() || nt.HLT_OldMu100() || nt.HLT_TkMu100()) ) continue;
 
       // Apply trigger SF:
-      // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018#Trigger_efficiency_AN2
-      // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Trigger_efficiency_AN2
       if ( isMC && applyTriggerSF )  {
-	TString tvariation = "central";
-	if ( varyTriggerSFUp ) tvariation = "up";
-	else if ( varyTriggerSFDown ) tvariation = "down";
-	float minPt  = 52.0;
-	float maxEta = 2.4; 
-	for ( unsigned int m=0; m < Muon_pt.size(); m++ ) {
-	  if ( Muon_pt.at(m) < minPt ) {
-	    weight *= 0.0;
-	    break;
-	  }
-	  else if ( fabs(nt.Muon_eta().at(m)) < maxEta && nt.Muon_highPtId().at(m) >= 2 ) {
-	    weight *= get_triggerSF(Muon_pt.at(m), nt.Muon_eta().at(m), year, tvariation);
-	    break;
-	  }
-	}
+	if ( triggerSF < 0.0 )
+	  weight *= 0.0;
+	else
+	  weight *= triggerSF;
       }
 
       label = "HLT";
@@ -1032,30 +1088,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	histos[name]->Fill(variable[plot_name],weight*factor);
       }
 
-      // Single muon selection loop
-      int nMu_id = 0;
-      int nMu_pt = 0;
-      int nMu_iso = 0;
-      for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ) {
-        bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
-        bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
-        bool mu_pt = ( Muon_pt.at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-        bool mu_relIso = ( Muon_tkRelIso.at(mu) < 0.1 );
-	      
-        if ( mu_trk_and_global && mu_id ) {
-          nMu_id++;
-          cand_muons_id.push_back(mu);
-          if ( mu_pt ) {
-            nMu_pt++;
-            cand_muons_id_pteta.push_back(mu);
-            if ( mu_relIso ) {
-              nMu_iso++;
-              cand_muons.push_back(mu);
-            }
-          }
-        }
-      }
-      
       // Defining booleans for cutflow
       bool id_req = ( nMu_id > 1 );
       bool pt_req = ( nMu_pt > 1 );
@@ -1766,6 +1798,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   } // File loop
   bar.finish();
 
+  if ( applyMuonSF ) {
+    reset_muonRecoSF();
+    reset_muonIDSF();
+    reset_muonIsoSF();
+  }
   if ( applyTriggerSF ) reset_triggerSF();
 
   if ( removeDataDuplicates )
