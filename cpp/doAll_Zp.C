@@ -2,7 +2,9 @@
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
   gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
 
-
+  // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
+  // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
+  // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2018
   vector<TString> years = { };
   years.push_back("2018");
   //years.push_back("2017");
