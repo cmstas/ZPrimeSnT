@@ -49,7 +49,7 @@ float get_muonIDSF( const float pt, const float eta, const TString year, const T
 		std::cout << "WARNING: unknown year, returning unity muon RECO SF!" << std::endl;
 		return 1.0;
 	}
-	if ( pt < 10.0 || fabs(eta) > 2.4 ) return 0.0;
+	if ( pt < 10.0 || fabs(eta) > 2.4 ) return 1.0;
 	else {
 		TString etabin = get_muonIDSFEtaBin(fabs(eta));
 		TString ptbin = get_muonIDSFPtBin(pt);

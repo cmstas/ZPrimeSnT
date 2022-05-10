@@ -109,8 +109,8 @@ float get_muonRecoSF(const float p, const float pt, const float eta, const TStri
 		std::cout << "WARNING: unknown year, returning unity muon RECO SF!" << std::endl;
 		return 1.0;
 	}
-	if ( pt < 10.0 || fabs(eta) > 2.4 ) return 0.0;
-	if ( ( p>100.0 && fabs(eta)<1.6 ) || ( p>50.0 && fabs(eta)>1.6 ) ) {
+	if ( pt < 10.0 || fabs(eta) > 2.4 ) return 1.0;
+	if ( p > 50.0 && ( fabs(eta) < 1.6 || p > 100.0 ) ) {
 		TString etabin = get_muonRecoSFEtaBin_hpt(fabs(eta));
 		TString pbin = get_muonRecoSFPBin_hpt(p);
 		if ( variation == "central" ) return recosfhpt[year][etabin][pbin];

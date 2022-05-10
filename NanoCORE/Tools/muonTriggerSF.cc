@@ -39,7 +39,7 @@ float get_triggerSF(const float pt, const float eta, const TString year, const T
   else if ( variation=="up" ) return tsf[tyear][ptbin][etabin]+unc[tyear][ptbin][etabin];
   else if ( variation=="down" ) return tsf[tyear][ptbin][etabin]-unc[tyear][ptbin][etabin];
   else {
-    cout << "WARNING: unknown variation! Return 0.0" << endl;
-    return 0.0;
+    cout << "WARNING: unknown variation (central, up, down), returning unity scale factor!" << endl;
+    return 1.0;
   }
 }

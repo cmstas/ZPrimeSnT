@@ -102,7 +102,7 @@ def print_cc(fout,fname):
     fout.write('\t\tstd::cout << "WARNING: unknown year, returning unity muon RECO SF!" << std::endl;\n')
     fout.write('\t\treturn 1.0;\n')
     fout.write('\t}\n')
-    fout.write('\tif ( pt < 10.0 || fabs(eta) > 2.4 ) return 0.0;\n')
+    fout.write('\tif ( pt < 10.0 || fabs(eta) > 2.4 ) return 1.0;\n')
     fout.write('\telse {\n')
     fout.write('\t\tTString etabin = get_muonIDSFEtaBin(fabs(eta));\n')
     fout.write('\t\tTString ptbin = get_muonIDSFPtBin(pt);\n')
