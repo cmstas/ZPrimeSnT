@@ -11,36 +11,39 @@ using namespace std;
 map<TString,map<TString,map<TString,float>>> idsf = { };
 map<TString,map<TString,map<TString,float>>> idsfunc = { };
 
-vector<float> thresholds_pt_id;
-vector<TString> ptbins_id;
+constexpr int nptbins_id = 7;
+constexpr int netabins_id = 4;
+
+float *thresholds_pt_id = new float[nptbins_id];
+TString *ptbins_id = new TString[nptbins_id];
 inline void set_ptbins_id() {
-	thresholds_pt_id.push_back(15.0);
-	ptbins_id.push_back("pt0");
-	thresholds_pt_id.push_back(20.0);
-	ptbins_id.push_back("pt1");
-	thresholds_pt_id.push_back(25.0);
-	ptbins_id.push_back("pt2");
-	thresholds_pt_id.push_back(30.0);
-	ptbins_id.push_back("pt3");
-	thresholds_pt_id.push_back(40.0);
-	ptbins_id.push_back("pt4");
-	thresholds_pt_id.push_back(50.0);
-	ptbins_id.push_back("pt5");
-	thresholds_pt_id.push_back(60.0);
-	ptbins_id.push_back("pt6");
+	thresholds_pt_id[0] = 0.0;
+	ptbins_id[0] = "pt0";
+	thresholds_pt_id[1] = 0.9;
+	ptbins_id[1] = "pt1";
+	thresholds_pt_id[2] = 1.2;
+	ptbins_id[2] = "pt2";
+	thresholds_pt_id[3] = 2.1;
+	ptbins_id[3] = "pt3";
+	thresholds_pt_id[4] = 2.4;
+	ptbins_id[4] = "pt4";
+	thresholds_pt_id[5] = 3.0;
+	ptbins_id[5] = "pt5";
+	thresholds_pt_id[6] = 3.6;
+	ptbins_id[6] = "pt6";
 }
 
-vector<float> thresholds_eta_id;
-vector<TString> etabins_id;
+float *thresholds_eta_id = new float[netabins_id];
+TString *etabins_id = new TString[netabins_id];
 inline void set_etabins_id() {
-	thresholds_eta_id.push_back(0.0);
-	etabins_id.push_back("eta0");
-	thresholds_eta_id.push_back(0.9);
-	etabins_id.push_back("eta1");
-	thresholds_eta_id.push_back(1.2);
-	etabins_id.push_back("eta2");
-	thresholds_eta_id.push_back(2.1);
-	etabins_id.push_back("eta3");
+	thresholds_eta_id[0] = 0.0;
+	etabins_id[0] = "eta0";
+	thresholds_eta_id[1] = 0.9;
+	etabins_id[1] = "eta1";
+	thresholds_eta_id[2] = 1.2;
+	etabins_id[2] = "eta2";
+	thresholds_eta_id[3] = 2.1;
+	etabins_id[3] = "eta3";
 }
 
 TString get_muonIDSFPtBin(const float pt);
