@@ -11,6 +11,38 @@ using namespace std;
 map<TString,map<TString,map<TString,float>>> idsf = { };
 map<TString,map<TString,map<TString,float>>> idsfunc = { };
 
+vector<float> thresholds_pt_id;
+vector<TString> ptbins_id;
+inline void set_ptbins_id() {
+	thresholds_pt_id.push_back(15.0);
+	ptbins_id.push_back("pt0");
+	thresholds_pt_id.push_back(20.0);
+	ptbins_id.push_back("pt1");
+	thresholds_pt_id.push_back(25.0);
+	ptbins_id.push_back("pt2");
+	thresholds_pt_id.push_back(30.0);
+	ptbins_id.push_back("pt3");
+	thresholds_pt_id.push_back(40.0);
+	ptbins_id.push_back("pt4");
+	thresholds_pt_id.push_back(50.0);
+	ptbins_id.push_back("pt5");
+	thresholds_pt_id.push_back(60.0);
+	ptbins_id.push_back("pt6");
+}
+
+vector<float> thresholds_eta_id;
+vector<TString> etabins_id;
+inline void set_etabins_id() {
+	thresholds_eta_id.push_back(0.0);
+	etabins_id.push_back("eta0");
+	thresholds_eta_id.push_back(0.9);
+	etabins_id.push_back("eta1");
+	thresholds_eta_id.push_back(1.2);
+	etabins_id.push_back("eta2");
+	thresholds_eta_id.push_back(2.1);
+	etabins_id.push_back("eta3");
+}
+
 TString get_muonIDSFPtBin(const float pt);
 
 TString get_muonIDSFEtaBin(const float abseta);
@@ -25,6 +57,9 @@ inline void reset_muonIDSF() {
 }
 
 inline void set_muonIDSF() {
+	set_ptbins_id();
+	set_etabins_id();
+
 	idsf.insert({"2016nonAPV", { }});
 	idsfunc.insert({"2016nonAPV", { }});
 	idsf["2016nonAPV"].insert({"eta0", { }});

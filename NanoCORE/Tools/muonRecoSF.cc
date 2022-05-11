@@ -1,107 +1,39 @@
 #include "muonRecoSF.h"
 
 TString get_muonRecoSFPBin_hpt(const float p) {
-	vector<float> thresholds;
-	vector<TString> pbins;
-	thresholds.push_back(50.0);
-	pbins.push_back("p0");
-	thresholds.push_back(100.0);
-	pbins.push_back("p1");
-	thresholds.push_back(150.0);
-	pbins.push_back("p2");
-	thresholds.push_back(200.0);
-	pbins.push_back("p3");
-	thresholds.push_back(300.0);
-	pbins.push_back("p4");
-	thresholds.push_back(400.0);
-	pbins.push_back("p5");
-	thresholds.push_back(600.0);
-	pbins.push_back("p6");
-	thresholds.push_back(1500.0);
-	pbins.push_back("p7");
-	for ( unsigned int b=thresholds.size()-1; b>=1; b-- ) {
-		if ( p > thresholds.at(b) ) {
-			return pbins.at(b);
+	for ( unsigned int b=thresholds_p_hpt.size()-1; b>=1; b-- ) {
+		if ( p > thresholds_p_hpt.at(b) ) {
+			return pbins_hpt.at(b);
 		}
 	}
-	return pbins.at(0);
+	return pbins_hpt.at(0);
 }
 
 TString get_muonRecoSFEtaBin_hpt(const float abseta) {
-	vector<float> thresholds;
-	vector<TString> etabins;
-	thresholds.push_back(0.0);
-	etabins.push_back("eta0");
-	thresholds.push_back(1.6);
-	etabins.push_back("eta1");
-	for ( unsigned int b=thresholds.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds.at(b) ) {
-			return etabins.at(b);
+	for ( unsigned int b=thresholds_eta_hpt.size()-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_hpt.at(b) ) {
+			return etabins_hpt.at(b);
 		}
 	}
-	return etabins.at(0);
+	return etabins_hpt.at(0);
 }
 
 TString get_muonRecoSFPtBin_mpt(const float pt) {
-	vector<float> thresholds;
-	vector<TString> ptbins;
-	thresholds.push_back(2.0);
-	ptbins.push_back("pt0");
-	thresholds.push_back(2.5);
-	ptbins.push_back("pt1");
-	thresholds.push_back(2.75);
-	ptbins.push_back("pt2");
-	thresholds.push_back(3.0);
-	ptbins.push_back("pt3");
-	thresholds.push_back(3.25);
-	ptbins.push_back("pt4");
-	thresholds.push_back(3.5);
-	ptbins.push_back("pt5");
-	thresholds.push_back(3.75);
-	ptbins.push_back("pt6");
-	thresholds.push_back(4.0);
-	ptbins.push_back("pt7");
-	thresholds.push_back(4.5);
-	ptbins.push_back("pt8");
-	thresholds.push_back(5.0);
-	ptbins.push_back("pt9");
-	thresholds.push_back(6.0);
-	ptbins.push_back("pt10");
-	thresholds.push_back(8.0);
-	ptbins.push_back("pt11");
-	thresholds.push_back(10.0);
-	ptbins.push_back("pt12");
-	thresholds.push_back(15.0);
-	ptbins.push_back("pt13");
-	thresholds.push_back(20.0);
-	ptbins.push_back("pt14");
-	thresholds.push_back(30.0);
-	ptbins.push_back("pt15");
-	for ( unsigned int b=thresholds.size()-1; b>=1; b-- ) {
-		if ( pt > thresholds.at(b) ) {
-			return ptbins.at(b);
+	for ( unsigned int b=thresholds_pt_mpt.size()-1; b>=1; b-- ) {
+		if ( pt > thresholds_pt_mpt.at(b) ) {
+			return ptbins_mpt.at(b);
 		}
 	}
-	return ptbins.at(0);
+	return ptbins_mpt.at(0);
 }
 
 TString get_muonRecoSFEtaBin_mpt(const float abseta) {
-	vector<float> thresholds;
-	vector<TString> etabins;
-	thresholds.push_back(0.0);
-	etabins.push_back("eta0");
-	thresholds.push_back(0.9);
-	etabins.push_back("eta1");
-	thresholds.push_back(1.2);
-	etabins.push_back("eta2");
-	thresholds.push_back(2.1);
-	etabins.push_back("eta3");
-	for ( unsigned int b=thresholds.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds.at(b) ) {
-			return etabins.at(b);
+	for ( unsigned int b=thresholds_eta_mpt.size()-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_mpt.at(b) ) {
+			return etabins_mpt.at(b);
 		}
 	}
-	return etabins.at(0);
+	return etabins_mpt.at(0);
 }
 
 float get_muonRecoSF(const float p, const float pt, const float eta, const TString year, const TString variation ) {

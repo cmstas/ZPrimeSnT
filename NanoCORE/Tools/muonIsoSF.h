@@ -11,6 +11,38 @@ using namespace std;
 map<TString,map<TString,map<TString,float>>> isosf = { };
 map<TString,map<TString,map<TString,float>>> isosfunc = { };
 
+vector<float> thresholds_pt_iso;
+vector<TString> ptbins_iso;
+inline void set_ptbins_iso() {
+	thresholds_pt_iso.push_back(15.0);
+	ptbins_iso.push_back("pt0");
+	thresholds_pt_iso.push_back(20.0);
+	ptbins_iso.push_back("pt1");
+	thresholds_pt_iso.push_back(25.0);
+	ptbins_iso.push_back("pt2");
+	thresholds_pt_iso.push_back(30.0);
+	ptbins_iso.push_back("pt3");
+	thresholds_pt_iso.push_back(40.0);
+	ptbins_iso.push_back("pt4");
+	thresholds_pt_iso.push_back(50.0);
+	ptbins_iso.push_back("pt5");
+	thresholds_pt_iso.push_back(60.0);
+	ptbins_iso.push_back("pt6");
+}
+
+vector<float> thresholds_eta_iso;
+vector<TString> etabins_iso;
+inline void set_etabins_iso() {
+	thresholds_eta_iso.push_back(0.0);
+	etabins_iso.push_back("eta0");
+	thresholds_eta_iso.push_back(0.9);
+	etabins_iso.push_back("eta1");
+	thresholds_eta_iso.push_back(1.2);
+	etabins_iso.push_back("eta2");
+	thresholds_eta_iso.push_back(2.1);
+	etabins_iso.push_back("eta3");
+}
+
 TString get_muonIsoSFPtBin(const float pt);
 
 TString get_muonIsoSFEtaBin(const float abseta);
@@ -25,6 +57,9 @@ inline void reset_muonIsoSF() {
 }
 
 inline void set_muonIsoSF() {
+	set_ptbins_iso();
+	set_etabins_iso();
+
 	isosf.insert({"2016nonAPV", { }});
 	isosfunc.insert({"2016nonAPV", { }});
 	isosf["2016nonAPV"].insert({"eta0", { }});

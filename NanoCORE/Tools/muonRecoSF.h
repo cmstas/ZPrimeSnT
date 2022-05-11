@@ -13,6 +13,86 @@ map<TString,map<TString,map<TString,float>>> recosfunchpt = { };
 map<TString,map<TString,map<TString,float>>> recosfmpt = { };
 map<TString,map<TString,map<TString,float>>> recosfuncmpt = { };
 
+vector<float> thresholds_p_hpt;
+vector<TString> pbins_hpt;
+inline void set_pbins_reco_hpt() {
+	thresholds_p_hpt.push_back(50.0);
+	pbins_hpt.push_back("p0");
+	thresholds_p_hpt.push_back(100.0);
+	pbins_hpt.push_back("p1");
+	thresholds_p_hpt.push_back(150.0);
+	pbins_hpt.push_back("p2");
+	thresholds_p_hpt.push_back(200.0);
+	pbins_hpt.push_back("p3");
+	thresholds_p_hpt.push_back(300.0);
+	pbins_hpt.push_back("p4");
+	thresholds_p_hpt.push_back(400.0);
+	pbins_hpt.push_back("p5");
+	thresholds_p_hpt.push_back(600.0);
+	pbins_hpt.push_back("p6");
+	thresholds_p_hpt.push_back(1500.0);
+	pbins_hpt.push_back("p7");
+}
+
+vector<float> thresholds_eta_hpt;
+vector<TString> etabins_hpt;
+inline void set_etabins_reco_hpt() {
+	thresholds_eta_hpt.push_back(0.0);
+	etabins_hpt.push_back("eta0");
+	thresholds_eta_hpt.push_back(1.6);
+	etabins_hpt.push_back("eta1");
+}
+
+vector<float> thresholds_pt_mpt;
+vector<TString> ptbins_mpt;
+inline void set_ptbins_reco_mpt() {
+	thresholds_pt_mpt.push_back(2.0);
+	ptbins_mpt.push_back("pt0");
+	thresholds_pt_mpt.push_back(2.5);
+	ptbins_mpt.push_back("pt1");
+	thresholds_pt_mpt.push_back(2.75);
+	ptbins_mpt.push_back("pt2");
+	thresholds_pt_mpt.push_back(3.0);
+	ptbins_mpt.push_back("pt3");
+	thresholds_pt_mpt.push_back(3.25);
+	ptbins_mpt.push_back("pt4");
+	thresholds_pt_mpt.push_back(3.5);
+	ptbins_mpt.push_back("pt5");
+	thresholds_pt_mpt.push_back(3.75);
+	ptbins_mpt.push_back("pt6");
+	thresholds_pt_mpt.push_back(4.0);
+	ptbins_mpt.push_back("pt7");
+	thresholds_pt_mpt.push_back(4.5);
+	ptbins_mpt.push_back("pt8");
+	thresholds_pt_mpt.push_back(5.0);
+	ptbins_mpt.push_back("pt9");
+	thresholds_pt_mpt.push_back(6.0);
+	ptbins_mpt.push_back("pt10");
+	thresholds_pt_mpt.push_back(8.0);
+	ptbins_mpt.push_back("pt11");
+	thresholds_pt_mpt.push_back(10.0);
+	ptbins_mpt.push_back("pt12");
+	thresholds_pt_mpt.push_back(15.0);
+	ptbins_mpt.push_back("pt13");
+	thresholds_pt_mpt.push_back(20.0);
+	ptbins_mpt.push_back("pt14");
+	thresholds_pt_mpt.push_back(30.0);
+	ptbins_mpt.push_back("pt15");
+}
+
+vector<float> thresholds_eta_mpt;
+vector<TString> etabins_mpt;
+inline void set_etabins_reco_mpt() {
+	thresholds_eta_mpt.push_back(0.0);
+	etabins_mpt.push_back("eta0");
+	thresholds_eta_mpt.push_back(0.9);
+	etabins_mpt.push_back("eta1");
+	thresholds_eta_mpt.push_back(1.2);
+	etabins_mpt.push_back("eta2");
+	thresholds_eta_mpt.push_back(2.1);
+	etabins_mpt.push_back("eta3");
+}
+
 TString get_muonRecoSFPBin_hpt(const float p);
 
 TString get_muonRecoSFEtaBin_hpt(const float abseta);
@@ -33,6 +113,11 @@ inline void reset_muonRecoSF() {
 }
 
 inline void set_muonRecoSF() {
+	set_pbins_reco_hpt();
+	set_etabins_reco_hpt();
+	set_ptbins_reco_mpt();
+	set_etabins_reco_mpt();
+
 	recosfhpt.insert({"2016nonAPV", { }});
 	recosfunchpt.insert({"2016nonAPV", { }});
 	recosfhpt["2016nonAPV"].insert({"eta0", { }});
