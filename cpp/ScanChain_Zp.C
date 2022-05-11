@@ -632,6 +632,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   if ( applyPUWeight ) set_puWeights();
   if ( applyMuonSF ) {
+    // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
+    // (central high-pT RECO SFs equal zero elsewhere)
+    // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
     set_muonRecoSF();
     set_muonIDSF();
     set_muonIsoSF();
@@ -815,6 +818,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	    TString tvariation = "central";
 	    if ( varyTriggerSFUp ) tvariation = "up";
 	    else if ( varyTriggerSFDown ) tvariation = "down";
+	    // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
+	    // (central high-pT RECO SFs equal zero elsewhere)
+	    // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
 	    weight *= get_muonRecoSF(Muon_p4.at(mu).P(), Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
 	    if ( mu_id ) {
 	      weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
