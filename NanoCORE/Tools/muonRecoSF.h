@@ -2,7 +2,6 @@
 #define MUONRECOSF_H
 
 #include <map>
-#include <vector>
 #include <iostream>
 #include <TString.h>
 
@@ -13,84 +12,90 @@ map<TString,map<TString,map<TString,float>>> recosfunchpt = { };
 map<TString,map<TString,map<TString,float>>> recosfmpt = { };
 map<TString,map<TString,map<TString,float>>> recosfuncmpt = { };
 
-vector<float> thresholds_p_hpt;
-vector<TString> pbins_hpt;
+constexpr int npbins_hpt = 8;
+constexpr int netabins_hpt = 2;
+
+float *thresholds_p_hpt = new float[npbins_hpt];
+TString *pbins_hpt = new TString[npbins_hpt];
 inline void set_pbins_reco_hpt() {
-	thresholds_p_hpt.push_back(50.0);
-	pbins_hpt.push_back("p0");
-	thresholds_p_hpt.push_back(100.0);
-	pbins_hpt.push_back("p1");
-	thresholds_p_hpt.push_back(150.0);
-	pbins_hpt.push_back("p2");
-	thresholds_p_hpt.push_back(200.0);
-	pbins_hpt.push_back("p3");
-	thresholds_p_hpt.push_back(300.0);
-	pbins_hpt.push_back("p4");
-	thresholds_p_hpt.push_back(400.0);
-	pbins_hpt.push_back("p5");
-	thresholds_p_hpt.push_back(600.0);
-	pbins_hpt.push_back("p6");
-	thresholds_p_hpt.push_back(1500.0);
-	pbins_hpt.push_back("p7");
+	thresholds_p_hpt[0] = 50.0;
+	pbins_hpt[0] = "p0";
+	thresholds_p_hpt[1] = 100.0;
+	pbins_hpt[1] = "p1";
+	thresholds_p_hpt[2] = 150.0;
+	pbins_hpt[2] = "p2";
+	thresholds_p_hpt[3] = 200.0;
+	pbins_hpt[3] = "p3";
+	thresholds_p_hpt[4] = 300.0;
+	pbins_hpt[4] = "p4";
+	thresholds_p_hpt[5] = 400.0;
+	pbins_hpt[5] = "p5";
+	thresholds_p_hpt[6] = 600.0;
+	pbins_hpt[6] = "p6";
+	thresholds_p_hpt[7] = 1500.0;
+	pbins_hpt[7] = "p7";
 }
 
-vector<float> thresholds_eta_hpt;
-vector<TString> etabins_hpt;
+float *thresholds_eta_hpt = new float[netabins_hpt];
+TString *etabins_hpt = new TString[netabins_hpt];
 inline void set_etabins_reco_hpt() {
-	thresholds_eta_hpt.push_back(0.0);
-	etabins_hpt.push_back("eta0");
-	thresholds_eta_hpt.push_back(1.6);
-	etabins_hpt.push_back("eta1");
+	thresholds_eta_hpt[0] = 0.0;
+	etabins_hpt[0] = "eta0";
+	thresholds_eta_hpt[1] = 1.6;
+	etabins_hpt[1] = "eta1";
 }
 
-vector<float> thresholds_pt_mpt;
-vector<TString> ptbins_mpt;
+constexpr int nptbins_mpt = 16;
+constexpr int netabins_mpt = 4;
+
+float *thresholds_pt_mpt = new float[nptbins_mpt];
+TString *ptbins_mpt = new TString[nptbins_mpt];
 inline void set_ptbins_reco_mpt() {
-	thresholds_pt_mpt.push_back(2.0);
-	ptbins_mpt.push_back("pt0");
-	thresholds_pt_mpt.push_back(2.5);
-	ptbins_mpt.push_back("pt1");
-	thresholds_pt_mpt.push_back(2.75);
-	ptbins_mpt.push_back("pt2");
-	thresholds_pt_mpt.push_back(3.0);
-	ptbins_mpt.push_back("pt3");
-	thresholds_pt_mpt.push_back(3.25);
-	ptbins_mpt.push_back("pt4");
-	thresholds_pt_mpt.push_back(3.5);
-	ptbins_mpt.push_back("pt5");
-	thresholds_pt_mpt.push_back(3.75);
-	ptbins_mpt.push_back("pt6");
-	thresholds_pt_mpt.push_back(4.0);
-	ptbins_mpt.push_back("pt7");
-	thresholds_pt_mpt.push_back(4.5);
-	ptbins_mpt.push_back("pt8");
-	thresholds_pt_mpt.push_back(5.0);
-	ptbins_mpt.push_back("pt9");
-	thresholds_pt_mpt.push_back(6.0);
-	ptbins_mpt.push_back("pt10");
-	thresholds_pt_mpt.push_back(8.0);
-	ptbins_mpt.push_back("pt11");
-	thresholds_pt_mpt.push_back(10.0);
-	ptbins_mpt.push_back("pt12");
-	thresholds_pt_mpt.push_back(15.0);
-	ptbins_mpt.push_back("pt13");
-	thresholds_pt_mpt.push_back(20.0);
-	ptbins_mpt.push_back("pt14");
-	thresholds_pt_mpt.push_back(30.0);
-	ptbins_mpt.push_back("pt15");
+	thresholds_pt_mpt[0] = 2.0;
+	ptbins_mpt[0] = "pt0";
+	thresholds_pt_mpt[1] = 2.5;
+	ptbins_mpt[1] = "pt1";
+	thresholds_pt_mpt[2] = 2.75;
+	ptbins_mpt[2] = "pt2";
+	thresholds_pt_mpt[3] = 3.0;
+	ptbins_mpt[3] = "pt3";
+	thresholds_pt_mpt[4] = 3.25;
+	ptbins_mpt[4] = "pt4";
+	thresholds_pt_mpt[5] = 3.5;
+	ptbins_mpt[5] = "pt5";
+	thresholds_pt_mpt[6] = 3.75;
+	ptbins_mpt[6] = "pt6";
+	thresholds_pt_mpt[7] = 4.0;
+	ptbins_mpt[7] = "pt7";
+	thresholds_pt_mpt[8] = 4.5;
+	ptbins_mpt[8] = "pt8";
+	thresholds_pt_mpt[9] = 5.0;
+	ptbins_mpt[9] = "pt9";
+	thresholds_pt_mpt[10] = 6.0;
+	ptbins_mpt[10] = "pt10";
+	thresholds_pt_mpt[11] = 8.0;
+	ptbins_mpt[11] = "pt11";
+	thresholds_pt_mpt[12] = 10.0;
+	ptbins_mpt[12] = "pt12";
+	thresholds_pt_mpt[13] = 15.0;
+	ptbins_mpt[13] = "pt13";
+	thresholds_pt_mpt[14] = 20.0;
+	ptbins_mpt[14] = "pt14";
+	thresholds_pt_mpt[15] = 30.0;
+	ptbins_mpt[15] = "pt15";
 }
 
-vector<float> thresholds_eta_mpt;
-vector<TString> etabins_mpt;
+float *thresholds_eta_mpt = new float[netabins_mpt];
+TString *etabins_mpt = new TString[netabins_mpt];
 inline void set_etabins_reco_mpt() {
-	thresholds_eta_mpt.push_back(0.0);
-	etabins_mpt.push_back("eta0");
-	thresholds_eta_mpt.push_back(0.9);
-	etabins_mpt.push_back("eta1");
-	thresholds_eta_mpt.push_back(1.2);
-	etabins_mpt.push_back("eta2");
-	thresholds_eta_mpt.push_back(2.1);
-	etabins_mpt.push_back("eta3");
+	thresholds_eta_mpt[0] = 0.0;
+	etabins_mpt[0] = "eta0";
+	thresholds_eta_mpt[1] = 0.9;
+	etabins_mpt[1] = "eta1";
+	thresholds_eta_mpt[2] = 1.2;
+	etabins_mpt[2] = "eta2";
+	thresholds_eta_mpt[3] = 2.1;
+	etabins_mpt[3] = "eta3";
 }
 
 TString get_muonRecoSFPBin_hpt(const float p);

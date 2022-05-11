@@ -1,5 +1,5 @@
-#ifndef MUONIsoSF_H
-#define MUONIsoSF_H
+#ifndef MUONISOSF_H
+#define MUONISOSF_H
 
 #include <map>
 #include <vector>
@@ -11,36 +11,39 @@ using namespace std;
 map<TString,map<TString,map<TString,float>>> isosf = { };
 map<TString,map<TString,map<TString,float>>> isosfunc = { };
 
-vector<float> thresholds_pt_iso;
-vector<TString> ptbins_iso;
+constexpr int nptbins_iso = 7;
+constexpr int netabins_iso = 4;
+
+float *thresholds_pt_iso = new float[nptbins_iso];
+TString *ptbins_iso = new TString[nptbins_iso];
 inline void set_ptbins_iso() {
-	thresholds_pt_iso.push_back(15.0);
-	ptbins_iso.push_back("pt0");
-	thresholds_pt_iso.push_back(20.0);
-	ptbins_iso.push_back("pt1");
-	thresholds_pt_iso.push_back(25.0);
-	ptbins_iso.push_back("pt2");
-	thresholds_pt_iso.push_back(30.0);
-	ptbins_iso.push_back("pt3");
-	thresholds_pt_iso.push_back(40.0);
-	ptbins_iso.push_back("pt4");
-	thresholds_pt_iso.push_back(50.0);
-	ptbins_iso.push_back("pt5");
-	thresholds_pt_iso.push_back(60.0);
-	ptbins_iso.push_back("pt6");
+	thresholds_pt_iso[0] = 0.0;
+	ptbins_iso[0] = "pt0";
+	thresholds_pt_iso[1] = 0.9;
+	ptbins_iso[1] = "pt1";
+	thresholds_pt_iso[2] = 1.2;
+	ptbins_iso[2] = "pt2";
+	thresholds_pt_iso[3] = 2.1;
+	ptbins_iso[3] = "pt3";
+	thresholds_pt_iso[4] = 2.4;
+	ptbins_iso[4] = "pt4";
+	thresholds_pt_iso[5] = 3.0;
+	ptbins_iso[5] = "pt5";
+	thresholds_pt_iso[6] = 3.6;
+	ptbins_iso[6] = "pt6";
 }
 
-vector<float> thresholds_eta_iso;
-vector<TString> etabins_iso;
+float *thresholds_eta_iso = new float[netabins_iso];
+TString *etabins_iso = new TString[netabins_iso];
 inline void set_etabins_iso() {
-	thresholds_eta_iso.push_back(0.0);
-	etabins_iso.push_back("eta0");
-	thresholds_eta_iso.push_back(0.9);
-	etabins_iso.push_back("eta1");
-	thresholds_eta_iso.push_back(1.2);
-	etabins_iso.push_back("eta2");
-	thresholds_eta_iso.push_back(2.1);
-	etabins_iso.push_back("eta3");
+	thresholds_eta_iso[0] = 0.0;
+	etabins_iso[0] = "eta0";
+	thresholds_eta_iso[1] = 0.9;
+	etabins_iso[1] = "eta1";
+	thresholds_eta_iso[2] = 1.2;
+	etabins_iso[2] = "eta2";
+	thresholds_eta_iso[3] = 2.1;
+	etabins_iso[3] = "eta3";
 }
 
 TString get_muonIsoSFPtBin(const float pt);

@@ -1,21 +1,21 @@
 #include "muonIDSF.h"
 
 TString get_muonIDSFPtBin(const float pt) {
-	for ( unsigned int b=thresholds_pt_id.size()-1; b>=1; b-- ) {
-		if ( pt > thresholds_pt_id.at(b) ) {
-			return ptbins_id.at(b);
+	for ( unsigned int b=nptbins_id-1; b>=1; b-- ) {
+		if ( pt > thresholds_pt_id[b] ) {
+			return ptbins_id[b];
 		}
 	}
-	return ptbins_id.at(0);
+	return ptbins_id[0];
 }
 
 TString get_muonIDSFEtaBin(const float abseta) {
-	for ( unsigned int b=thresholds_eta_id.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds_eta_id.at(b) ) {
-			return etabins_id.at(b);
+	for ( unsigned int b=netabins_id-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_id[b] ) {
+			return etabins_id[b];
 		}
 	}
-	return etabins_id.at(0);
+	return etabins_id[0];
 }
 
 float get_muonIDSF( const float pt, const float eta, const TString year, const TString variation ) {

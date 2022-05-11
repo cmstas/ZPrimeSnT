@@ -1,21 +1,21 @@
 #include "muonIsoSF.h"
 
 TString get_muonIsoSFPtBin(const float pt) {
-	for ( unsigned int b=thresholds_pt_iso.size()-1; b>=1; b-- ) {
-		if ( pt > thresholds_pt_iso.at(b) ) {
-			return ptbins_iso.at(b);
+	for ( unsigned int b=nptbins_iso-1; b>=1; b-- ) {
+		if ( pt > thresholds_pt_iso[b] ) {
+			return ptbins_iso[b];
 		}
 	}
-	return ptbins_iso.at(0);
+	return ptbins_iso[0];
 }
 
 TString get_muonIsoSFEtaBin(const float abseta) {
-	for ( unsigned int b=thresholds_eta_iso.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds_eta_iso.at(b) ) {
-			return etabins_iso.at(b);
+	for ( unsigned int b=netabins_iso-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_iso[b] ) {
+			return etabins_iso[b];
 		}
 	}
-	return etabins_iso.at(0);
+	return etabins_iso[0];
 }
 
 float get_muonIsoSF( const float pt, const float eta, const TString year, const TString variation ) {

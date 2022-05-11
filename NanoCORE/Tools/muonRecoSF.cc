@@ -1,39 +1,39 @@
 #include "muonRecoSF.h"
 
 TString get_muonRecoSFPBin_hpt(const float p) {
-	for ( unsigned int b=thresholds_p_hpt.size()-1; b>=1; b-- ) {
-		if ( p > thresholds_p_hpt.at(b) ) {
-			return pbins_hpt.at(b);
+	for ( unsigned int b=npbins_hpt-1; b>=1; b-- ) {
+		if ( p > thresholds_p_hpt[b] ) {
+			return pbins_hpt[b];
 		}
 	}
-	return pbins_hpt.at(0);
+	return pbins_hpt[0];
 }
 
 TString get_muonRecoSFEtaBin_hpt(const float abseta) {
-	for ( unsigned int b=thresholds_eta_hpt.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds_eta_hpt.at(b) ) {
-			return etabins_hpt.at(b);
+	for ( unsigned int b=netabins_hpt-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_hpt[b] ) {
+			return etabins_hpt[b];
 		}
 	}
-	return etabins_hpt.at(0);
+	return etabins_hpt[0];
 }
 
 TString get_muonRecoSFPtBin_mpt(const float pt) {
-	for ( unsigned int b=thresholds_pt_mpt.size()-1; b>=1; b-- ) {
-		if ( pt > thresholds_pt_mpt.at(b) ) {
-			return ptbins_mpt.at(b);
+	for ( unsigned int b=nptbins_mpt-1; b>=1; b-- ) {
+		if ( pt > thresholds_pt_mpt[b] ) {
+			return ptbins_mpt[b];
 		}
 	}
-	return ptbins_mpt.at(0);
+	return ptbins_mpt[0];
 }
 
 TString get_muonRecoSFEtaBin_mpt(const float abseta) {
-	for ( unsigned int b=thresholds_eta_mpt.size()-1; b>=1; b-- ) {
-		if ( abseta > thresholds_eta_mpt.at(b) ) {
-			return etabins_mpt.at(b);
+	for ( unsigned int b=netabins_mpt-1; b>=1; b-- ) {
+		if ( abseta > thresholds_eta_mpt[b] ) {
+			return etabins_mpt[b];
 		}
 	}
-	return etabins_mpt.at(0);
+	return etabins_mpt[0];
 }
 
 float get_muonRecoSF(const float p, const float pt, const float eta, const TString year, const TString variation ) {
