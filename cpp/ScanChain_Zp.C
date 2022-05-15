@@ -492,7 +492,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Define muon detector region bins
    vector<TString> MuDetRegion = {};
-   MuDetRegion.push_back("MuDetRegion_all");
+   MuDetRegion.push_back("MuDetRegionall");
    if (doMuDetRegionBins)
    {
      MuDetRegion.push_back("MuDetBB");
@@ -600,6 +600,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("chhIsoTrack_extra_eta"); ++nExtraHistos;
       plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
     }
+
     // Third lepton/isotrack veto
     if (isel==7) {
       // Remove plots added for thid lepton/isotrack veto
@@ -877,6 +878,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
+
       pfmet_pt  = pfmet_temp.Mod();
       pfmet_phi = TVector2::Phi_mpi_pi(pfmet_temp.Phi());
       puppimet_pt  = puppimet_temp.Mod();
@@ -1229,6 +1231,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
           }
 	      }
       }
+
       icutflow++;
       sel = "sel3";
       if ( muonDebug ) {
@@ -1544,6 +1547,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
             extra_isotracks_lep.push_back(i);
         }
       }
+
       vector<int> extra_isotracks_chh;
       for ( int i = 0; i < nt.nIsoTrack(); i++ ) {
         if ( nt.IsoTrack_isPFcand().at(i) &&
@@ -1736,7 +1740,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       }
 
       if ( doDYEnriched && cand_bJets.size() ==0 )  {
-        sel = "0bjet";
+        sel = "sel8";
         for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
 	        TString plot_name = plot_names[iplot];
 	        //if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
@@ -1913,9 +1917,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
               if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionsel[iMuDet])
                 histos[name]->Fill(variable[plot_name], weight * factor);
             }
-	          TString name = plot_name+"_"+sel+"_"+mllbin[imll]+"_"+nbtag[inb];
-	          if ( mllbinsel[imll] && nbtagsel[inb] )
-	          histos[name]->Fill(variable[plot_name],weight*factor);
 	        }
 	      }
       }

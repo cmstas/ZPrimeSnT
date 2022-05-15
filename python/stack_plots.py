@@ -19,6 +19,7 @@ parser.add_argument("--shape", default=False, action="store_true", help="Shape n
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel9')")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
+parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -62,6 +63,7 @@ sels.append("m_{#mu#mu}>150 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)")
 sels.append("min m_{#mu b}>175 GeV")
+sels.append("min m_{#mu b}<175 GeV")
 
 nsel=dict()
 nsel["sel0"]=2
@@ -74,8 +76,10 @@ nsel["sel6"]=8
 nsel["sel7"]=9
 nsel["sel8"]=10
 nsel["sel9"]=11
+nsel["antisel9"]=12
 
 nbbin=dict()
+nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, medium WP)"
 nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)"
 nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, medium WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, medium WP)"
@@ -88,6 +92,10 @@ mllbin["mll700to1300"]="700 <m_{#mu#mu} < 1300 GeV"
 mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
 mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
+MuDetbin=dict()
+MuDetbin["MuDetBB"]="2 muons both in Barrels"
+MuDetbin["MuDetBE"]="1 muon in Barrel, 1 muon in Endcap)"
+MuDetbin["MuDetEE"]="2 muons both in Endcaps"
 
 # Samples
 samples=[]
@@ -344,6 +352,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if "cutflow" not in plotname:
         thissel=""
         if "sel8" in plotname or "sel9" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-4]
+        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-3]
         else:
             thissel = plotname.split("_")[len(plotname.split("_"))-2]
@@ -351,11 +361,39 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             return(0)
         thismll=""
         if "sel8" in plotname or "sel9" in plotname:
-            thismll = plotname.split("_")[len(plotname.split("_"))-2]
+            thismll = plotname.split("_")[len(plotname.split("_"))-3]
+        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-2]
         else:
             thismll = plotname.split("_")[len(plotname.split("_"))-1]
         if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
+        thisMuDet=""
+        if "sel8" in plotname or "sel9" in plotname:
+            thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-1]
+        else:
+            thisMuDet = "all"
+        if not args.plotMuonDetRegions and 'all' not in thisMuDet:
+            return(0)
+    else:
+        if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
+            return(0)
+        if not args.plotMuonDetRegions and ("cutflow" in plotname and "MuDet" in plotname and "all" not in plotname):
+            return(0)
+
+    if "cutflow" not in plotname:
+        thissel=""
+        if "sel8" in plotname or "sel9" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-4]
+        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
+            thissel = plotname.split("_")[len(plotname.split("_"))-3]
+        else:
+            thissel = plotname.split("_")[len(plotname.split("_"))-2]
+        if thissel not in args.selections:
+            return(0)
+
     else:
         if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
             return(0)
@@ -685,9 +723,15 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if "cutflow" not in plotname:
         whichnb  = ""
         whichmll = ""
+        whichMuDet = ""
         whichsel = ""
         if "sel8" in plotname or "sel9" in plotname:
-            whichnb  = plotname.split("_")[len(plotname.split("_"))-1]
+            whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+            whichnb  = plotname.split("_")[len(plotname.split("_"))-2]
+            whichmll = plotname.split("_")[len(plotname.split("_"))-3]
+            whichsel = plotname.split("_")[len(plotname.split("_"))-4]
+        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
+            whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
             whichmll = plotname.split("_")[len(plotname.split("_"))-2]
             whichsel = plotname.split("_")[len(plotname.split("_"))-3]
         else:
@@ -698,6 +742,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if 'inclusive' not in whichmll and s==8:
                 continue
             if '1p' not in whichnb and s==10:
+                continue
+            if 'all' not in whichMuDet and s==8:
                 continue
             ts = ts+1
             if args.data:
@@ -710,6 +756,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
             else:
                 latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
+        if 'all' not in whichMuDet and nsel[whichsel]>=8:
+            ts = ts+1
+            if args.data:
+                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), MuDetbin[whichMuDet])
+            else:
+                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), MuDetbin[whichMuDet])
         if '1p' not in whichnb and nsel[whichsel]>=10:
             ts = ts+1
             if args.data:
