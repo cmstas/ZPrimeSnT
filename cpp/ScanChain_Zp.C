@@ -46,6 +46,7 @@ bool useOnlyRun2018B = true;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
+bool doDYEnriched = true;
 bool doMuDetRegionBins = true;
 
 // General flags
@@ -476,6 +477,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   vector<TString> nbtag = { };
   nbtag.push_back("nBTag1p");
   if ( doNbTagBins ) {
+    if (doDYEnriched) nbtag.push_back("nBTag0");
     nbtag.push_back("nBTag1");
     nbtag.push_back("nBTag2p");
   }
@@ -484,6 +486,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   map<TString, TString> nbtagbinlabel;
   nbtagbinlabel["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)";
+  if (doDYEnriched) nbtagbinlabel["nBTag0"] = "N_{b-tag}= 0 (p_{T}>20 GeV, medium WP)";
   nbtagbinlabel["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, medium WP)";
   nbtagbinlabel["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, medium WP)";
 
@@ -1712,6 +1715,42 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  cand_bJets.push_back(jet);  // Medium DeepJet WP
 	}
       }
+
+      if (cand_bJets.size()>=1) nbtagsel[0] = true;
+      else nbtagsel[0] = false;
+      if (doNbTagBins) {
+        if ( doDYEnriched ) {
+          if (cand_bJets.size() == 0) nbtagsel[1] = true;
+          else nbtagsel[1] = false;
+          if (cand_bJets.size() == 1) nbtagsel[2] = true;
+          else nbtagsel[2] = false;
+          if (cand_bJets.size() >= 2) nbtagsel[3] = true;
+          else nbtagsel[3] = false;
+          }
+        else {
+	        if (cand_bJets.size() == 1) nbtagsel[1] = true;
+ 	        else nbtagsel[1] = false;
+ 	        if (cand_bJets.size() >=2 ) nbtagsel[2] = true;
+ 	        else nbtagsel[2] = false;
+        }
+      }
+
+      if ( doDYEnriched && cand_bJets.size() ==0 )  {
+        sel = "0bjet";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+	        TString plot_name = plot_names[iplot];
+	        //if ( plot_name.Contains("bjet2") && cand_bJets.size() < 2 ) continue;
+	        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+	          unsigned int inb=1;
+	          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
+              if (mllbinsel[imll] && MuDetRegionsel[iMuDet])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+	          }
+	        }
+        }
+      }
+
       if ( cand_bJets.size() < 1 ) continue;
       float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
       float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
@@ -1812,14 +1851,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_l_b");
       variable.insert({"minDPhi_l_b", minDPhi_l_b});
 
-      if (cand_bJets.size()>=1) nbtagsel[0] = true;
-      else nbtagsel[0] = false;
-      if (doNbTagBins) {
-	if (cand_bJets.size()==1) nbtagsel[1] = true;
-	else nbtagsel[1] = false;
-	if (cand_bJets.size()>=2) nbtagsel[2] = true;
-	else nbtagsel[2] = false;
-      }
       // Fill histos: sel8
       label = ">0 b-tag (medium WP)";
       slicedlabel = "";
