@@ -142,25 +142,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"nb2.root", "RECREATE");
+  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
   float m_ll, wgt, weighted_evts;
-  bool flag_pass_mlb_all_T;
-
+  bool flag_20T, flag_20M, flag_30T, flag_30M;
   TTree tree_out("tree","");
   tree_out.Branch("m_ll",&m_ll);
   tree_out.Branch("wgt",&wgt);
   tree_out.Branch("weighted_evts",&weighted_evts);
-  tree_out.Branch("flag_pass_mlb_all_T",&flag_pass_mlb_all_T);
-
-  bool flags[1][1];
-  std::vector<std::pair<float, float>> bptcuts{ { 20,20 } };
-  std::vector<TString> bwplabels{ "LT" };
-
-  for (unsigned int ipt=0; ipt<bptcuts.size(); ipt++){
-    for (unsigned int iwp=0; iwp<bwplabels.size(); iwp++){
-      tree_out.Branch(Form("flag_%.0f%c_%.0f%c", bptcuts.at(ipt).first, bwplabels.at(iwp)[0], bptcuts.at(ipt).second, bwplabels.at(iwp)[1]), &(flags[ipt][iwp]));
-    }
-  }
+  tree_out.Branch("flag_20T",&flag_20T);
+  tree_out.Branch("flag_20M",&flag_20M);
+  tree_out.Branch("flag_30T",&flag_30T);
+  tree_out.Branch("flag_30M",&flag_30M);     
 
   int nEventsTotal = 0;
   int nEventsChain = ch->GetEntries();
@@ -180,6 +172,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     nt.Init(tree);
 
     for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
+
+      flag_20T = false;
+      flag_20M = false;
+      flag_30T = false;
+      flag_30M = false;
 
       nt.GetEntry(event);
       tree->LoadTree(event);
@@ -393,51 +390,33 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if ( extra_isotracks_lep.size() > 0 || extra_isotracks_chh.size() > 0 ) continue;
 
 
-      // Sort indices right away so that you don't have to worry about them ever again
-      std::vector<std::pair<unsigned int, float>> jet_idx_pt_pairs; jet_idx_pt_pairs.reserve(nt.nJet());
-      for (unsigned int jet = 0; jet < nt.nJet(); jet++) jet_idx_pt_pairs.emplace_back(jet, nt.Jet_pt().at(jet));
-      std::sort(jet_idx_pt_pairs.begin(), jet_idx_pt_pairs.end(), [] (auto &left, auto &right){ return left.second > right.second; });
-
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_loose_20; bjet_idx_loose_20.reserve(jet_idx_pt_pairs.size());
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_med_20; bjet_idx_med_20.reserve(jet_idx_pt_pairs.size());
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_tight_20; bjet_idx_tight_20.reserve(jet_idx_pt_pairs.size());
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_loose_30; bjet_idx_loose_30.reserve(jet_idx_pt_pairs.size());
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_med_30; bjet_idx_med_30.reserve(jet_idx_pt_pairs.size());
-      std::vector<std::pair<unsigned int, LorentzVector>> bjet_idx_tight_30; bjet_idx_tight_30.reserve(jet_idx_pt_pairs.size());
-      // Loop over sorted jet index - pt pairs
-      for (auto const& jet_pt_pair:jet_idx_pt_pairs){
-        auto const& jet = jet_pt_pair.first;
-        auto const& jet_pt = jet_pt_pair.second;
-
+      //vector<int> cand_bJets;
+      vector<int> bjet_idx_med_20;
+      vector<int> bjet_idx_tight_20;
+      vector<int> bjet_idx_med_30;
+      vector<int> bjet_idx_tight_30;
+      unsigned int nbtagDeepFlavB = 0;
+      for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
         float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
         float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - nt.Jet_eta().at(jet);
         float d_phi_1 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(leadingMu_idx) - nt.Jet_phi().at(jet));
         float d_phi_2 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(subleadingMu_idx) - nt.Jet_phi().at(jet));
-        float dr_jmu1 = TMath::Sqrt(d_eta_1*d_eta_1+d_phi_1*d_phi_1);
-        float dr_jmu2 = TMath::Sqrt(d_eta_2*d_eta_2+d_phi_2*d_phi_2);
-
-        // Reject jets if they are within dR = 0.4 of the candidate leptons...
-        if (std::min(dr_jmu1, dr_jmu2) < 0.4) continue;
-        // ...or if they fail ID or kinematic cuts.
-        if (jet_pt<20. || std::abs(nt.Jet_eta().at(jet))>=2.5 || nt.Jet_jetId().at(jet)==0) continue;
-
-        if (nt.Jet_btagDeepFlavB().at(jet) > 0.0490){ // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight, 0.2783 for medium)
-          bjet_idx_loose_20.emplace_back(jet, nt.Jet_p4().at(jet));
-          if (jet_pt > 30.) bjet_idx_loose_30.emplace_back(jet, nt.Jet_p4().at(jet));
-
-          if (nt.Jet_btagDeepFlavB().at(jet) > 0.2783){
-            bjet_idx_med_20.emplace_back(jet, nt.Jet_p4().at(jet));
-            if (jet_pt > 30.) bjet_idx_med_30.emplace_back(jet, nt.Jet_p4().at(jet));
-
-            if (nt.Jet_btagDeepFlavB().at(jet) > 0.7100){
-              bjet_idx_tight_20.emplace_back(jet, nt.Jet_p4().at(jet));
-              if (jet_pt > 30.) bjet_idx_tight_30.emplace_back(jet, nt.Jet_p4().at(jet));
-            }
-          }
-        }
+        float dr_jmu1 = TMath::Sqrt( d_eta_1*d_eta_1+d_phi_1*d_phi_1 );
+        float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
+        if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
+        if ( nt.Jet_pt().at(jet) > 20 && 
+	     fabs(nt.Jet_eta().at(jet))<2.5 && 
+	     nt.Jet_jetId().at(jet) > 0 && 
+	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { 
+	   bjet_idx_med_20.push_back(jet);
+           if ( nt.Jet_btagDeepFlavB().at(jet) > 0.7100 ){
+                bjet_idx_tight_20.push_back(jet);
+                if (nt.Jet_pt().at(jet) > 30) bjet_idx_tight_30.push_back(jet);
+           }
+           if ( nt.Jet_pt().at(jet) > 30 ) bjet_idx_med_30.push_back(jet);
+	}
       }
-      if (bjet_idx_tight_20.size()<1) continue;
-
+ 
       //std::cout << "Number of M 20 jets = " << bjet_idx_med_20.size() << endl;
       //std::cout << "Number of T 20 jets = " << bjet_idx_tight_20.size() << endl;
       //std::cout << "Number of M 30 jets = " << bjet_idx_med_30.size() << endl;
@@ -448,93 +427,93 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       auto leadingMu_p4 = nt.Muon_p4().at(leadingMu_idx);
       auto subleadingMu_p4 = nt.Muon_p4().at(subleadingMu_idx);
       auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
-     
-      // flag loops
-      //bool pass_any_flag = false;
-      for (unsigned int ipt=0; ipt<bptcuts.size(); ipt++){
-        auto const& ptcut_jet1 = bptcuts.at(ipt).first;
-        auto const& ptcut_jet2 = bptcuts.at(ipt).second;
-        for (unsigned int iwp=0; iwp<bwplabels.size(); iwp++){
-          bool& selflag = flags[ipt][iwp]; // We are going to assign this
-
-          char const wp_jet1 = bwplabels.at(iwp)[0];
-          char const wp_jet2 = bwplabels.at(iwp)[1];
-
-          std::vector<std::pair<unsigned int, LorentzVector>> const* coll_jet1 = nullptr;
-          switch (wp_jet1){
-          case 'L':
-            coll_jet1 = (ptcut_jet1==20. ? &bjet_idx_loose_20 : &bjet_idx_loose_30);
-            break;
-          case 'M':
-            coll_jet1 = (ptcut_jet1==20. ? &bjet_idx_med_20 : &bjet_idx_med_30);
-            break;
-          default:
-            coll_jet1 = (ptcut_jet1==20. ? &bjet_idx_tight_20 : &bjet_idx_tight_30);
-            break;
-          }
-
-          std::vector<std::pair<unsigned int, LorentzVector>> const* coll_jet2 = nullptr;
-          switch (wp_jet2){
-          case 'L':
-            coll_jet2 = (ptcut_jet2==20. ? &bjet_idx_loose_20 : &bjet_idx_loose_30);
-            break;
-          case 'M':
-            coll_jet2 = (ptcut_jet2==20. ? &bjet_idx_med_20 : &bjet_idx_med_30);
-            break;
-          default:
-            coll_jet2 = (ptcut_jet2==20. ? &bjet_idx_tight_20 : &bjet_idx_tight_30);
-            break;
-          }
-
-          selflag = false; // Set default value before any continue statements
-
-          // Skip if either collection is empty. That would not give a proper pairing.
-          if (coll_jet1->empty() || coll_jet2->empty()) continue;
-          // If the leading-pt b-jet does not come from coll_jet1, skip
-          if (coll_jet1->front().second.Pt()<coll_jet2->front().second.Pt()) continue;
-
-          float min_mlb = -1;
-          unsigned int n_unique_jets = 0;
-          {
-            std::vector<unsigned int> unique_indices; unique_indices.reserve(std::max(coll_jet1->size(), coll_jet2->size()));
-            for (auto const& jj:(*coll_jet1)){ unique_indices.push_back(jj.first); break; } // Only interested in the leading-pt jet in collection 1, not the rest.
-            for (auto const& jj:(*coll_jet2)){ if (std::find(unique_indices.begin(), unique_indices.end(), jj.first)==unique_indices.end()) unique_indices.push_back(jj.first); }
-            n_unique_jets = unique_indices.size();
-          }
-          // If the number of unique jets is <2, we are not really considering the Nb>=2 case, so the selection flag should still remain false.
-          if (n_unique_jets<2) continue;
-
-          for (auto const& jj:(*coll_jet1)){
-            auto const& jp4 = jj.second;
-            float tmp_mlb = std::min((leadingMu_p4+jp4).M(), (subleadingMu_p4+jp4).M());
-            if (min_mlb<0. || tmp_mlb<min_mlb) min_mlb = tmp_mlb;
-            break; // Again, only the leading-pt jet from coll_jet1
-          }
-          for (auto const& jj:(*coll_jet2)){
-            if (jj.first==coll_jet1->front().first) continue; // Make sure we are not looking at the same leading-pt jet.
-            auto const& jp4 = jj.second;
-            float tmp_mlb = std::min((leadingMu_p4+jp4).M(), (subleadingMu_p4+jp4).M());
-            if (min_mlb<0. || tmp_mlb<min_mlb) min_mlb = tmp_mlb;
-            // No breaks, look at all remaining b-jets.
-          }
-
-          selflag = (min_mlb>175.);
-          //pass_any_flag |= selflag;
+      
+      if ( bjet_idx_med_20.size() != 1 ) continue;
+      float min_mlb_med_20 = 1e9;
+      //float min_mlb_tight_20 = 1e9;
+      //float min_mlb_med_30 = 1e9;
+      //float min_mlb_tight_30 1e9;
+      for ( int bm2 = 0; bm2 < bjet_idx_med_20.size(); bm2++ ) {
+        //if ( bjet > 2 ) continue;
+        auto bjet_p4 = nt.Jet_p4().at(bjet_idx_med_20[bm2]);
+        float m_mu1_b = (leadingMu_p4+bjet_p4).M();
+        if ( m_mu1_b < min_mlb_med_20 ) {
+          min_mlb_med_20 = m_mu1_b;
         }
+        float m_mu2_b = (subleadingMu_p4+bjet_p4).M();
+        if ( m_mu2_b < min_mlb_med_20 ) {
+          min_mlb_med_20 = m_mu2_b;
+        }
+
+      }
+      
+      float min_mlb_med_30 = -1;
+      if ( bjet_idx_med_30.size() == 1 ){ 
+        min_mlb_med_30 = 1e9;
+      	for ( int bm3 = 0; bm3 < bjet_idx_med_30.size(); bm3++ ){
+        	auto bjet_p4_1 = nt.Jet_p4().at(bjet_idx_med_30[bm3]);
+        	float m_mu1_b_1 = (leadingMu_p4+bjet_p4_1).M();
+        	if ( m_mu1_b_1 < min_mlb_med_30 ) {
+          	min_mlb_med_30 = m_mu1_b_1;
+        	}
+        	float m_mu2_b_1 = (subleadingMu_p4+bjet_p4_1).M();
+        	if ( m_mu2_b_1 < min_mlb_med_30 ) {
+          	min_mlb_med_30 = m_mu2_b_1;
+        	} 
+      	} 
       }
 
-      // Do not record if none of the flags are true.
-      //if (!pass_any_flag) continue;
-      flag_pass_mlb_all_T = false;
-      {
-      float min_mlb = -1;
-      for ( auto const& jj:bjet_idx_tight_20 ){
-            auto const& jp4 = jj.second;
-            float tmp_mlb = std::min((leadingMu_p4+jp4).M(), (subleadingMu_p4+jp4).M());
-            if (min_mlb<0. || tmp_mlb<min_mlb) min_mlb = tmp_mlb; 
+      float min_mlb_tight_20 = -1;
+      if ( bjet_idx_tight_20.size() == 1 ){
+         min_mlb_tight_20 = 1e9;
+      	for ( int bt2 = 0; bt2 < bjet_idx_tight_20.size(); bt2++ ){
+        	auto bjet_p4_2 = nt.Jet_p4().at(bjet_idx_tight_20[bt2]);
+        	float m_mu1_b_2 = (leadingMu_p4+bjet_p4_2).M();
+        	if ( m_mu1_b_2 < min_mlb_tight_20 ) {
+          	min_mlb_tight_20 = m_mu1_b_2;
+        	}
+        	float m_mu2_b_2 = (subleadingMu_p4+bjet_p4_2).M();
+        	if ( m_mu2_b_2 < min_mlb_tight_20 ) {
+          	min_mlb_tight_20 = m_mu2_b_2;
+        	}
+      	}	
       }
-      flag_pass_mlb_all_T = (min_mlb > 175.);      
+
+      float min_mlb_tight_30 = -1;
+      if ( bjet_idx_tight_30.size() == 1 ){
+        min_mlb_tight_30 = 1e9;
+      	for ( int bt3 = 0; bt3 < bjet_idx_tight_30.size(); bt3++ ){
+       	 	auto bjet_p4_3 = nt.Jet_p4().at(bjet_idx_tight_30[bt3]);
+        	float m_mu1_b_3 = (leadingMu_p4+bjet_p4_3).M();
+        	if ( m_mu1_b_3 < min_mlb_tight_30 ) {
+          	min_mlb_tight_30 = m_mu1_b_3;
+        	}
+        	float m_mu2_b_3 = (subleadingMu_p4+bjet_p4_3).M();
+        	if ( m_mu2_b_3 < min_mlb_tight_30 ) {
+          	min_mlb_tight_30 = m_mu2_b_3;
+        	}
+      	}
       }
+    
+      
+
+      if ( min_mlb_med_20 < 175 ) continue;
+      // Set corresponding boolean to true
+      flag_20M = true;
+      
+      if ( min_mlb_med_30 > 175 ){
+           // Set corresponding boolean to true
+           flag_30M = true;
+      }
+      if ( min_mlb_tight_20 > 175 ){
+           // Set corresponding boolean to true
+           flag_20T = true;
+      }
+      if ( min_mlb_tight_30 > 175 ){
+           // Set corresponding boolean to true
+           flag_30T = true; 
+      }
+
       // Fill the tree
       tree_out.Fill();    
 

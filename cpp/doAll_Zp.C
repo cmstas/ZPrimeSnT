@@ -1,6 +1,6 @@
 {
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
-  gROOT->ProcessLine(".L ScanChain_Zprime_nb2.C+");  // Macro that performs the selection
+  gROOT->ProcessLine(".L ScanChain_Zprime_nbtags2.C+");  // Macro that performs the selection
 
 
   vector<TString> years = { };
@@ -63,6 +63,7 @@
   //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
 
   // ZToMuMu
+  
   vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
   vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
   for ( unsigned int imass=0; imass<lowM.size(); imass++ )
@@ -74,7 +75,7 @@
                                                                   { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                                                   { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
-
+  
   // VV
   /*
   vector<TString> VV = { "WW", "WZ", "ZZ" };
@@ -130,7 +131,7 @@
   // Signals
   
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-  vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
+  vector<TString> sigMass = { "200", "400", "700", "1000", "1500", "2000" };
   
   for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
   {
@@ -144,7 +145,7 @@
                                                                   { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
     }
   }
-
+  
 
   TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100_allBranches";
   TString baseSignalDir = baseDir;
