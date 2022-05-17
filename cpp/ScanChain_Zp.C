@@ -23,6 +23,8 @@
 #include "../NanoCORE/Tools/muonIDSF.h"
 #include "../NanoCORE/Tools/muonIsoSF.h"
 #include "../NanoCORE/Tools/muonTriggerSF.h"
+#include "../NanoCORE/Tools/bTagEff.h"
+#include "../NanoCORE/Tools/btagsf/BTagCalibrationStandalone_v2.h"
 
 #include <iostream>
 #include <iomanip>
@@ -46,22 +48,32 @@ bool useOnlyRun2018B = true;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
+//
 // General flags
 bool removeSpikes = true;
 bool removeDataDuplicates = false;
 bool useTuneP = true;
 bool usePuppiMET = false;
+//
 // Event weights / scale factors
 bool applyTopPtWeight = true;
+
 bool applyPUWeight = true;
 bool varyPUWeightUp = false;
 bool varyPUWeightDown = false;
+
 bool applyMuonSF = true;
 bool varyMuonSFUp = false;
 bool varyMuonSFDown = false;
+
 bool applyTriggerSF = true;
 bool varyTriggerSFUp = false;
 bool varyTriggerSFDown = false;
+
+bool applyBTagSF = true;
+bool varyBTagSFUp = false;
+bool varyBTagSFDown = false;
+//
 // HEM15/16 veto
 bool doHEMveto = false;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
@@ -165,6 +177,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   if ( year == "2017" )       lumi = 41.48; // fb-1
   if ( year == "2016APV" )    lumi = 19.5;  // fb-1
   if ( year == "2016nonAPV" ) lumi = 16.8;  // fb-1
+
+  gconf.nanoAOD_ver = 9;
+  gconf.GetConfigs(year.Atoi());
 
   if ( !isMC ) {
     if ( year == "2016APV" )
@@ -640,6 +655,46 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     set_muonIsoSF();
   }
   if ( applyTriggerSF ) set_triggerSF();
+  if ( applyBTagSF ) set_allbTagEff();
+
+  // Setting up btagging scale factors
+  BTagCalibration_v2* btagCalib;
+  BTagCalibrationReader_v2* btagReaderTight = new BTagCalibrationReader_v2(BTagEntry_v2::OP_TIGHT, "central", {"up", "down"});
+  BTagCalibrationReader_v2* btagReaderMedium = new BTagCalibrationReader_v2(BTagEntry_v2::OP_MEDIUM, "central", {"up", "down"});
+  BTagCalibrationReader_v2* btagReaderLoose = new BTagCalibrationReader_v2(BTagEntry_v2::OP_LOOSE, "central", {"up", "down"});
+  if ( isMC ) {
+    if (year == "2016APV")
+    {
+      btagCalib = new BTagCalibration_v2("DeepJet", "../data/wp_deepJet_106XUL16preVFP_v2.csv");
+    }
+    else if (year == "2016nonAPV")
+    {
+      btagCalib = new BTagCalibration_v2("DeepJet", "../data/wp_deepJet_106XUL16postVFP_v3.csv");
+    }
+    else if (year == "2017")
+    {
+      btagCalib = new BTagCalibration_v2("DeepJet", "../data/wp_deepJet_106XUL17_v3.csv");
+    }
+    else if (year == "2018")
+    {
+      btagCalib = new BTagCalibration_v2("DeepJet", "../data/wp_deepJet_106XUL18_v2.csv");
+    }
+    else
+    {
+      cout<<"Non-valid year for setting bTag SFs: Exiting!"<<endl;
+      return 1;
+    }
+
+    btagReaderTight->load(*btagCalib, BTagEntry_v2::FLAV_B, "comb");
+    btagReaderTight->load(*btagCalib, BTagEntry_v2::FLAV_C, "comb");
+    btagReaderTight->load(*btagCalib, BTagEntry_v2::FLAV_UDSG, "incl");
+    btagReaderMedium->load(*btagCalib, BTagEntry_v2::FLAV_B, "comb");
+    btagReaderMedium->load(*btagCalib, BTagEntry_v2::FLAV_C, "comb");
+    btagReaderMedium->load(*btagCalib, BTagEntry_v2::FLAV_UDSG, "incl");
+    btagReaderLoose->load(*btagCalib, BTagEntry_v2::FLAV_B, "comb");
+    btagReaderLoose->load(*btagCalib, BTagEntry_v2::FLAV_C, "comb");
+    btagReaderLoose->load(*btagCalib, BTagEntry_v2::FLAV_UDSG, "incl");
+  }
 
   int nEventsTotal = 0;
   int nDuplicates = 0;
@@ -1616,7 +1671,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	}
       }
 
-      vector<int> cand_bJets;
+      float btag_prob_DATA=1.0, btag_up_prob_DATA=1.0, btag_dn_prob_DATA=1.0, btag_prob_MC=1.0;
+      vector<int> cand_bJets_tight, cand_bJets;
       unsigned int nbtagDeepFlavB = 0;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
         float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
@@ -1628,13 +1684,105 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         // Reject jets if they are within dR = 0.4 of the candidate leptons
         if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
         if ( nt.Jet_pt().at(jet) > 20 &&
-	     fabs(nt.Jet_eta().at(jet)) < 2.5 &&
-	     nt.Jet_jetId().at(jet) > 1 &&
-	     nt.Jet_btagDeepFlavB().at(jet) > 0.2783 ) { // Using medium WP for 2018 (0.0490 for loose, 0.7100 for tight)
-	  cand_bJets.push_back(jet);  // Medium DeepJet WP
-	}
+             fabs(nt.Jet_eta().at(jet)) < 2.5 &&
+             nt.Jet_jetId().at(jet) > 1 ) {
+          bool isBTagMedium = false, isBTagTight = false;
+          if ( nt.Jet_btagDeepFlavB().at(jet) > gconf.WP_DeepFlav_medium ) {
+            isBTagMedium = true;
+            cand_bJets.push_back(jet);
+          }
+          if ( nt.Jet_btagDeepFlavB().at(jet) > gconf.WP_DeepFlav_tight ) {
+            isBTagTight = true;
+            cand_bJets_tight.push_back(jet);
+          }
+
+          // https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
+          if ( isMC && applyBTagSF ) {
+            float pt = nt.Jet_pt().at(jet);
+            float eta = nt.Jet_eta().at(jet);
+            int flavor = nt.Jet_hadronFlavour().at(jet);
+
+            float eff_tight = get_bTagEff(pt, eta, year, "tight", flavor, "central");
+            float eff_med = get_bTagEff(pt, eta, year, "med", flavor, "central");
+
+            float sf_tight =
+                flavor == 4 ? btagReaderTight->eval_auto_bounds("central", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderTight->eval_auto_bounds("central", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderTight->eval_auto_bounds("central", BTagEntry_v2::FLAV_UDSG, eta, pt));
+            float sf_up_tight =
+                flavor == 4 ? btagReaderTight->eval_auto_bounds("up", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderTight->eval_auto_bounds("up", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderTight->eval_auto_bounds("up", BTagEntry_v2::FLAV_UDSG, eta, pt));
+            float sf_dn_tight =
+                flavor == 4 ? btagReaderTight->eval_auto_bounds("down", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderTight->eval_auto_bounds("down", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderTight->eval_auto_bounds("down", BTagEntry_v2::FLAV_UDSG, eta, pt));
+            float sf_med =
+                flavor == 4 ? btagReaderMedium->eval_auto_bounds("central", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderMedium->eval_auto_bounds("central", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderMedium->eval_auto_bounds("central", BTagEntry_v2::FLAV_UDSG, eta, pt));
+            float sf_up_med =
+                flavor == 4 ? btagReaderMedium->eval_auto_bounds("up", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderMedium->eval_auto_bounds("up", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderMedium->eval_auto_bounds("up", BTagEntry_v2::FLAV_UDSG, eta, pt));
+            float sf_dn_med =
+                flavor == 4 ? btagReaderMedium->eval_auto_bounds("down", BTagEntry_v2::FLAV_C, eta, pt) : (
+                flavor == 5 ? btagReaderMedium->eval_auto_bounds("down", BTagEntry_v2::FLAV_B, eta, pt) :
+                              btagReaderMedium->eval_auto_bounds("down", BTagEntry_v2::FLAV_UDSG, eta, pt));
+
+            if ( isBTagTight ) {
+              btag_prob_MC *= eff_tight;
+              if ( varyBTagSFUp )
+                btag_up_prob_DATA *= sf_up_tight * eff_tight;
+              else if ( varyBTagSFDown )
+                btag_dn_prob_DATA *= sf_dn_tight * eff_tight;
+              else
+                btag_prob_DATA *= sf_tight * eff_tight;
+            }
+            else if ( isBTagMedium ) {
+              btag_prob_MC *= (eff_med - eff_tight);
+              if ( varyBTagSFUp )
+                btag_up_prob_DATA *= (sf_up_med * eff_med - sf_up_tight * eff_tight);
+              else if ( varyBTagSFDown )
+                btag_dn_prob_DATA *= (sf_dn_med * eff_med - sf_dn_tight * eff_tight);
+              else
+                btag_prob_DATA *= (sf_med * eff_med - sf_tight * eff_tight);
+            }
+            else {
+              btag_prob_MC *= (1 - eff_med);
+              if ( varyBTagSFUp )
+                btag_up_prob_DATA *= (1 - sf_up_med * eff_med);
+              else if ( varyBTagSFDown )
+                btag_dn_prob_DATA *= (1 - sf_dn_med * eff_med);
+              else
+                btag_prob_DATA *= (1 - sf_med * eff_med);
+            }
+          }
+        }
       }
-      if ( cand_bJets.size() < 1 ) continue;
+
+      if ( cand_bJets_tight.size() < 1 ) continue;
+      nbtagsel[0] = true;
+      if (doNbTagBins) {
+        if (cand_bJets.size()==1) {
+          nbtagsel[1] = true;
+          nbtagsel[2] = false;
+        }
+        else {
+          nbtagsel[1] = false;
+          nbtagsel[2] = true;
+        }
+      }
+
+      if ( isMC && applyBTagSF ) {
+        if ( varyBTagSFUp )
+          weight *= btag_up_prob_DATA / btag_prob_MC;
+        else if ( varyBTagSFDown )
+          weight *= btag_dn_prob_DATA / btag_prob_MC;
+        else
+          weight *= btag_prob_DATA / btag_prob_MC;
+      }
+
       float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
       float bjet2_pt = (cand_bJets.size() > 1 ? nt.Jet_pt().at(cand_bJets[1]) : -1.0);
       float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
@@ -1734,16 +1882,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_l_b");
       variable.insert({"minDPhi_l_b", minDPhi_l_b});
 
-      if (cand_bJets.size()>=1) nbtagsel[0] = true;
-      else nbtagsel[0] = false;
-      if (doNbTagBins) {
-	if (cand_bJets.size()==1) nbtagsel[1] = true;
-	else nbtagsel[1] = false;
-	if (cand_bJets.size()>=2) nbtagsel[2] = true;
-	else nbtagsel[2] = false;
-      }
       // Fill histos: sel8
-      label = ">0 b-tag (medium WP)";
+      label = ">0 b-tag (Tight+Mediums WP)";
       slicedlabel = "";
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1796,7 +1936,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  }
 	}
       }
-
     } // Event loop
 
     delete file;
@@ -1810,6 +1949,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     reset_muonIsoSF();
   }
   if ( applyTriggerSF ) reset_triggerSF();
+  if ( applyBTagSF ) reset_bTagEff();
 
   if ( removeDataDuplicates )
     cout << "Number of duplicates found: " << nDuplicates << endl;
