@@ -652,7 +652,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                 continue;
               if (isel>8 && nbtag[inb]=="nBTag0")
                 continue;
-              if (isel==8 && nbtag[inb]=="nBTag0" && plot_names.Contains("bjet1"))
+              if (isel==8 && nbtag[inb]=="nBTag0" && plot_name.Contains("bjet1"))
                 continue;
               TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
               HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
