@@ -34,6 +34,7 @@
 						 "Run2017H-UL2017_MiniAODv2_NanoAODv9-v1",
 						} },
                                 { "2016APV",    {
+						 "Run2016B-ver1_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
 						 "Run2016B-ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
 						 "Run2016C-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
 						 "Run2016D-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",

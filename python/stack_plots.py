@@ -60,7 +60,7 @@ sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
 sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
 sels.append("m_{#mu#mu}>150 GeV")
 sels.append("No extra lepton / iso. track")
-sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)")
+sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
 sels.append("min m_{#mu b}>175 GeV")
 
 nsel=dict()
@@ -76,9 +76,9 @@ nsel["sel8"]=10
 nsel["sel9"]=11
 
 nbbin=dict()
-nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, medium WP)"
-nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, medium WP)"
-nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, medium WP)"
+nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
+nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
+nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
 
 mllbin=dict()
 mllbin["mll150to250"]="150 < m_{#mu#mu} < 250 GeV"

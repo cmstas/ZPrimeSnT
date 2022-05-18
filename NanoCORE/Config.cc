@@ -19,6 +19,9 @@ void GlobalConfig::GetConfigsFromDatasetName(std::string dsname) {
     GetConfigs();
     GetSampleType(dsname);
 
+    if (year==2016 && (dsname.find("APV") != std::string::npos || (is_data && dsname.find("HIPM") == std::string::npos)))
+        isAPV=1;
+
     std::cout << ">>> ------------ GlobalConfig ------------" << std::endl;
     if (year <= 0) {
         std::cout << ">>> [!] Couldn't figure out year, so setting it to 2017. Make sure this is what you want!"
