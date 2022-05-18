@@ -48,9 +48,9 @@ bool useOnlyRun2018B = true;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
-bool doTTEnriched = true;
+bool doTTEnriched = false;
 bool doDYEnriched = false;
-bool doMuDetRegionBins = true;
+bool doMuDetRegionBins = false;
 
 // General flags
 bool removeSpikes = true;
