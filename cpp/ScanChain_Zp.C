@@ -46,6 +46,7 @@ bool useOnlyRun2018B = true;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
+bool doTTEnriched = true;
 bool doDYEnriched = false;
 bool doMuDetRegionBins = true;
 
@@ -503,9 +504,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
    bool MuDetRegionsel[MuDetRegionBins];
 
    map<TString, TString> MuDetRegionbinlabel;
-   MuDetRegionbinlabel["BB"] = "2 muons both in Barrels";
+   MuDetRegionbinlabel["BB"] = "2 muons in Barrel";
    MuDetRegionbinlabel["BE"] = "1 muon in Barrel, 1 muon in Endcap)";
-   MuDetRegionbinlabel["EE"] = "2 muons both in Endcaps";
+   MuDetRegionbinlabel["EE"] = "2 muons in Endcap";
 
   // Define cutflow histograms in bins of mll and number of b-tags
   map<TString, TH1F*> slicedcutflows;
@@ -532,9 +533,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   selection.push_back("sel7"); // No extra lepton / isoTrack
   selection.push_back("sel8"); // NbTag >= 1 (medium WP)
   selection.push_back("sel9"); // minMlb > 175 GeV
-  selection.push_back("antisel9"); // minMlb < 175 GeV, used for ttbar bkg reduction
+  if (doTTEnriched) selection.push_back("antisel9"); // minMlb < 175 GeV, used for ttbar bkg reduction
 
   vector<TString> plot_names = { };
+  vector<TString> plot_names_b = { };
   vector<TString> plot_names_2b = { };
   plot_names.push_back("pfmet_pt");
   plot_names.push_back("pfmet_phi");
@@ -621,6 +623,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("minDPhi_llb_MET");
       plot_names.push_back("minDPhi_l_b");
       //
+      plot_names_b.push_back("bjet1_pt");
+      plot_names_b.push_back("bjet1_eta");
+      plot_names_b.push_back("min_mlb");
+      plot_names_b.push_back("minDPhi_b_MET");
+      plot_names_b.push_back("minDPhi_lb_MET");
+      plot_names_b.push_back("minDPhi_llb_MET");
+      plot_names_b.push_back("minDPhi_l_b");
+      //
       plot_names_2b.push_back("bjet2_pt");
       plot_names_2b.push_back("bjet2_eta");
       plot_names_2b.push_back("min_mbb");
@@ -648,11 +658,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
           for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
             for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
               TString plot_name = plot_names[iplot];
-              if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && nbtag[inb]=="nBTag1" ) // find "plot_name" from [a,b], return the position. If not found, return end of vector
+              if ( std::find(plot_names_b.begin(), plot_names_b.end(), plot_name) != plot_names_b.end() && nbtag[inb]=="nBTag0" )
                 continue;
-              if (isel>8 && nbtag[inb]=="nBTag0")
-                continue;
-              if (isel==8 && nbtag[inb]=="nBTag0" && plot_name.Contains("bjet1"))
+              if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
                 continue;
               TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
               HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
@@ -1822,42 +1830,44 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       plot_names.push_back("nbtagDeepFlavB");
       variable.insert({"nbtagDeepFlavB", cand_bJets.size()});
 
-      plot_names.push_back("bjet1_pt");
-      variable.insert({"bjet1_pt", bjet1_pt});
+      if ( cand_bJets.size() >= 1 ) {
 
-      plot_names.push_back("bjet1_eta");
-      variable.insert({"bjet1_eta", bjet1_eta});
+        plot_names.push_back("bjet1_pt");
+        variable.insert({"bjet1_pt", bjet1_pt});
 
-      if ( cand_bJets.size() > 1 ) {
+        plot_names.push_back("bjet1_eta");
+        variable.insert({"bjet1_eta", bjet1_eta});
 
-	plot_names.push_back("bjet2_pt");
-	variable.insert({"bjet2_pt", bjet2_pt});
+        plot_names.push_back("min_mlb");
+        variable.insert({"min_mlb", min_mlb});
 
-	plot_names.push_back("bjet2_eta");
-	variable.insert({"bjet2_eta", bjet2_eta});
+        plot_names.push_back("minDPhi_b_MET");
+        variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
 
-	plot_names.push_back("min_mbb");
-	variable.insert({"min_mbb", min_mbb});
+        plot_names.push_back("minDPhi_lb_MET");
+        variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
 
-	plot_names.push_back("max_mbb");
-	variable.insert({"max_mbb", max_mbb});
+        plot_names.push_back("minDPhi_llb_MET");
+        variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
 
+        plot_names.push_back("minDPhi_l_b");
+        variable.insert({"minDPhi_l_b", minDPhi_l_b});
+
+        if ( cand_bJets.size() > 1 ) {
+
+          plot_names.push_back("bjet2_pt");
+          variable.insert({"bjet2_pt", bjet2_pt});
+
+          plot_names.push_back("bjet2_eta");
+          variable.insert({"bjet2_eta", bjet2_eta});
+
+          plot_names.push_back("min_mbb");
+          variable.insert({"min_mbb", min_mbb});
+
+          plot_names.push_back("max_mbb");
+          variable.insert({"max_mbb", max_mbb});
+        }
       }
-
-      plot_names.push_back("min_mlb");
-      variable.insert({"min_mlb", min_mlb});
-
-      plot_names.push_back("minDPhi_b_MET");
-      variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
-
-      plot_names.push_back("minDPhi_lb_MET");
-      variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
-
-      plot_names.push_back("minDPhi_llb_MET");
-      variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
-
-      plot_names.push_back("minDPhi_l_b");
-      variable.insert({"minDPhi_l_b", minDPhi_l_b});
 
       // Fill histos: sel8
       label = ">0 b-tag (medium WP)";
@@ -1925,7 +1935,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
           }
         }
       }
-    else if (min_mlb < 175.0){
+    if (min_mlb < 175.0 && doTTEnriched){
       label = "min m_{#mu b}<175 GeV";
       slicedlabel = label;
       sel = "antisel9";

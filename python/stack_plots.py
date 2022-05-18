@@ -93,9 +93,9 @@ mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
 mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
 MuDetbin=dict()
-MuDetbin["BB"]="2 muons both in Barrels"
+MuDetbin["BB"]="2 muons in Barrel"
 MuDetbin["BE"]="1 muon in Barrel, 1 muon in Endcap)"
-MuDetbin["EE"]="2 muons both in Endcaps"
+MuDetbin["EE"]="2 muons in Endcap"
 
 # Samples
 samples=[]
@@ -743,11 +743,11 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 continue
             if '1p' not in whichnb and s==10:
                 continue
-            ts = ts+1
             if 'antisel9' in whichsel and s==11:
                 continue;
-            elif 'sel9' in whichsel and s==12:
+            if 'anti' not in whichsel and 'sel9' in whichsel and s==12:
                 continue;    
+            ts = ts+1
             if args.data:
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
             else:
