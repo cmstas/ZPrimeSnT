@@ -93,9 +93,9 @@ mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
 mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
 MuDetbin=dict()
-MuDetbin["MuDetBB"]="2 muons both in Barrels"
-MuDetbin["MuDetBE"]="1 muon in Barrel, 1 muon in Endcap)"
-MuDetbin["MuDetEE"]="2 muons both in Endcaps"
+MuDetbin["BB"]="2 muons both in Barrels"
+MuDetbin["BE"]="1 muon in Barrel, 1 muon in Endcap)"
+MuDetbin["EE"]="2 muons both in Endcaps"
 
 # Samples
 samples=[]
@@ -374,13 +374,13 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-1]
         else:
-            thisMuDet = "all"
-        if not args.plotMuonDetRegions and 'all' not in thisMuDet:
+            thisMuDet = "All"
+        if not args.plotMuonDetRegions and 'All' not in thisMuDet:
             return(0)
     else:
         if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
             return(0)
-        if not args.plotMuonDetRegions and ("cutflow" in plotname and "MuDet" in plotname and "all" not in plotname):
+        if not args.plotMuonDetRegions and ("cutflow" in plotname and "MuDet" in plotname and "All" not in plotname):
             return(0)
 
     if "cutflow" not in plotname:
@@ -743,9 +743,11 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 continue
             if '1p' not in whichnb and s==10:
                 continue
-            if 'all' not in whichMuDet and s==8:
-                continue
             ts = ts+1
+            if 'antisel9' in whichsel and s==11:
+                continue;
+            elif 'sel9' in whichsel and s==12:
+                continue;    
             if args.data:
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
             else:
@@ -756,7 +758,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
             else:
                 latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
-        if 'all' not in whichMuDet and nsel[whichsel]>=8:
+        if 'All' not in whichMuDet and nsel[whichsel]>=8:
             ts = ts+1
             if args.data:
                 latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), MuDetbin[whichMuDet])
