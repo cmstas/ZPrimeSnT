@@ -650,6 +650,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
               TString plot_name = plot_names[iplot];
               if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && nbtag[inb]=="nBTag1" ) // find "plot_name" from [a,b], return the position. If not found, return end of vector
                 continue;
+              if (isel>8 && nbtag[inb]=="nBTag0")
+                continue;
+              if (isel==8 && nbtag[inb]=="nBTag0" && plot_names.Contains("bjet1"))
+                continue;
               TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
               HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
               histos[name] = h_temp;
