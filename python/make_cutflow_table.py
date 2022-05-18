@@ -75,6 +75,7 @@ def reformat_label(tlabel):
     tlabel = tlabel.replace("m_{#mu b}","$m_{\\mu\\mathrm{b}}$")
     tlabel = tlabel.replace("N_{b-tag}","$N_{\\mathrm{b-tag}}$")
     tlabel = tlabel.replace("p_{T}","$p_{\\mathrm{T}}$")
+    tlabel = tlabel.replace("E_{T}^{miss}","$E_{\\mathrm{T}}^{\\mathrm{miss}}$")
     tlabel = tlabel.replace("#geq","$\\geq$")
     tlabel = tlabel.replace("=","$=$")
     tlabel = tlabel.replace(">","$>$")
