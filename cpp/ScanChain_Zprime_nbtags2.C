@@ -142,7 +142,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"nb2.root", "RECREATE");
+  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"nb2_no_mlb.root", "RECREATE");
   float m_ll, wgt, weighted_evts;
   bool flag_TT, flag_TM, flag_TL, flag_TT_1b, flag_TM_1b, flag_TL_1b;
 
@@ -464,29 +464,29 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                min_mlb_tl_1b = 1e9;
                min_mlb_tl_1b = std::min(min_mlb_tl_1b,std::min(m_mu1_tb,m_mu2_tb));
                //std::cout << "minimum mlb = " << min_mlb_tl_1b << endl;
-               if (min_mlb_tl_1b > 175.0){
+              // if (min_mlb_tl_1b > 175.0){
                    flag_TL_1b = true;
                    nEvents_TL_1b++;
-               }    
+              // }    
            }
         
            // Do the same for the TM case
            if (bjet_idx_med_20.size() < 2 ){
                min_mlb_tm_1b = 1e9;
                min_mlb_tm_1b = std::min(min_mlb_tm_1b,std::min(m_mu1_tb,m_mu2_tb));
-               if (min_mlb_tm_1b > 175.0){
+               //if (min_mlb_tm_1b > 175.0){
                    flag_TM_1b = true;
                    nEvents_TM_1b++;
-               }
+               //}
            }
   
            // And for the TT case       
            min_mlb_tt_1b = 1e9;
            min_mlb_tt_1b = std::min(min_mlb_tt_1b,std::min(m_mu1_tb,m_mu2_tb));
-           if (min_mlb_tt_1b > 175.0){
+           //if (min_mlb_tt_1b > 175.0){
                flag_TT_1b = true;
                nEvents_TT_1b++;
-           }
+          // }
            
       }
 
@@ -503,10 +503,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                }
                //flag_TL = false;
                min_mlb_tl = min_mlb_l;
-               if (min_mlb_tl > 175.0 ){
+               //if (min_mlb_tl > 175.0 ){
                    flag_TL = true;
                    nEvents_TL++;
-               }      
+               //}      
       }
 
       if ( bjet_idx_med_20.size() > 1 ){
@@ -520,10 +520,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
            }
            //flag_TM = false;
            min_mlb_tm = min_mlb_m;
-           if (min_mlb_tm > 175.0 ){
+           //if (min_mlb_tm > 175.0 ){
                flag_TM = true;
                nEvents_TM++;
-           }
+           //}
 
       }
 
@@ -538,10 +538,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
            }
           
-           if ( min_mlb_tt > 175.0 ){
+           //if ( min_mlb_tt > 175.0 ){
                 flag_TT = true;
                 nEvents_TT++;
-           }
+           //}
       }
       
       //if (min_mlb_tt > 175) flag_TT = true;

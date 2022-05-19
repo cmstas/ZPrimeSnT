@@ -1,43 +1,59 @@
-vector<double> btag_yields_nb2(TString process, TString year, double mass){
-       
+#include "Math/DistFunc.h"
+#include "Math/DistFuncMathMore.h" 
+#include <iostream>
+#include <fstream>
+using namespace std; 
+
+typedef double(*fcn_chisquared_quantile_t)(double, double);
+
+void getPoissonCountingConfidenceInterval_Frequentist(double sw_total, double swsq_total, double CL, double& vlow, double& vhigh){
+    double const quant = (1. - CL) / 2.;
+    double const count = (swsq_total<=0. ? (sw_total==0. ? 0. : sw_total) : std::pow(sw_total, 2)/swsq_total);
+    //bool const useMathMore = (count<1.);
+    constexpr bool useMathMore = false;
+    fcn_chisquared_quantile_t fcn_chisquared_quantile = (useMathMore ? ROOT::MathMore::chisquared_quantile : ROOT::Math::chisquared_quantile);
+    vlow = (count == 0. ? 0. : fcn_chisquared_quantile(quant, 2. * count) / 2.);
+    vhigh = fcn_chisquared_quantile(1.-quant, 2 * (count + 1.)) / 2.;
+    if (count>0.){
+        vlow *= sw_total/count;
+        vhigh *= sw_total/count;
+        }
+   }
+
+
+vector<double> btag_yields_nb2(TString process, TString year, double mass, TString btag_comb){
+    
+       ofstream myfile;
+       ofstream yield_file;
+       myfile.open (Form("datacards/datacard_%s_%s.txt",process.Data(),btag_comb.Data()));
+       yield_file.open (Form("yields/yields_%s_%s.txt",process.Data(),btag_comb.Data()));
+   
        TString dir = "temp_data/";
        TString filestart = "output_";
        TString filetype = ".root";
        
-       std::cout << dir+filestart+process+"_"+year+"nb2"+filetype << endl;
+       //std::cout << dir+filestart+process+"_"+year+"nb2"+filetype << endl;
        TFile* file = TFile::Open(dir+filestart+process+"_"+year+"nb2"+filetype,"READ");
        
        TTree* tree_in = (TTree*)file->Get("tree");
 
-       bool flag_TT, flag_TT_1b, flag_TM, flag_TM_1b, flag_TL, flag_TL_1b;
+       bool flag, flag_1b;
        float wgt, m_ll, weighted_evts; 
 
 
-       std::cout << "1" << endl;
+       //std::cout << "1" << endl;
        tree_in->SetBranchAddress("wgt",&wgt);
        tree_in->SetBranchAddress("weighted_evts",&weighted_evts);
        tree_in->SetBranchAddress("m_ll",&m_ll);
-       tree_in->SetBranchAddress("flag_TT",&flag_TT);
-       tree_in->SetBranchAddress("flag_TT_1b",&flag_TT_1b);
-       tree_in->SetBranchAddress("flag_TM",&flag_TM);
-       tree_in->SetBranchAddress("flag_TM_1b",&flag_TM_1b);
-       tree_in->SetBranchAddress("flag_TL",&flag_TL);
-       tree_in->SetBranchAddress("flag_TL_1b",&flag_TL_1b);
+       tree_in->SetBranchAddress("flag_"+btag_comb,&flag);
+       tree_in->SetBranchAddress(Form("flag_%s_1b",btag_comb.Data()),&flag_1b);
 
-       std::cout << "2" << endl;
+       //std::cout << "2" << endl;
 
-       double sumW_TT = 0;
-       double sumW_TT_1b = 0;
-       double sumW_TM = 0;
-       double sumW_TM_1b = 0;
-       double sumW_TL = 0;
-       double sumW_TL_1b = 0;
-       double ssW_TT = 0;
-       double ssW_TT_1b = 0;
-       double ssW_TM = 0;
-       double ssW_TM_1b = 0;
-       double ssW_TL = 0;
-       double ssW_TL_1b = 0; 
+       double sumW = 0;
+       double sumW_1b = 0;
+       double ssW = 0;
+       double ssW_1b = 0;
 
        vector<double> yields;
 
@@ -70,14 +86,10 @@ vector<double> btag_yields_nb2(TString process, TString year, double mass){
        double upper_bound = mass+window;
        double lower_bound = mass-window;
 
-       int n_TT = 0;
-       int n_TT_1b = 0;
-       int n_TM = 0;
-       int n_TM_1b = 0;
-       int n_TL = 0;
-       int n_TL_1b = 0;
+       int n = 0;
+       int n_1b = 0;
 
-       std::cout << "Number of events = " << tree_in->GetEntries() << endl;
+       //std::cout << "Number of events = " << tree_in->GetEntries() << endl;
 
        // Event loop for signal sample
        for (Long64_t event = 0; event < tree_in->GetEntries(); ++event){
@@ -87,42 +99,17 @@ vector<double> btag_yields_nb2(TString process, TString year, double mass){
             
             if ( m_ll >= lower_bound && m_ll <= upper_bound ){
                  
-                 if ( flag_TT ){
-                      sumW_TT += weighted_evts;
-                      ssW_TT += pow(weighted_evts,2.0);
-                      n_TT++;
+                 if ( flag ){
+                      sumW += weighted_evts;
+                      ssW += pow(weighted_evts,2.0);
+                      n++;
                  }
                   
-                 if ( flag_TT_1b ){
-                      sumW_TT_1b += weighted_evts;
-                      ssW_TT_1b += pow(weighted_evts,2.0);
-                      n_TT_1b++;
+                 if ( flag_1b ){
+                      sumW_1b += weighted_evts;
+                      ssW_1b += pow(weighted_evts,2.0);
+                      n_1b++;
                  }
- 
-                 if ( flag_TM ){
-                      sumW_TM += weighted_evts;
-                      ssW_TM += pow(weighted_evts,2.0);
-                      n_TM++;
-                 }
-
-                 if ( flag_TM_1b ){
-                      sumW_TM_1b += weighted_evts;
-                      ssW_TM_1b += pow(weighted_evts,2.0);
-                      n_TM_1b++;
-                 }
-
-                 if ( flag_TL ){
-                      sumW_TL += weighted_evts;
-                      ssW_TL += pow(weighted_evts,2.0);
-                      n_TL++;
-                 }
-        
-                 if ( flag_TL_1b ){
-                      sumW_TL_1b += weighted_evts;
-                      ssW_TL_1b += pow(weighted_evts,2.0);
-                      n_TL_1b++;
-                 }
- 
             }
             
        }
@@ -139,66 +126,33 @@ vector<double> btag_yields_nb2(TString process, TString year, double mass){
        tree_DY->SetBranchAddress("wgt",&wgt);
        tree_DY->SetBranchAddress("weighted_evts",&weighted_evts);
        tree_DY->SetBranchAddress("m_ll",&m_ll);
-       tree_DY->SetBranchAddress("flag_TT",&flag_TT);
-       tree_DY->SetBranchAddress("flag_TT_1b",&flag_TT_1b);
-       tree_DY->SetBranchAddress("flag_TM",&flag_TM);
-       tree_DY->SetBranchAddress("flag_TM_1b",&flag_TM_1b);
-       tree_DY->SetBranchAddress("flag_TL",&flag_TL);
-       tree_DY->SetBranchAddress("flag_TL_1b",&flag_TL_1b);
+       tree_DY->SetBranchAddress("flag_"+btag_comb,&flag);
+       tree_DY->SetBranchAddress(Form("flag_%s_1b",btag_comb.Data()),&flag_1b);
 
-       std::cout << "3" << endl;
+       //std::cout << "3" << endl;
        
-       double sumW_TT_DY = 0;
-       double sumW_TT_1b_DY = 0;
-       double sumW_TM_DY = 0;
-       double sumW_TM_1b_DY = 0;
-       double sumW_TL_DY = 0;
-       double sumW_TL_1b_DY = 0;
-       double ssW_TT_DY = 0;
-       double ssW_TT_1b_DY = 0;
-       double ssW_TM_DY = 0;
-       double ssW_TM_1b_DY = 0;
-       double ssW_TL_DY = 0;
-       double ssW_TL_1b_DY = 0;       
+       double sumW_DY = 0;
+       double sumW_1b_DY = 0;
+       double ssW_DY = 0;
+       double ssW_1b_DY = 0;
  
       
        for (Long64_t event = 0; event < tree_DY->GetEntries(); ++event){
 
             tree_DY->GetEntry(event);
-            //if ( weighted_evts < 0.0 ) continue;
 
             if ( m_ll >= lower_bound && m_ll <= upper_bound ){
                  
-                 if ( flag_TT ){
-                      sumW_TT_DY += weighted_evts;
-                      ssW_TT_DY += pow(weighted_evts,2.0);
+                 if ( flag ){
+                      sumW_DY += weighted_evts;
+                      ssW_DY += pow(weighted_evts,2.0);
                  }
 
-                 if ( flag_TT_1b ){
-                      sumW_TT_1b_DY += weighted_evts;
-                      ssW_TT_1b_DY += pow(weighted_evts,2.0);
+                 if ( flag_1b ){
+                      sumW_1b_DY += weighted_evts;
+                      ssW_1b_DY += pow(weighted_evts,2.0);
                  }
-
-                 if ( flag_TM ){
-                      sumW_TM_DY += weighted_evts;
-                      ssW_TM_DY += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TM_1b ){
-                      sumW_TM_1b_DY += weighted_evts;
-                      ssW_TM_1b_DY += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TL ){
-                      sumW_TL_DY += weighted_evts;
-                      ssW_TL_DY += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TL_1b ){
-                      sumW_TL_1b_DY += weighted_evts;
-                      ssW_TL_1b_DY += pow(weighted_evts,2.0);
-                 }
-          
+ 
             }
        }
 
@@ -214,25 +168,13 @@ vector<double> btag_yields_nb2(TString process, TString year, double mass){
        tree_tt->SetBranchAddress("wgt",&wgt);
        tree_tt->SetBranchAddress("weighted_evts",&weighted_evts);
        tree_tt->SetBranchAddress("m_ll",&m_ll);
-       tree_tt->SetBranchAddress("flag_TT",&flag_TT);
-       tree_tt->SetBranchAddress("flag_TT_1b",&flag_TT_1b);
-       tree_tt->SetBranchAddress("flag_TM",&flag_TM);
-       tree_tt->SetBranchAddress("flag_TM_1b",&flag_TM_1b);
-       tree_tt->SetBranchAddress("flag_TL",&flag_TL);
-       tree_tt->SetBranchAddress("flag_TL_1b",&flag_TL_1b);       
+       tree_tt->SetBranchAddress("flag_"+btag_comb,&flag);
+       tree_tt->SetBranchAddress(Form("flag_%s_1b",btag_comb.Data()),&flag_1b);
        
-       double sumW_TT_tt = 0;
-       double sumW_TT_1b_tt = 0;
-       double sumW_TM_tt = 0; 
-       double sumW_TM_1b_tt = 0; 
-       double sumW_TL_tt = 0;
-       double sumW_TL_1b_tt = 0;
-       double ssW_TT_tt = 0; 
-       double ssW_TT_1b_tt = 0; 
-       double ssW_TM_tt = 0;
-       double ssW_TM_1b_tt = 0;
-       double ssW_TL_tt = 0;
-       double ssW_TL_1b_tt = 0; 
+       double sumW_tt = 0;
+       double sumW_1b_tt = 0;
+       double ssW_tt = 0; 
+       double ssW_1b_tt = 0; 
 
        for (Long64_t event = 0; event < tree_tt->GetEntries(); ++event){
 
@@ -241,68 +183,65 @@ vector<double> btag_yields_nb2(TString process, TString year, double mass){
 
             if ( m_ll >= lower_bound && m_ll <= upper_bound ){               
                  
-                 if ( flag_TT ){
-                      sumW_TT_tt += weighted_evts;
-                      ssW_TT_tt += pow(weighted_evts,2.0);
+                 if ( flag ){
+                      sumW_tt += weighted_evts;
+                      ssW_tt += pow(weighted_evts,2.0);
                  }
 
-                 if ( flag_TT_1b ){
-                      sumW_TT_1b_tt += weighted_evts;
-                      ssW_TT_1b_tt += pow(weighted_evts,2.0);
+                 if ( flag_1b ){
+                      sumW_1b_tt += weighted_evts;
+                      ssW_1b_tt += pow(weighted_evts,2.0);
                  }
-
-                 if ( flag_TM ){
-                      sumW_TM_tt += weighted_evts;
-                      ssW_TM_tt += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TM_1b ){
-                      sumW_TM_1b_tt += weighted_evts;
-                      ssW_TM_1b_tt += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TL ){
-                      sumW_TL_tt += weighted_evts;
-                      ssW_TL_tt += pow(weighted_evts,2.0);
-                 }
-
-                 if ( flag_TL_1b ){
-                      sumW_TL_1b_tt += weighted_evts;
-                      ssW_TL_1b_tt += pow(weighted_evts,2.0);
-                 }
-                
+                  
             }
 
        }   
 
        // Calculate the uncertainties associated with each of the yields 
- 
+       /* 
+       double v_low;
+       double v_high;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW, ssW, 0.684, v_low, v_high);
+       std::cout << "Number of TT_2b events = " << sumW << " , frac unc =  " << (v_low-sumW)/sumW << "/" << (v_high-sumW)/sumW << endl;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW_1b, ssW_1b, 0.684, v_low, v_high);
+       std::cout << "Number of TT_1b events = " << sumW_1b << " , frac unc =  " << (v_low-sumW_1b)/sumW_1b << "/" << (v_high-sumW_1b)/sumW_1b  << endl;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW_DY, sumW_DY, 0.684, v_low, v_high);
+       std::cout << "N DY events TT 2b = " << sumW_DY << " , frac unc =  " << (v_low-sumW_DY)/sumW_DY << "/" << (v_high-sumW_DY)/sumW_DY  << endl;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW_tt, sumW_tt, 0.684, v_low, v_high);
+       std::cout << "N ttbar events TT 2b = " << sumW_tt << " , frac unc =  " << (v_low-sumW_tt)/sumW_tt << "/" << (v_high-sumW_tt)/sumW_tt  << endl;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW_1b_DY, sumW_1b_DY, 0.684, v_low, v_high);
+       std::cout << "N DY events TT 1b = " << sumW_1b_DY << " , frac unc =  " << (v_low-sumW_1b_DY)/sumW_1b_DY << "/" << (v_high-sumW_1b_DY)/sumW_1b_DY  << endl;
+       getPoissonCountingConfidenceInterval_Frequentist(sumW_1b_tt, sumW_1b_tt, 0.684, v_low, v_high);
+       std::cout << "N ttbar events TT 1b = " << sumW_1b_tt << " , frac unc = " << (v_low-sumW_1b_tt)/sumW_1b_tt << "/" << (v_high-sumW_1b_tt)/sumW_1b_tt  << endl;
+       */
 
-
-
-       std::cout << "Fraction of TT_2b events = " << sumW_TT/(sumW_TT+sumW_TT_1b) << endl;
-       std::cout << "Fraction of TT_1b events = " << sumW_TT_1b/(sumW_TT+sumW_TT_1b) << endl;
-       std::cout << "N bkgd events TT 2b = " << sumW_TT_DY + sumW_TT_tt << " +/- " << sqrt(ssW_TT_DY+ssW_TT_tt) << endl;
-       std::cout << "N bkgd events TT 1b = " << sumW_TT_1b_DY + sumW_TT_1b_tt << " +/- " << sqrt(ssW_TT_1b_DY+ssW_TT_1b_tt) << endl;    
-       std::cout << "Fraction of TM_2b events = " << sumW_TM/(sumW_TM+sumW_TM_1b) << endl;
-       std::cout << "Fraction of TM_1b events = " << sumW_TM_1b/(sumW_TM+sumW_TM_1b) << endl;
-       std::cout << "N bkgd events TM 2b = " << sumW_TM_DY + sumW_TM_tt << " +/- " << sqrt(ssW_TM_DY+ssW_TM_tt)  << endl;
-       std::cout << "N bkgd events TM 1b = " << sumW_TM_1b_DY + sumW_TM_1b_tt << " +/- " << sqrt(ssW_TM_1b_DY+ssW_TM_1b_tt)  << endl;
-       std::cout << "Fraction of TL_2b events = " << sumW_TL/(sumW_TL+sumW_TL_1b) << endl;
-       std::cout << "Fraction of TL_1b events = " << sumW_TL_1b/(sumW_TL+sumW_TL_1b) << endl;
-       std::cout << "N bkgd events TL 2b = " << sumW_TL_DY + sumW_TL_tt << " +/- " << sqrt(ssW_TL_DY+ssW_TL_tt)  << endl;
-       std::cout << "N bkgd events TL 1b = " << sumW_TL_1b_DY + sumW_TL_1b_tt << " +/- " << sqrt(ssW_TL_1b_DY+ssW_TL_1b_tt) << endl;
-
-       /*
-       std::cout << "N entries signal TT2b = " << n_TT << endl;
-       std::cout << "N entries signal TT1b = " << n_TT_1b << endl;
-       std::cout << "N entries signal TM2b = " << n_TM << endl;
-       std::cout << "N entries signal TM1b = " << n_TM_1b << endl;
-       std::cout << "N entries signal TL2b = " << n_TL << endl;
-       std::cout << "N entries signal TL1b = " << n_TL_1b << endl;
-       */ 
+       myfile << "imax  * " << endl;
+       myfile << "jmax  * " << endl;
+       myfile << "kmax  * " << endl;
+       myfile << "--------------------------------------" << endl;
+       myfile << "--------------------------------------" << endl;             
+       myfile << "bin one_b two_b" << endl;
+       myfile << "observation " << sumW << " " << sumW_1b << endl;
+       myfile << "--------------------------------------" << endl;
+       myfile << "bin one_b two_b one_b two_b one_b two_b" << endl;
+       myfile << "process ttbar ttbar Drell-Yan Drell-Yan " << process << " " << process << endl;
+       myfile << "process 1 1 2 2 -1 -1" << endl;
+       myfile << "rate " << sumW_1b_tt << " " << sumW_tt << " " << sumW_1b_DY << " " << sumW_DY << " " << sumW_1b/(sumW_1b+sumW) << " " << sumW/(sumW_1b+sumW) << endl;
+       myfile << "--------------------------------------" << endl;
+       myfile << "ttbar_Norm_1b gmN " << sumW_1b_tt << " 1 - - - - -" << endl;
+       myfile << "ttbar_Norm_2b gmN " << sumW_tt << " - 1 - - - -" << endl;
+       myfile << "DY_Norm_1b gmN " << sumW_1b_DY << " - - 1 - - -" << endl;    
+       myfile << "DY_Norm_2b gmN " << sumW_DY << " - - - 1 - -" << endl;
+       myfile << "signal_Norm_1b gmN " << pow(sumW_1b,2.0)/ssW_1b << " - - - - " << ssW_1b/sumW_1b/(sumW_1b+sumW) << " -"<< endl;
+       myfile << "signal_Norm_2b gmN " << pow(sumW,2.0)/ssW << " - - - - - " << ssW/sumW/(sumW_1b+sumW) << endl;
        
-       yields = {sumW_TT,sumW_TT_1b,sumW_TM,sumW_TM_1b,sumW_TL,sumW_TL_1b};
+       myfile.close();         
+
+       yield_file <<  sumW + sumW_1b << endl;
+
+       yield_file.close();
+       
+       yields = {sumW,sumW_1b};
       
        return yields;
 }

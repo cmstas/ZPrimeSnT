@@ -1,6 +1,6 @@
 {
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
-  gROOT->ProcessLine(".L ScanChain_Zprime_nbtags2.C+");  // Macro that performs the selection
+  gROOT->ProcessLine(".L ScanChain_Zprime_nbtags2_MM.C+");  // Macro that performs the selection
 
 
   vector<TString> years = { };

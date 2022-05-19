@@ -142,7 +142,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
     factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"nb2.root", "RECREATE");
+  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"nb2_LT.root", "RECREATE");
   float m_ll, wgt, weighted_evts;
   bool flag_pass_mlb_all_T;
 
