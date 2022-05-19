@@ -1,0 +1,22 @@
+
+Processing btag_yields_nb2.C("Y3_M400","2018",400.0)...
+temp_data/output_Y3_M400_2018nb2.root
+Number of TT_2b events = 1.11788 , frac unc =  0.0279092
+Number of TT_1b events = 17.1773 , frac unc =  0.00711905
+N DY events TT 2b = 4.01847 , frac unc =  0.5
+N ttbar events TT 2b = 0.833486 , frac unc =  0.447214
+N DY events TT 1b = 32.4281 , frac unc =  0.396645
+N ttbar events TT 1b = 17.8366 , frac unc = 0.097573
+Number of TM_2b events = 1.74713 , frac unc 0.0223232
+Number of TM_1b events = 15.1979 , frac unc 0.00756846
+N DY events TM 2b = 4.02889 , frac unc =  0.498713
+N ttbar events TM 2b = 0.833486 , frac unc = 0.447214
+N DY events TM 1b = 30.4189 , frac unc = 0.420257
+N ttbar events TM 1b = 9.83514 , frac unc = 0.132377
+Number of TL_2b events = 2.51957 , frac unc = 0.0185868
+Number of TL_1b events = 11.5493 , frac unc = 0.00868215
+N DY events TL 2b = 17.7106 , frac unc = 0.51822
+N ttbar events TL 2b = 0.833486 , frac unc = 0.447214
+N DY events TL 1b = 28.4097 , frac unc = 0.447191
+N ttbar events TL 1b = 4.83422 , frac unc = 0.191992
+(std::vector<double>) { 1.1178775, 17.177326, 1.7471284, 15.197921, 2.5195701, 11.549266 }

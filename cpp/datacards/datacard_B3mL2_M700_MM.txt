@@ -1,0 +1,19 @@
+imax  * 
+jmax  * 
+kmax  * 
+--------------------------------------
+--------------------------------------
+bin one_b two_b
+observation 13.1616 85.1559
+--------------------------------------
+bin one_b two_b one_b two_b one_b two_b
+process ttbar ttbar Drell-Yan Drell-Yan B3mL2_M700 B3mL2_M700
+process 1 1 2 2 -1 -1
+rate 3.50064 0.333394 36.832 2.11931 0.866132 0.133868
+--------------------------------------
+ttbar_Norm_1b gmN 3.50064 1 - - - - -
+ttbar_Norm_2b gmN 0.333394 - 1 - - - -
+DY_Norm_1b gmN 36.832 - - 1 - - -
+DY_Norm_2b gmN 2.11931 - - - 1 - -
+signal_Norm_1b gmN 39577.1 - - - - 2.18847e-05 -
+signal_Norm_2b gmN 6118.29 - - - - - 2.188e-05
