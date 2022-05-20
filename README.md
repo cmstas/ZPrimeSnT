@@ -25,7 +25,8 @@ root -b -q -l -n doAll_Zp.C
 popd
 ```
 
-This loops and creates a number of output files of the form `output_"process"_"year".root`, which contains a handful of histograms. 
+This loops and creates a number of output files of the form `output_"process"_"year".root` containing histograms. 
+Optionally, the file also contains a `RooDataSet` to be used as input for fitting (see below).
 
 To produce plots:
 ```bash
@@ -36,6 +37,27 @@ To produce cutflow table:
 ```bash
 python python/make_cutflow_table.py
 ```
+
+## Fitting code:
+
+NOTE: fitting requires a more recent version of ROOT.
+
+```bash
+pushd /cvmfs/cms.cern.ch/slc7_amd64_gcc10/cms/cmssw/CMSSW_12_3_3/
+cmsenv
+popd
+pushd cpp/
+root -b -q -l -n doAll_fitDimuonMass.C
+popd
+```
+
+This creates a ROOT file with a workspace containing all relevant PDFs, to be used as input to `combine`.
+Optionally, fits are drawn and fit results are saved in a dedicated ROOT file.
+In order to plot fit results:
+```bash
+python python/plot_fitResults.py
+```
+
 
 ## Pull requests:
 
