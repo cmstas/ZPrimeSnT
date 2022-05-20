@@ -17,7 +17,7 @@ parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass poi
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
-parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel9')")
+parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
 parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
 args = parser.parse_args()
@@ -41,7 +41,7 @@ if len(args.signalMass)>3:
             massToExclude.append(str(m))
 
 if len(args.selections)==0:
-    args.selections = ["sel9"]
+    args.selections = ["sel10"]
 
 # Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
@@ -53,7 +53,7 @@ if args.data:
 sels = []
 sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
 sels.append("HLT selection")
-sels.append("N_{good PV}#geq 1 & MET filters")
+sels.append("N_{good PV}#geq 1 & E_{T}^{miss} filters")
 sels.append("N_{highPt ID #mu}#geq 2")
 sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
 sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
@@ -62,6 +62,7 @@ sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
 sels.append("m_{#mu#mu}>150 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
+sels.append("E_{T}^{miss}<250 GeV, if aligned")
 sels.append("min m_{#mu b}>175 GeV")
 sels.append("min m_{#mu b}<175 GeV")
 
@@ -76,7 +77,8 @@ nsel["sel6"]=8
 nsel["sel7"]=9
 nsel["sel8"]=10
 nsel["sel9"]=11
-nsel["antisel9"]=12
+nsel["sel10"]=12
+nsel["antisel10"]=13
 
 nbbin=dict()
 nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, T WP)"
@@ -105,7 +107,7 @@ if args.data:
 samples.append("Y3")
 #samples.append("DY3")
 #samples.append("DYp3")
-samples.append("B3mL2")
+#samples.append("B3mL2")
 # SM MC
 samples.append("ZToMuMu")
 samples.append("ttbar")
@@ -351,7 +353,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     if "cutflow" not in plotname:
         thissel=""
-        if "sel8" in plotname or "sel9" in plotname:
+        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-3]
@@ -360,7 +362,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if thissel not in args.selections:
             return(0)
         thismll=""
-        if "sel8" in plotname or "sel9" in plotname:
+        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thismll = plotname.split("_")[len(plotname.split("_"))-3]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-2]
@@ -369,7 +371,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
         thisMuDet=""
-        if "sel8" in plotname or "sel9" in plotname:
+        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-1]
@@ -385,7 +387,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     if "cutflow" not in plotname:
         thissel=""
-        if "sel8" in plotname or "sel9" in plotname:
+        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-3]
@@ -725,7 +727,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         whichmll = ""
         whichMuDet = ""
         whichsel = ""
-        if "sel8" in plotname or "sel9" in plotname:
+        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
             whichnb  = plotname.split("_")[len(plotname.split("_"))-2]
             whichmll = plotname.split("_")[len(plotname.split("_"))-3]
@@ -743,9 +745,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 continue
             if '1p' not in whichnb and s==10:
                 continue
-            if 'antisel9' in whichsel and s==11:
+            if 'antisel10' in whichsel and s==12:
                 continue;
-            if 'anti' not in whichsel and 'sel9' in whichsel and s==12:
+            if 'anti' not in whichsel and 'sel10' in whichsel and s==13:
                 continue;    
             ts = ts+1
             if args.data:
