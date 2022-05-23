@@ -16,6 +16,7 @@
   //years.push_back("2016nonAPV");
 
   vector<TString> samples = { };
+  vector<TString> sigmodels = { };
   vector<TString> sigsamples = { };
   vector<float> sigmasses = { };
 
@@ -68,6 +69,7 @@
 
   // Signals
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
+  //vector<TString> sigModel = { "Y3" };
   vector<float> sigMass = { /*100.0,*/ 200.0, 400.0, 700.0, 1000.0, 1500.0, 2000.0 };
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
@@ -76,6 +78,7 @@
   {
     for ( unsigned int imass=0; imass<sigMassString.size(); imass++ )
     {
+      sigmodels.push_back(sigModel[imodel]);
       sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
       sigmasses.push_back(sigMass[imass]);
     }
@@ -115,12 +118,12 @@
 	RooDataSet *tds = (RooDataSet*) fin.Get(dNames[d])->Clone();
 	tds->SetName(dNames[d]+"_"+sample+"_"+year);
 	mmumu_sig.push_back( *tds );
-	fitmass(mmumu_sig[isample], sample, false, true, sigmasses[isample], "dcbvoigt", "fitResults");
+	fitmass(mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], "dcbg", "fitResults");
 	if ( samples.size() > 0 ) {
 	  if ( useData )
-	    fitmass(*mmumu_bkg, "Background", true, false, sigmasses[isample], "", "fitResults");
+	    fitmass(*mmumu_bkg, "Background", true, false, sigmodels[isample], sigmasses[isample], "", "fitResults");
 	  else
-	    fitmass(*mmumu_bkg, "Background", false, false, sigmasses[isample], "", "fitResults");
+	    fitmass(*mmumu_bkg, "Background", false, false, sigmodels[isample], sigmasses[isample], "", "fitResults");
 	}
 	cout<<endl;
       }
