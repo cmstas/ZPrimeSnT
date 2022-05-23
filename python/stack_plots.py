@@ -440,6 +440,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     totalScale   = totalSM.Integral(0,-1)
     if "cutflow" in plotname:
         totalScale = totalSM.GetBinContent(1)
+    if args.shape and totalScale>0.0:
+        totalSM.Scale(1.0/totalScale)
 
 
     # Build stack
