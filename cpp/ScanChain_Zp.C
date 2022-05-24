@@ -47,7 +47,7 @@ bool useOnlyRun2018B = true;
 // Looper setup flags
 bool muonDebug = false;
 bool doMllBins = false;
-bool doNbTagBins = true;
+bool doNbTagBins = false;
 bool doTTEnriched = false;
 bool doDYEnriched = false;
 bool doMuDetRegionBins = false;
@@ -1921,7 +1921,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float maxDPhi_b_MET = -1e9;
       float min_mlb = 1e9;
       float min_mbb = 1e9, max_mbb = -1e9;
-      for ( int bjet = 0; bjet < cand_bJets.size(); bjet++ ) {
+      for ( int bjet = 0; bjet < cand_bJets_tight.size(); bjet++ ) {
         auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
         float m_mu1_b = (leadingMu_p4+bjet_p4).M();
         if ( m_mu1_b < min_mlb ) {
