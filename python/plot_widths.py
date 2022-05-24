@@ -84,6 +84,6 @@ for m in models:
     graphs[m].Draw("PE,same")
     ffits[m].Draw("same")
 legmodel.Draw("same")
-can.SaveAs("./cpp/fitResults_dcbg/gamma_vs_mass.png")
+can.SaveAs("./cpp/fitResults/gamma_vs_mass.png")
 can.Update()
 can.Clear()

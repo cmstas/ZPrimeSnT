@@ -348,7 +348,7 @@ for m in models:
     latex.DrawLatexNDC(0.60, 0.35, texta)
     latex.DrawLatexNDC(0.60, 0.30, textb)
     latex.DrawLatexNDC(0.60, 0.25, textc)
-    can.SaveAs("./cpp/fitResults_dcbg/sigma_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/sigma_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -361,7 +361,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.60, 0.35, texta)
     latex.DrawLatexNDC(0.60, 0.30, textb)
     latex.DrawLatexNDC(0.60, 0.25, textc)
-    can.SaveAs("./cpp/fitResults_dcbg/sigma_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/sigma_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -378,7 +378,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.85, textfR)
     latex.DrawLatexNDC(0.60, 0.80, textafR)
     latex.DrawLatexNDC(0.60, 0.75, textbfR)
-    can.SaveAs("./cpp/fitResults_dcbg/mcfracR_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/mcfracR_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -390,7 +390,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.85, textfR)
     latex.DrawLatexNDC(0.60, 0.80, textafR)
     latex.DrawLatexNDC(0.60, 0.75, textbfR)
-    can.SaveAs("./cpp/fitResults_dcbg/mcfracR_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/mcfracR_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -407,7 +407,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.15, textfL)
     latex.DrawLatexNDC(0.60, 0.25, textafL)
     latex.DrawLatexNDC(0.60, 0.20, textbfL)
-    can.SaveAs("./cpp/fitResults_dcbg/mcfracL_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/mcfracL_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -419,7 +419,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.15, textfL)
     latex.DrawLatexNDC(0.60, 0.25, textafL)
     latex.DrawLatexNDC(0.60, 0.20, textbfL)
-    can.SaveAs("./cpp/fitResults_dcbg/mcfracL_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/mcfracL_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -436,7 +436,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.15, textaR)
     latex.DrawLatexNDC(0.60, 0.25, textaaR)
     latex.DrawLatexNDC(0.60, 0.20, textbaR)
-    can.SaveAs("./cpp/fitResults_dcbg/alphaR_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/alphaR_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -448,7 +448,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.15, textaR)
     latex.DrawLatexNDC(0.60, 0.25, textaaR)
     latex.DrawLatexNDC(0.60, 0.20, textbaR)
-    can.SaveAs("./cpp/fitResults_dcbg/alphaR_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/alphaR_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -465,7 +465,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.85, textaL)
     latex.DrawLatexNDC(0.60, 0.80, textaaL)
     latex.DrawLatexNDC(0.60, 0.75, textbaL)
-    can.SaveAs("./cpp/fitResults_dcbg/alphaL_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/alphaL_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -477,7 +477,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.85, textaL)
     latex.DrawLatexNDC(0.60, 0.80, textaaL)
     latex.DrawLatexNDC(0.60, 0.75, textbaL)
-    can.SaveAs("./cpp/fitResults_dcbg/alphaL_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/alphaL_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -494,7 +494,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.85, textnR)
     latex.DrawLatexNDC(0.60, 0.80, textanR)
     latex.DrawLatexNDC(0.60, 0.75, textbnR)
-    can.SaveAs("./cpp/fitResults_dcbg/nR_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/nR_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -506,7 +506,7 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.85, textnR)
     latex.DrawLatexNDC(0.60, 0.80, textanR)
     latex.DrawLatexNDC(0.60, 0.75, textbnR)
-    can.SaveAs("./cpp/fitResults_dcbg/nR_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/nR_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
 
@@ -523,7 +523,7 @@ for m in models:
     latex.DrawLatexNDC(0.55, 0.15, textnL)
     latex.DrawLatexNDC(0.60, 0.25, textanL)
     latex.DrawLatexNDC(0.60, 0.20, textbnL)
-    can.SaveAs("./cpp/fitResults_dcbg/nL_vs_mass_nBTag_%s.png"%m)
+    can.SaveAs("./cpp/fitResults/nL_vs_mass_nBTag_%s.png"%m)
     can.Update()
     can.Clear()
 for b in nbbins:
@@ -535,6 +535,6 @@ for b in nbbins:
     latex.DrawLatexNDC(0.55, 0.15, textnL)
     latex.DrawLatexNDC(0.60, 0.25, textanL)
     latex.DrawLatexNDC(0.60, 0.20, textbnL)
-    can.SaveAs("./cpp/fitResults_dcbg/nL_vs_mass_model_%s.png"%b)
+    can.SaveAs("./cpp/fitResults/nL_vs_mass_model_%s.png"%b)
     can.Update()
     can.Clear()
