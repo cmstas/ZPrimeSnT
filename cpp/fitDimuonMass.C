@@ -49,29 +49,18 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
   if ( isSignal ) {
     set_widths();
 
-    TString model = "";
-    if ( sample.Contains("B3mL2") )
-      model = "B3mL2";
-    else if ( sample.Contains("DYp3") )
-      model = "DYp3";
-    else if ( sample.Contains("DY3") )
-      model = "DY3";
-    else if ( sample.Contains("Y3") )
-      model = "Y3";
-    else {
-      cout << "Unknown model. Exit." << endl;
-      return;
-    }
-    double gamma = widths[model][Form("%.0f",mass)];
+    double gamma = 0.001*mass;
+    if ( widths[sigmodel].find(Form("%.0f",mass)) != widths[sigmodel].end() )
+      gamma = widths[sigmodel][Form("%.0f",mass)];
 
     // Set starting standard deviation (sigma)
     double stddev = 0.05*mass;
     double minstddev = 0.01*mass;
     double maxstddev = 0.25*mass;
     //
-    double p0 = 8.8e-06;
-    double p1 = 0.02;
-    double p2 = -2.25;
+    double p0 = 8.53e-06;
+    double p1 = 2.27e-02;
+    double p2 = -2.22;
     TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",150.0,3000.0);
     fstddev->SetParameter(0, p0);
     fstddev->SetParameter(1, p1);
@@ -83,6 +72,99 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
     double binsize = 0.1*stddev;
 
+    // Set starting alphaR
+    double alphaR = 1.0;
+    double minalphaR = 0.1;
+    double maxalphaR = 10.0;
+    //
+    p0 = 2.58e-04;
+    p1 = 6.89e-01;
+    TF1 *falphaR = new TF1("falphaR","[0]*x+[1]",150.0,3000.0);
+    falphaR->SetParameter(0, p0);
+    falphaR->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      alphaR = std::max(1.0e-3, falphaR->Eval(mass));
+      minalphaR = 0.75*alphaR;
+      maxalphaR = 1.25*alphaR;
+    }
+    // Set starting alphaL
+    double alphaL = -1.0;
+    double minalphaL = -10.0;
+    double maxalphaL = -0.1;
+    //
+    p0 = -6.42e-05;
+    p1 = -1.20;
+    TF1 *falphaL = new TF1("falphaL","[0]*x+[1]",150.0,3000.0);
+    falphaL->SetParameter(0, p0);
+    falphaL->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      alphaL = std::min(-1.0e-3, falphaL->Eval(mass));
+      minalphaL = 1.25*alphaL;
+      maxalphaL = 0.75*alphaL;
+    }
+
+    // Set starting nR
+    double nR = 2.0;
+    double minnR = 1.0;
+    double maxnR = 5.0;
+    //
+    p0 = -8.94e-04;
+    p1 = 3.21;
+    TF1 *fnR = new TF1("fnR","[0]*x+[1]",150.0,3000.0);
+    fnR->SetParameter(0, p0);
+    fnR->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      nR = std::max(1.0, fnR->Eval(mass));
+      minnR = 0.75*nR;
+      maxnR = 1.25*nR;
+    }
+    // Set starting nL
+    double nL = 6.0;
+    double minnL = 1.0;
+    double maxnL = 15.0;
+    //
+    p0 = 2.33e-03;
+    p1 = 6.13;
+    TF1 *fnL = new TF1("fnL","[0]*x+[1]",150.0,3000.0);
+    fnL->SetParameter(0, p0);
+    fnL->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      nL = std::max(1.0, fnL->Eval(mass));
+      minnL = 0.75*nL;
+      maxnL = 1.25*nL;
+    }
+
+    // Set starting fracR
+    double fracR = 1.0/3;
+    double minfracR = 0.0;
+    double maxfracR = 1.0;
+    //
+    p0 = -9.54e-05;
+    p1 = 2.19e-01;
+    TF1 *ffracR = new TF1("ffracR","[0]*x+[1]",150.0,3000.0);
+    ffracR->SetParameter(0, p0);
+    ffracR->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      fracR = std::max(1.0e-03, ffracR->Eval(mass));
+      minfracR = 0.75*fracR;
+      maxfracR = 1.25*fracR;
+    }
+    // Set starting fracL
+    double fracL = 6.0;
+    double minfracL = 1.0;
+    double maxfracL = 15.0;
+    //
+    p0 = 4.12e-05;
+    p1 = 5.44e-01;
+    TF1 *ffracL = new TF1("ffracL","[0]*x+[1]",150.0,3000.0);
+    ffracL->SetParameter(0, p0);
+    ffracL->SetParameter(1, p1);
+    if ( !useFixedSigma ) {
+      fracL = std::max(1.0e-03, ffracL->Eval(mass));
+      minfracL = 0.75*fracL;
+      maxfracL = 1.25*fracL;
+    }
+
     // Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
     x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
@@ -92,7 +174,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("Signal dimuon mass fit");
     // Plot RooDataSet onto frame
-    mmumu.plotOn(frame, DataError(RooAbsData::SumW2));
+    mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
 
     // Define fit-related variables
     int nMaxFitAttempts = 5;
@@ -101,14 +183,14 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooFitResult *r = new RooFitResult();
 
     if (sigshape=="gaus"){    
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooGaussian signal("gauss","gauss",x,mean,sigma);
       nFitParams = 2;
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -122,8 +204,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //wfit->Print();
     }
     else if (sigshape=="voigt"){
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
-      //RooRealVar width("width","width",gamma,0.5*gamma,2.0*gamma);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
+      //RooRealVar width("width","width",gamma,0.75*gamma,1.25*gamma);
       RooRealVar width("width","width",gamma);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooVoigtian signal("voigt","voigt",x,mean,width,sigma);
@@ -132,7 +214,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -146,21 +228,21 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //wfit->Print();
     }
     else if (sigshape=="dcb"){
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
-      RooRealVar alpha_1("alpha_1", "alpha of left CB tail",  1.0, 0.1, 10.0);
-      RooRealVar alpha_2("alpha_2", "alpha of 2nd DoubleCB",  -1.0, -10.0, -0.1);
-      RooRealVar n_1("n_1", "n of 1st DoubleCB", 2.0, 1.0, 10.0);
-      RooRealVar n_2("n_2", "n of 2nd DoubleCB", 2.0, 1.0, 10.0);
-      RooCrystalBall cb_1("CrystallBall_1", "CrystallBall_1", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "CrystallBall_2", x, mean, sigma, alpha_2, n_2);
+      RooRealVar alpha_1("alpha_1", "alpha of right CB",  alphaR, minalphaR, maxalphaR);
+      RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
+      RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
+      RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
+      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooRealVar mc_frac("mc_frac", "mc_frac", 0.5, 0.0, 1.0);
       RooAddPdf signal("signal", "signal", RooArgList(cb_1,cb_2), RooArgList(mc_frac), true);
       nFitParams = 7;
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -174,23 +256,23 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //wfit->Print();
     }
     else if (sigshape=="dcbg"){
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooGaussian gaus("Gaus", "Gaus", x, mean, sigma);
-      RooRealVar alpha_1("alpha_1", "alpha of left CB tail",  1.0, 0.1, 10.0);
-      RooRealVar alpha_2("alpha_2", "alpha of 2nd DoubleCB",  -1.0, -10.0, -0.1);
-      RooRealVar n_1("n_1", "n of 1st DoubleCB", 2.0, 1.0, 10.0);
-      RooRealVar n_2("n_2", "n of 2nd DoubleCB", 2.0, 1.0, 10.0);
-      RooCrystalBall cb_1("CrystallBall_1", "CrystallBall_1", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "CrystallBall_2", x, mean, sigma, alpha_2, n_2);
-      RooRealVar mc_frac_1("mc_frac_1", "mc_frac_1", 1.0/3, 0.0, 1.0);
-      RooRealVar mc_frac_2("mc_frac_2", "mc_frac_2", 1.0/3, 0.0, 1.0);
+      RooRealVar alpha_1("alpha_1", "alpha of right CB",  alphaR, minalphaR, maxalphaR);
+      RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
+      RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
+      RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
+      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooRealVar mc_frac_1("mc_frac_1", "fraction of right CB", fracR, minfracR, maxfracR);
+      RooRealVar mc_frac_2("mc_frac_2", "fraction of left CB", fracL, minfracL, maxfracL);
       RooAddPdf signal("signal", "signal", RooArgList(gaus,cb_1,cb_2), RooArgList(mc_frac_1,mc_frac_2), true);
       nFitParams = 8;
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -204,27 +286,27 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //wfit->Print();
     }
     else if (sigshape=="dcbxvoigt"){
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
-      //RooRealVar width("width","width",gamma,0.5*gamma,2.0*gamma);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
+      //RooRealVar width("width","width",gamma,0.75*gamma,1.25*gamma);
       RooRealVar width("width","width",gamma);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooVoigtian voigt("voigt","voigt",x,mean,width,sigma);
-      RooRealVar alpha_1("alpha_1", "alpha of left CB tail",  1.0, 0.1, 10.0);
-      RooRealVar alpha_2("alpha_2", "alpha of 2nd DoubleCB",  -1.0, -10.0, -0.1);
-      RooRealVar n_1("n_1", "n of 1st DoubleCB", 2.0, 1.0, 10.0);
-      RooRealVar n_2("n_2", "n of 2nd DoubleCB", 2.0, 1.0, 10.0);
-      RooCrystalBall cb_1("CrystallBall_1", "CrystallBall_1", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "CrystallBall_2", x, mean, sigma, alpha_2, n_2);
+      RooRealVar alpha_1("alpha_1", "alpha of right CB",  alphaR, minalphaR, maxalphaR);
+      RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
+      RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
+      RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
+      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooFFTConvPdf cb1voigt("cb1voigt", "cb1voigt", x, cb_1, voigt);
       RooFFTConvPdf cb2voigt("cb2voigt", "cb2voigt", x, cb_2, voigt);
-      RooRealVar mc_frac("mc_frac", "mc_frac", 0.5, 0.05, 1.0);
+      RooRealVar mc_frac("mc_frac", "mc_frac", 0.5, 0.0, 1.0);
       RooAddPdf signal("signal", "signal", RooArgList(cb1voigt,cb2voigt), RooArgList(mc_frac), true);
       //nFitParams = 8;
       nFitParams = 7;
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -238,26 +320,26 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //wfit->Print();
     }
     else if (sigshape=="dcbvoigt"){
-      RooRealVar mean("mean","Mean",mass,0.75*mass,1.25*mass);
-      //RooRealVar width("width","width",gamma,0.5*gamma,2.0*gamma);
+      RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
+      //RooRealVar width("width","width",gamma,0.75*gamma,1.25*gamma);
       RooRealVar width("width","width",gamma);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooVoigtian voigt("voigt","voigt",x,mean,width,sigma);
-      RooRealVar alpha_1("alpha_1", "alpha of left CB tail",  1.0, 0.1, 10.0);
-      RooRealVar alpha_2("alpha_2", "alpha of 2nd DoubleCB",  -1.0, -10.0, -0.1);
-      RooRealVar n_1("n_1", "n of 1st DoubleCB", 2.0, 1.0, 10.0);
-      RooRealVar n_2("n_2", "n of 2nd DoubleCB", 2.0, 1.0, 10.0);
-      RooCrystalBall cb_1("CrystallBall_1", "CrystallBall_1", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "CrystallBall_2", x, mean, sigma, alpha_2, n_2);
-      RooRealVar mc_frac_1("mc_frac_1", "mc_frac_1", 1.0/3, 0.0, 1.0);
-      RooRealVar mc_frac_2("mc_frac_2", "mc_frac_2", 1.0/3, 0.0, 1.0);
+      RooRealVar alpha_1("alpha_1", "alpha of right CB",  alphaR, minalphaR, maxalphaR);
+      RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
+      RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
+      RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
+      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooRealVar mc_frac_1("mc_frac_1", "fraction of right CB", fracR, minfracR, maxfracR);
+      RooRealVar mc_frac_2("mc_frac_2", "fraction of left CB", fracL, minfracL, maxfracL);
       RooAddPdf signal("signal", "signal", RooArgList(voigt,cb_1,cb_2), RooArgList(mc_frac_1,mc_frac_2), true);
       //nFitParams = 9;
       nFitParams = 8;
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -393,7 +475,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("BG dimuon mass fit");
     // Plot RooDataSet onto frame
-    mmumu.plotOn(frame, DataError(RooAbsData::SumW2));
+    mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
 
     // Define fit-related variables
     int nMaxFitAttempts = 5;
@@ -470,7 +552,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       // Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
