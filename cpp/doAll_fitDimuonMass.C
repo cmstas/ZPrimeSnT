@@ -27,10 +27,10 @@
   else {
     // ttbar
     samples.push_back("ttbar");
-  
+
     // DY
     //samples.push_back("DY");
-  
+
     // ZToMuMu
     vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
     vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
@@ -38,14 +38,14 @@
       {
   	samples.push_back("ZToMuMu_"+lowM[imass]+"_"+uppM[imass]);
       }
-  
+
     // VV
     vector<TString> VV = { "WW", "WZ", "ZZ" };
     for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
       {
   	samples.push_back(VV[iVV]);
       }
-  
+
     // tW
     vector<TString> top = { "", "anti" };
     vector<TString> top_name = { "tW", "tbarW" };
@@ -53,10 +53,10 @@
       {
   	samples.push_back(top_name[itop]);
       }
-  
+
     // tZq
     samples.push_back("tZq");
-  
+
     // TTX
     samples.push_back("TTW");
     samples.push_back("TTZ");
@@ -69,8 +69,9 @@
 
   // Signals
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-  //vector<TString> sigModel = { "Y3" };
   vector<float> sigMass = { /*100.0,*/ 200.0, 400.0, 700.0, 1000.0, 1500.0, 2000.0 };
+  //vector<TString> sigModel = { "Y3" };
+  //vector<float> sigMass = { 200.0 };
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
@@ -104,6 +105,7 @@
       	  RooDataSet *tds_other = (RooDataSet*) fin.Get(dNames[d])->Clone();
       	  mmumu_bkg->append( *tds_other );
       	}
+	fin.Close();
       }
       if ( useData )
       	mmumu_bkg->SetName(dNames[d]+"_data_"+year);
@@ -118,13 +120,39 @@
 	RooDataSet *tds = (RooDataSet*) fin.Get(dNames[d])->Clone();
 	tds->SetName(dNames[d]+"_"+sample+"_"+year);
 	mmumu_sig.push_back( *tds );
-	fitmass(mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], "dcbg", "fitResults");
+	fin.Close();
+
+	// Create workspace, import data and model
+	TString outDir = "fitResults";
+
+	RooWorkspace wfit("wfit","workspace");
+
+	fitmass(mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbg", outDir);
 	if ( samples.size() > 0 ) {
 	  if ( useData )
-	    fitmass(*mmumu_bkg, "Background", true, false, sigmodels[isample], sigmasses[isample], "", "fitResults");
+	    fitmass(*mmumu_bkg, "Background", true, false, sigmodels[isample], sigmasses[isample], wfit, "", outDir);
 	  else
-	    fitmass(*mmumu_bkg, "Background", false, false, sigmodels[isample], sigmasses[isample], "", "fitResults");
+	    fitmass(*mmumu_bkg, "Background", false, false, sigmodels[isample], sigmasses[isample], wfit, "", outDir);
 	}
+
+	//double bgNormalization = mmumu.sumEntries(fitRange.Data());
+	//RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization,0.5*bgNormalization,2.0*bgNormalization);
+	//if ( bgNormalization < 1e-3 ) {
+	//  nBG.setVal(0.0);
+	//  nBG.setRange(0.0,2e-3);
+	//}
+	//wfit->import(nBG);
+
+	// Import data into the workspace
+	wfit.import(*mmumu_bkg);
+
+	// Print workspace contents
+	wfit.Print();
+
+	//// Save the workspace into a ROOT file
+	//TString fws = Form("%s/%s_workspace.root",outDir.Data(),mmumu_sig[isample].GetName());
+	//wfit.writeToFile(fws) ;
+
 	cout<<endl;
       }
     }

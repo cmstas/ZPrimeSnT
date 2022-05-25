@@ -39,12 +39,9 @@ bool saveFitResult = true;
 bool drawResidual = false;
 bool useFixedSigma = false;
 
-void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TString sigmodel, float mass, TString sigshape="dcbvoigt", const char* outDir = "fitResults")
+void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TString sigmodel, float mass, RooWorkspace &wfit, TString sigshape="dcbvoigt", const char* outDir = "fitResults")
 {
   int mdir = mkdir(outDir,0755);
-
-  // Create workspace, import data and model
-  RooWorkspace *wfit = new RooWorkspace("wfit","workspace") ;
 
   if ( isSignal ) {
     set_widths();
@@ -197,11 +194,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Import data into the workspace
-      wfit->import(mmumu);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else if (sigshape=="voigt"){
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
@@ -221,11 +214,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Import data into the workspace
-      wfit->import(mmumu);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else if (sigshape=="dcb"){
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
@@ -249,11 +238,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Import data into the workspace
-      wfit->import(mmumu);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else if (sigshape=="dcbg"){
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
@@ -279,11 +264,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Import data into the workspace
-      wfit->import(mmumu);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else if (sigshape=="dcbxvoigt"){
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
@@ -313,11 +294,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Import data into the workspace
-      wfit->import(mmumu);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else if (sigshape=="dcbvoigt"){
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
@@ -346,9 +323,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       signal.plotOn(frame,Name("signal"));
       // Import model and all its components into the workspace
-      wfit->import(signal);
-      // Print workspace contents
-      //wfit->Print();
+      wfit.import(signal);
     }
     else{
       cout << "Signal PDF is unknown. Exiting..." << endl;
@@ -439,11 +414,6 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     reset_widths();
 
-    // Save the workspace into a ROOT file
-    wfit->writeToFile(Form("%s/%s_workspace.root",outDir,mmumu.GetName())) ;
-    // Workspace will remain in memory after macro finishes
-    gDirectory->Add(wfit) ;
-
   }
   else {
 
@@ -493,13 +463,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     vector<int> fitStatusBernstein;
     for (int to=0; to<maxpolyorder+1; to++) { 
       RooArgList parList(Form("bernstein_order%d_%s_mass%.0f",to,mmumu.GetName(),mass));
-      RooRealVar par0(Form("pbern0_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern0_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par1(Form("pbern1_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern1_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par2(Form("pbern2_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern2_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par3(Form("pbern3_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern3_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par4(Form("pbern4_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern4_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par5(Form("pbern5_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern5_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
-      RooRealVar par6(Form("pbern6_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern6_maxorder%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par0(Form("pbern0_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern0_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par1(Form("pbern1_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern1_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par2(Form("pbern2_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern2_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par3(Form("pbern3_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern3_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par4(Form("pbern4_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern4_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par5(Form("pbern5_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern5_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
+      RooRealVar par6(Form("pbern6_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("pbern6_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),0.0,1.0);
       if ( to<=0 ) {
 	parList.add(par0);
       }      
@@ -624,14 +594,17 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     vector<int> bernsteinPDFOrders;
     for ( int to = bestBernsteinOrder-1; to <= bestBernsteinOrder+1; to++) {
       if ( to < 0 ) continue;
-      if ( chi2BernsteinPvalue[to] > 0.0 && chi2BernsteinPvalue[to] < 1.0 && fitStatusBernstein[to]==0 )
+      if ( chi2BernsteinPvalue[to] > 0.0 && 
+	   chi2BernsteinPvalue[to] < 1.0 && 
+	   fitStatusBernstein[to]==0 ) {
+	cout << "Pushing order " << to << endl;
 	bernsteinPDFOrders.push_back(to);
+      }
     }
     
     for(const auto& to: bernsteinPDFOrders) {
+
       pdfBernstein[to].plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",to,mass)));
-      //// Import model and all its components into the workspace
-      //wfit->import(pdfBernstein[to]);
 
       if ( drawFits ) {
 	// Draw fit
@@ -674,23 +647,10 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       }
       
     }
-    
-    //double bgNormalization = mmumu.sumEntries(fitRange.Data());
-    //RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization,0.5*bgNormalization,2.0*bgNormalization);
-    //if ( bgNormalization < 1e-3 ) {
-    //  nBG.setVal(0.0);
-    //  nBG.setRange(0.0,2e-3);
-    //}    
-    //wfit->import(nBG);
-    //// Import data into the workspace
-    //wfit->import(mmumu);
-    //// Print workspace contents
-    ////wfit->Print();
 
-    //// Save the workspace into a ROOT file
-    //wfit->writeToFile(Form("%s/%s_workspace.root",outDir,mmumu.GetName())) ;
-    //// Workspace will remain in memory after macro finishes
-    //gDirectory->Add(wfit) ;
+    // Import model and all its components into the workspace
+    for(const auto& to: bernsteinPDFOrders)
+      wfit.import(pdfBernstein[to]);
 
   }
 
