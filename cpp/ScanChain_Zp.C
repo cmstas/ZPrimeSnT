@@ -1922,7 +1922,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       float min_mlb = 1e9;
       float min_mbb = 1e9, max_mbb = -1e9;
       for ( int bjet = 0; bjet < cand_bJets_tight.size(); bjet++ ) {
-        auto bjet_p4 = nt.Jet_p4().at(cand_bJets[bjet]);
+        auto bjet_p4 = nt.Jet_p4().at(cand_bJets_tight[bjet]);
         float m_mu1_b = (leadingMu_p4+bjet_p4).M();
         if ( m_mu1_b < min_mlb ) {
           min_mlb = m_mu1_b;
