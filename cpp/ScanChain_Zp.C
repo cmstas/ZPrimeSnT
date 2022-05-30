@@ -541,6 +541,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   // Define RooDataSet's for fit
   RooRealVar mfit("mfit", "mfit", 150.0, 3000.0);
+  RooRealVar roow("roow", "roow", 1.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -548,7 +549,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
         TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
 	TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
 	if ( fillRooDataSet )
-	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit))});
+	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar(roow))});
       }
     }
   }
