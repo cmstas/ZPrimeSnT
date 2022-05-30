@@ -177,7 +177,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("Signal dimuon mass fit");
     //////Plot RooDataSet onto frame
-    mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
+    //mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
+    mmumu.plotOn(frame, DataError(RooAbsData::SumW2));
 
     //////Define fit-related variables
     int nMaxFitAttempts = 5;
@@ -187,6 +188,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
 
+    double sigNormalization = mmumu.sumEntries(fitRange.Data());
+    RooRealVar nSig("sigNormalization","sigNormalization",sigNormalization);
+
     if (sigshape=="gaus"){    
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
@@ -195,12 +199,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
       //////Import model and all its components into the workspace
       wfit.import(signal);
     }
@@ -215,12 +220,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
       //////Import model and all its components into the workspace
       wfit.import(signal);
     }
@@ -241,12 +247,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
       //////Import model and all its components into the workspace
       wfit.import(signal);
     }
@@ -269,7 +276,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -301,12 +309,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
       //////Import model and all its components into the workspace
       wfit.import(signal);
     }
@@ -332,12 +341,13 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
       //////Import model and all its components into the workspace
       wfit.import(signal);
     }
@@ -380,8 +390,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     r->floatParsFinal().Print("s");
     //////Evaluate chi-square:
     cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
-    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
-    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << std::max(nFitParams,nPoints-nEmptyBins-nFitParams) << endl;
+    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams))) << endl;
     
     if ( drawFits ) {
       //////Draw fit
@@ -461,7 +471,10 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("BG dimuon mass fit");
     //////Plot RooDataSet onto frame
-    mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
+    if ( isData )
+      mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
+    else
+      mmumu.plotOn(frame, DataError(RooAbsData::SumW2));
 
     //////Define RooMultiPDF
     //////Make a RooCategory object. This will control which of the PDFs is "active"
@@ -482,8 +495,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization);
     if ( bgNormalization < 1e-3 ) {
       nBG.setVal(0.0);
-      nBG.setRange(0.0,2e-3);
+      nBG.setRange(0.0,1e-3);
     }
+    cout << bgNormalization << endl;
     wfit.import(nBG);
 
     //////Exponential PDF
@@ -492,7 +506,10 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     //////Fit
     int nFits = 0;
     while ( nFits < nMaxFitAttempts ) {
-      r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      if ( isData )
+	r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      else
+	r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
       ++nFits;
       if ( r->status()==0 )
 	break;
@@ -533,8 +550,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     r->floatParsFinal().Print("s");
     //////Evaluate chi-square:
     cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
-    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
-    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << std::max(nFitParams,nPoints-nEmptyBins-nFitParams) << endl;
+    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams))) << endl;
 
     if ( saveFitResult ) {
       //////Save RooFitResult into a ROOT file
@@ -546,7 +563,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     //////Select PDFs
     //////Chi2-based p-value
     int fitStatusExponential = r->status();
-    double chi2ExponentialPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams));
+    double chi2ExponentialPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams)));
 
     frame->remove(Form("background_exponential_mass%.0f",mass));      
 
@@ -603,7 +620,10 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     //////Fit
     nFits = 0;
     while ( nFits < nMaxFitAttempts ) {
-      r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      if ( isData )
+	r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      else
+	r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
       ++nFits;
       if ( r->status()==0 )
 	break;
@@ -643,8 +663,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     r->floatParsFinal().Print("s");
     //////Evaluate chi-square:
     cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
-    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
-    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << std::max(nFitParams,nPoints-nEmptyBins-nFitParams) << endl;
+    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams))) << endl;
 
     if ( saveFitResult ) {
       //////Save RooFitResult into a ROOT file
@@ -656,7 +676,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     //////Select PDFs
     //////Chi2-based p-value
     int fitStatusPowerlaw = r->status();
-    double chi2PowerlawPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams));
+    double chi2PowerlawPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams)));
 
     frame->remove(Form("background_powerlaw_mass%.0f",mass));      
 
@@ -710,7 +730,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     //////Bernstein polynomials
     int maxpolyorder = 6;
     int lastnll = 0;    
-    int bestBernsteinOrder = 0;
+    int bestBernsteinOrder = -1;
     vector<RooArgList> parListBernstein;
     RooArgList bgBernsteinPDFs;
     vector<double> chi2BernsteinPvalue;
@@ -777,7 +797,10 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	if ( isData )
+	  r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	else
+	  r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -820,8 +843,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       r->floatParsFinal().Print("s");
       //////Evaluate chi-square:
       cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
-      cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
-      cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+      cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << std::max(nFitParams,nPoints-nEmptyBins-nFitParams) << endl;
+      cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams))) << endl;
       
       if ( saveFitResult ) {
 	//////Save RooFitResult into a ROOT file
@@ -834,26 +857,26 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Chi2-based p-value
       fitResultBernstein.push_back(*r);
       fitStatusBernstein.push_back(r->status());
-      chi2BernsteinPvalue.push_back(ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)));
+      chi2BernsteinPvalue.push_back(ROOT::Math::chisquared_cdf_c(chi2, (double)(std::max(nFitParams,nPoints-nEmptyBins-nFitParams))));
       //////Fisher test
       double thisnll = r->minNll();
       double ftestChi2 = 2*(lastnll-thisnll);
       lastnll = thisnll;
       if ( ftestChi2 < 0.0 ) ftestChi2 = 0.0;
-      if ( fitStatusBernstein[to-1]==0 && TMath::Prob(ftestChi2,1) > 0.05 && to > 0 && bestBernsteinOrder <= 0 ) bestBernsteinOrder = to-1;
+      if ( bestBernsteinOrder < 0 && fitStatusBernstein[to]==0 && TMath::Prob(ftestChi2,1) > 0.05 && to >= 0 ) bestBernsteinOrder = to;
+      if ( nBG.getVal() < 1e-3 ) bestBernsteinOrder=0;
 
       frame->remove(Form("background_bernstein_order%d_mass%.0f",to,mass));      
 
-      if ( (bestBernsteinOrder > 0 && to > bestBernsteinOrder) || to >= maxpolyorder ) {
+      if ( (bestBernsteinOrder >= 0 && to > bestBernsteinOrder) || to >= maxpolyorder ) {
 
 	vector<int> bernsteinPDFOrders;
 	for ( int tto = bestBernsteinOrder-1; tto <= bestBernsteinOrder+1; tto++) {
 	  if ( tto < 0 ) continue;
-	  if ( chi2BernsteinPvalue[tto] > 0.0 && 
-	       chi2BernsteinPvalue[tto] < 1.0 && 
-	       fitStatusBernstein[tto]==0 ) {
+	  if ( nBG.getVal() < 1e-3 && tto > 0 ) continue;
+	  if ( ( chi2BernsteinPvalue[tto] > 0.0 && chi2BernsteinPvalue[tto] < 1.0 && fitStatusBernstein[tto]==0 ) || nBG.getVal() < 1e-3 ) {
 	    bernsteinPDFOrders.push_back(tto);
-	    parListBernstein[tto].Print("v");
+	    //parListBernstein[tto].Print("v");
 	    RooBernstein background(Form("background_bernstein_order%d_%s_mass%.0f",tto,mmumu.GetName(),mass),Form("background_bernstein_order%d_%s_mass%.0f",tto,mmumu.GetName(),mass),x,parListBernstein[tto]);
 	    RooArgList tbgBernsteinPDFs;
 	    tbgBernsteinPDFs.add(background);
