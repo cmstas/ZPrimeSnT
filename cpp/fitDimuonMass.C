@@ -1,3 +1,5 @@
+#include "../CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/interface/RooMultiPdf.h"
+#include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooFitResult.h"
 #include "RooDataSet.h"
@@ -11,8 +13,10 @@
 #include "RooGaussian.h"
 #include "RooVoigtian.h"
 #include "RooBreitWigner.h"
-#include "RooCrystalBall.h"
+#include "RooCBShape.h"
 #include "RooBernstein.h"
+#include "RooExponential.h"
+#include "RooGenericPdf.h"
 
 #include "TCanvas.h"
 #include "TFile.h"
@@ -21,6 +25,7 @@
 #include "TH1F.h"
 #include "TF1.h"
 #include "TMath.h"
+#include "TSystem.h"
 
 #include "Math/ProbFunc.h"
 
@@ -41,6 +46,7 @@ bool useFixedSigma = false;
 
 void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TString sigmodel, float mass, RooWorkspace &wfit, TString sigshape="dcbvoigt", const char* outDir = "fitResults")
 {
+  
   int mdir = mkdir(outDir,0755);
 
   if ( isSignal ) {
@@ -50,7 +56,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     if ( widths[sigmodel].find(Form("%.0f",mass)) != widths[sigmodel].end() )
       gamma = widths[sigmodel][Form("%.0f",mass)];
 
-    // Set starting standard deviation (sigma)
+    //////Set starting standard deviation (sigma)
     double stddev = 0.05*mass;
     double minstddev = 0.01*mass;
     double maxstddev = 0.25*mass;
@@ -69,7 +75,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
     double binsize = 0.1*stddev;
 
-    // Set starting alphaR
+    cout << "Range: "<< mass-10.0*stddev <<"-"<<mass+10.0*stddev << endl;
+
+    //////Set starting alphaR
     double alphaR = 1.0;
     double minalphaR = 0.1;
     double maxalphaR = 10.0;
@@ -84,7 +92,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       minalphaR = 0.75*alphaR;
       maxalphaR = 1.25*alphaR;
     }
-    // Set starting alphaL
+    //////Set starting alphaL
     double alphaL = -1.0;
     double minalphaL = -10.0;
     double maxalphaL = -0.1;
@@ -100,7 +108,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       maxalphaL = 0.75*alphaL;
     }
 
-    // Set starting nR
+    //////Set starting nR
     double nR = 2.0;
     double minnR = 1.0;
     double maxnR = 5.0;
@@ -115,7 +123,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       minnR = 0.75*nR;
       maxnR = 1.25*nR;
     }
-    // Set starting nL
+    //////Set starting nL
     double nL = 6.0;
     double minnL = 1.0;
     double maxnL = 15.0;
@@ -131,7 +139,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       maxnL = 1.25*nL;
     }
 
-    // Set starting fracR
+    //////Set starting fracR
     double fracR = 1.0/3;
     double minfracR = 0.0;
     double maxfracR = 1.0;
@@ -146,7 +154,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       minfracR = 0.75*fracR;
       maxfracR = 1.25*fracR;
     }
-    // Set starting fracL
+    //////Set starting fracL
     double fracL = 6.0;
     double minfracL = 1.0;
     double maxfracL = 15.0;
@@ -162,7 +170,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       maxfracL = 1.25*fracL;
     }
 
-    // Get RooRealVar from RooDataSet
+    //////Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
     x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     int nBins = (mass+10.0*stddev - std::max(150.0,mass-10.0*stddev))/binsize;
@@ -170,21 +178,23 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("Signal dimuon mass fit");
-    // Plot RooDataSet onto frame
+    //////Plot RooDataSet onto frame
     mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
 
-    // Define fit-related variables
+    //////Define fit-related variables
     int nMaxFitAttempts = 5;
     double minMforFit = 175.0;
     int nFitParams = 0;
     RooFitResult *r = new RooFitResult();
+
+    TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
 
     if (sigshape=="gaus"){    
       RooRealVar mean("mean","Mean",mass,mass-stddev,mass+stddev);
       RooRealVar sigma("sigma","Sigma",stddev,minstddev,maxstddev);
       RooGaussian signal("gauss","gauss",x,mean,sigma);
       nFitParams = 2;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -193,7 +203,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  break;
       }
       signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else if (sigshape=="voigt"){
@@ -204,7 +214,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       RooVoigtian signal("voigt","voigt",x,mean,width,sigma);
       //nFitParams = 3;
       nFitParams = 2;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -213,7 +223,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  break;
       }
       signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else if (sigshape=="dcb"){
@@ -223,12 +233,14 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
       RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
       RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
-      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      //RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      //RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooCBShape cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCBShape cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooRealVar mc_frac("mc_frac", "mc_frac", 0.5, 0.0, 1.0);
       RooAddPdf signal("signal", "signal", RooArgList(cb_1,cb_2), RooArgList(mc_frac), true);
       nFitParams = 7;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -237,7 +249,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  break;
       }
       signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else if (sigshape=="dcbg"){
@@ -248,13 +260,15 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
       RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
       RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
-      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      //RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      //RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooCBShape cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCBShape cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooRealVar mc_frac_1("mc_frac_1", "fraction of right CB", fracR, minfracR, maxfracR);
       RooRealVar mc_frac_2("mc_frac_2", "fraction of left CB", fracL, minfracL, maxfracL);
       RooAddPdf signal("signal", "signal", RooArgList(gaus,cb_1,cb_2), RooArgList(mc_frac_1,mc_frac_2), true);
       nFitParams = 8;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -262,8 +276,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	if ( r->status()==0 )
 	  break;
       }
-      signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      signal.plotOn(frame,Name("signal"),Range("fitRange"),RooFit::NormRange("fitRange"));
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else if (sigshape=="dcbxvoigt"){
@@ -276,15 +290,17 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
       RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
       RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
-      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      //RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      //RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooCBShape cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCBShape cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooFFTConvPdf cb1voigt("cb1voigt", "cb1voigt", x, cb_1, voigt);
       RooFFTConvPdf cb2voigt("cb2voigt", "cb2voigt", x, cb_2, voigt);
       RooRealVar mc_frac("mc_frac", "mc_frac", 0.5, 0.0, 1.0);
       RooAddPdf signal("signal", "signal", RooArgList(cb1voigt,cb2voigt), RooArgList(mc_frac), true);
       //nFitParams = 8;
       nFitParams = 7;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -293,7 +309,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  break;
       }
       signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else if (sigshape=="dcbvoigt"){
@@ -306,14 +322,16 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       RooRealVar alpha_2("alpha_2", "alpha of left CB",  alphaL, minalphaL, maxalphaL);
       RooRealVar n_1("n_1", "n of right CB", nR, minnR, maxnR);
       RooRealVar n_2("n_2", "n of left CB", nL, minnL, maxnL);
-      RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
-      RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      //RooCrystalBall cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      //RooCrystalBall cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
+      RooCBShape cb_1("CrystallBall_1", "Right CB", x, mean, sigma, alpha_1, n_1);
+      RooCBShape cb_2("CrystallBall_2", "Left CB", x, mean, sigma, alpha_2, n_2);
       RooRealVar mc_frac_1("mc_frac_1", "fraction of right CB", fracR, minfracR, maxfracR);
       RooRealVar mc_frac_2("mc_frac_2", "fraction of left CB", fracL, minfracL, maxfracL);
       RooAddPdf signal("signal", "signal", RooArgList(voigt,cb_1,cb_2), RooArgList(mc_frac_1,mc_frac_2), true);
       //nFitParams = 9;
       nFitParams = 8;
-      // Fit
+      //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
@@ -322,7 +340,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  break;
       }
       signal.plotOn(frame,Name("signal"));
-      // Import model and all its components into the workspace
+      //////Import model and all its components into the workspace
       wfit.import(signal);
     }
     else{
@@ -332,11 +350,11 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     double chi2 = 0.0;
     int nEmptyBins = 0;
-    // Construct histograms with residuals and pulls of the data w.r.t. the curve
+    //////Construct histograms with residuals and pulls of the data w.r.t. the curve
     RooHist *hresid = frame->residHist();
     RooHist *hpull = frame->pullHist();
     RooCurve *fitcurve = frame->getCurve("signal");
-    // Determine range of curve 
+    //////Determine range of curve 
     Double_t xstart,xstop,y;
     fitcurve->GetPoint(0,xstart,y);
     fitcurve->GetPoint(fitcurve->GetN()-1,xstop,y);
@@ -353,26 +371,26 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	chi2 += point*point / (fitcurve->interpolate(b));
       }
     }
-    // Access fit result information
+    //////Access fit result information
     //r->Print();
-    // Access basic information
+    //////Access basic information
     cout << "Status = " << r->status() << endl;
     cout << "EDM = " << r->edm() << endl;
     cout << "-log(L) at minimum = " << r->minNll() << endl;
-    // Access list of final fit parameter values
+    //////Access list of final fit parameter values
     cout << "Final value of floating parameters:" << endl;
     r->floatParsFinal().Print("s");
-    // Evaluate chi-square:
+    //////Evaluate chi-square:
     cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
     cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
     cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
     
     if ( drawFits ) {
-      // Draw fit
+      //////Draw fit
       TCanvas *can = new TCanvas("can","",600,600);
       can->cd();
-      frame->SetLabelSize(0.01,"Y");
-      frame->SetTitleSize(0.015,"Y");
+      frame->SetLabelSize(0.02,"Y");
+      frame->SetTitleSize(0.025,"Y");
       frame->SetXTitle("Dimuon mass [GeV]");
       frame->Draw();
       can->SaveAs(Form("%s/%s_fitSignal_%s.png",outDir,mmumu.GetName(),sigshape.Data()));
@@ -382,7 +400,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
 
     if ( drawResidual ) {
-      // Create a dedicated frame to draw the residual distribution and add the distribution to the frame
+      //Create a dedicated frame to draw the residual distribution and add the distribution to the frame
       RooPlot *frameres = x.frame(Title("Residual Distribution"));
       frameres->addPlotable(hresid, "P");
       frameres->SetXTitle("Dimuon mass [GeV]");
@@ -393,7 +411,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       can->Update();
       can->Clear();
 
-      // Create a dedicated frame to draw the pull distribution and add the distribution to the frame
+      //Create a dedicated frame to draw the pull distribution and add the distribution to the frame
       RooPlot *framepull = x.frame(Title("Pull Distribution"));
       framepull->addPlotable(hpull, "P");
       framepull->SetXTitle("Dimuon mass [GeV]");
@@ -406,7 +424,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
 
     if ( saveFitResult ) {
-      // Save RooFitResult into a ROOT file
+      //////Save RooFitResult into a ROOT file
       TFile ffitresult(Form("%s/%s_fitResult_%s.root",outDir,mmumu.GetName(),sigshape.Data()),"RECREATE");
       r->Write("fitResult");
       ffitresult.Close();
@@ -417,14 +435,14 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
   }
   else {
 
-    // Set starting standard deviation (sigma)
+    //////Set starting standard deviation (sigma)
     double stddev = 0.05*mass;
     double minstddev = 0.01*mass;
     double maxstddev = 0.25*mass;
     //
-    double p0 = 8.8e-06;
-    double p1 = 0.02;
-    double p2 = -2.25;
+    double p0 = 8.53e-06;
+    double p1 = 2.27e-02;
+    double p2 = -2.22;
     TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",150.0,3000.0);
     fstddev->SetParameter(0, p0);
     fstddev->SetParameter(1, p1);
@@ -436,7 +454,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
     double binsize = 0.1*stddev;
 
-    // Get RooRealVar from RooDataSet
+    cout << "Range: "<< mass-10.0*stddev <<"-"<<mass+10.0*stddev << endl;
+
+    //////Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
     x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     int nBins = (mass+10.0*stddev - std::max(150.0,mass-10.0*stddev))/binsize;
@@ -444,22 +464,263 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("BG dimuon mass fit");
-    // Plot RooDataSet onto frame
+    //////Plot RooDataSet onto frame
     mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
 
-    // Define fit-related variables
+    //////Define RooMultiPDF
+    //////Make a RooCategory object. This will control which of the PDFs is "active"
+    RooCategory cat(Form("pdf_index_%s",mmumu.GetName()),"Index of active PDF");
+    RooArgList bgPDFs;
+    //RooArgSet *bgPDFs;
+
+    //////Define fit-related variables
     int nMaxFitAttempts = 5;
     double minMforFit = 175.0;
     int nFitParams = 0;
     RooFitResult *r = new RooFitResult();
 
     TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+    x.setRange("fitRange",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+
+    double bgNormalization = mmumu.sumEntries(fitRange.Data());
+    RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization);
+    if ( bgNormalization < 1e-3 ) {
+      nBG.setVal(0.0);
+      nBG.setRange(0.0,2e-3);
+    }
+    wfit.import(nBG);
+
+    //////Exponential PDF
+    RooRealVar expo_slope(Form("expo_slope_%s_mass%.0f",mmumu.GetName(),mass),Form("expo_slope_%s_mass%.0f",mmumu.GetName(),mass),-0.02,-0.1,-0.0001);
+    RooExponential exponential(Form("background_exponential_%s_mass%.0f",mmumu.GetName(),mass),Form("background_exponential_%s_mass%.0f",mmumu.GetName(),mass),x,expo_slope);
+    //////Fit
+    int nFits = 0;
+    while ( nFits < nMaxFitAttempts ) {
+      r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      ++nFits;
+      if ( r->status()==0 )
+	break;
+    }
+    exponential.plotOn(frame,Name(Form("background_exponential_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"));
+      
+    double chi2 = 0.0;
+    int nEmptyBins = 0;
+    //////Construct histograms with residuals and pulls of the data w.r.t. the curve
+    RooHist *hresid = frame->residHist();
+    RooHist *hpull = frame->pullHist();
+    RooCurve *fitcurve = frame->getCurve(Form("background_exponential_mass%.0f",mass));
+    //////Determine range of curve 
+    Double_t xstart,xstop,y;
+    fitcurve->GetPoint(0,xstart,y);
+    fitcurve->GetPoint(fitcurve->GetN()-1,xstop,y);
+    int nPoints = hresid->GetN();
+    for (int i = 0; i < nPoints; i++) {
+      double b, point;
+      hpull->GetPoint(i,b,point);
+      if (b<xstart || b>xstop) continue;
+      if (point==0) {
+	++nEmptyBins;
+      }
+      else {
+	hresid->GetPoint(i,b,point);
+	chi2 += point*point / (fitcurve->interpolate(b));
+      }
+    }
+    //////Access fit result information
+    //r->Print();
+    //////Access basic information
+    cout << "Status = " << r->status() << endl;
+    cout << "EDM = " << r->edm() << endl;
+    cout << "-log(L) at minimum = " << r->minNll() << endl;
+    //////Access list of final fit parameter values
+    cout << "Final value of floating parameters:" << endl;
+    r->floatParsFinal().Print("s");
+    //////Evaluate chi-square:
+    cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
+    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
+    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+
+    if ( saveFitResult ) {
+      //////Save RooFitResult into a ROOT file
+      TFile ffitresult(Form("%s/%s_fitResult_exponential_mass%.0f.root",outDir,mmumu.GetName(),mass),"RECREATE");
+      r->Write("fitResult");
+      ffitresult.Close();
+    }
+    
+    //////Select PDFs
+    //////Chi2-based p-value
+    int fitStatusExponential = r->status();
+    double chi2ExponentialPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams));
+
+    frame->remove(Form("background_exponential_mass%.0f",mass));      
+
+    if ( chi2ExponentialPvalue > 0.0 && 
+	 chi2ExponentialPvalue < 1.0 && 
+	 fitStatusExponential==0 ) {
+      cout << "Pushing exponential" << endl;
+      bgPDFs.add(exponential);
+
+      exponential.plotOn(frame,Name(Form("background_exponential_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kRed));
+      if ( drawFits ) {
+	//////Draw fit
+	TCanvas *can = new TCanvas("can","",600,600);
+	can->cd();
+	frame->SetLabelSize(0.02,"Y");
+	frame->SetTitleSize(0.025,"Y");
+	frame->SetXTitle("Dimuon mass [GeV]");
+	frame->Draw();
+	can->SaveAs(Form("%s/%s_fitBackground_exponential_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	can->Close();
+      }
+      if ( drawResidual ) {
+	//Create a dedicated frame to draw the residual distribution and add the distribution to the frame
+	RooHist *hresid = frame->residHist();
+	RooPlot *frameres = x.frame(Title("Residual Distribution"));
+	frameres->addPlotable(hresid, "P");
+	frameres->SetXTitle("Dimuon mass [GeV]");
+	TCanvas *can = new TCanvas("can","",600,600);
+	can->cd();
+	frameres->Draw();
+	can->SaveAs(Form("%s/%s_fitResidual_exponential_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	
+	//Create a dedicated frame to draw the pull distribution and add the distribution to the frame
+	RooHist *hpull = frame->pullHist();
+	RooPlot *framepull = x.frame(Title("Pull Distribution"));
+	framepull->addPlotable(hpull, "P");
+	framepull->SetXTitle("Dimuon mass [GeV]");
+	can->cd();
+	framepull->Draw();
+	can->SaveAs(Form("%s/%s_fitPull_exponential_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	can->Close();
+      }
+      frame->remove(Form("background_exponential_mass%.0f",mass));
+    }
+
+    //////Power-law PDF
+    RooRealVar plaw_power(Form("plaw_power_%s_mass%.0f",mmumu.GetName(),mass),Form("plaw_power_%s_mass%.0f",mmumu.GetName(),mass),-3.0,-6.0,-0.0001);
+    RooGenericPdf powerlaw("powerlaw","TMath::Power(@0,@1)",RooArgList(x,plaw_power));
+    //////Fit
+    nFits = 0;
+    while ( nFits < nMaxFitAttempts ) {
+      r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+      ++nFits;
+      if ( r->status()==0 )
+	break;
+    }
+    powerlaw.plotOn(frame,Name(Form("background_powerlaw_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"));
+      
+    chi2 = 0.0;
+    nEmptyBins = 0;
+    //////Construct histograms with residuals and pulls of the data w.r.t. the curve
+    hresid = frame->residHist();
+    hpull = frame->pullHist();
+    fitcurve = frame->getCurve(Form("background_powerlaw_mass%.0f",mass));
+    //////Determine range of curve 
+    fitcurve->GetPoint(0,xstart,y);
+    fitcurve->GetPoint(fitcurve->GetN()-1,xstop,y);
+    nPoints = hresid->GetN();
+    for (int i = 0; i < nPoints; i++) {
+      double b, point;
+      hpull->GetPoint(i,b,point);
+      if (b<xstart || b>xstop) continue;
+      if (point==0) {
+	++nEmptyBins;
+      }
+      else {
+	hresid->GetPoint(i,b,point);
+	chi2 += point*point / (fitcurve->interpolate(b));
+      }
+    }
+    //////Access fit result information
+    //r->Print();
+    //////Access basic information
+    cout << "Status = " << r->status() << endl;
+    cout << "EDM = " << r->edm() << endl;
+    cout << "-log(L) at minimum = " << r->minNll() << endl;
+    //////Access list of final fit parameter values
+    cout << "Final value of floating parameters:" << endl;
+    r->floatParsFinal().Print("s");
+    //////Evaluate chi-square:
+    cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
+    cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
+    cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
+
+    if ( saveFitResult ) {
+      //////Save RooFitResult into a ROOT file
+      TFile ffitresult(Form("%s/%s_fitResult_powerlaw_mass%.0f.root",outDir,mmumu.GetName(),mass),"RECREATE");
+      r->Write("fitResult");
+      ffitresult.Close();
+    }
+    
+    //////Select PDFs
+    //////Chi2-based p-value
+    int fitStatusPowerlaw = r->status();
+    double chi2PowerlawPvalue = ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams));
+
+    frame->remove(Form("background_powerlaw_mass%.0f",mass));      
+
+    if ( chi2PowerlawPvalue > 0.0 && 
+	 chi2PowerlawPvalue < 1.0 && 
+	 fitStatusPowerlaw==0 ) {
+      cout << "Pushing power-law" << endl;
+      bgPDFs.add(powerlaw);
+
+      powerlaw.plotOn(frame,Name(Form("background_powerlaw_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kRed));
+      if ( drawFits ) {
+	//////Draw fit
+	TCanvas *can = new TCanvas("can","",600,600);
+	can->cd();
+	frame->SetLabelSize(0.02,"Y");
+	frame->SetTitleSize(0.025,"Y");
+	frame->SetXTitle("Dimuon mass [GeV]");
+	frame->Draw();
+	can->SaveAs(Form("%s/%s_fitBackground_powerlaw_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	can->Close();
+      }
+      if ( drawResidual ) {
+	//Create a dedicated frame to draw the residual distribution and add the distribution to the frame
+	RooHist *hresid = frame->residHist();
+	RooPlot *frameres = x.frame(Title("Residual Distribution"));
+	frameres->addPlotable(hresid, "P");
+	frameres->SetXTitle("Dimuon mass [GeV]");
+	TCanvas *can = new TCanvas("can","",600,600);
+	can->cd();
+	frameres->Draw();
+	can->SaveAs(Form("%s/%s_fitResidual_powerlaw_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	
+	//Create a dedicated frame to draw the pull distribution and add the distribution to the frame
+	RooHist *hpull = frame->pullHist();
+	RooPlot *framepull = x.frame(Title("Pull Distribution"));
+	framepull->addPlotable(hpull, "P");
+	framepull->SetXTitle("Dimuon mass [GeV]");
+	can->cd();
+	framepull->Draw();
+	can->SaveAs(Form("%s/%s_fitPull_powerlaw_mass%.0f.png",outDir,mmumu.GetName(),mass));
+	can->Update();
+	can->Clear();
+	can->Close();
+      }
+      frame->remove(Form("background_powerlaw_mass%.0f",mass));
+    }
+
+    //////Bernstein polynomials
     int maxpolyorder = 6;
-    int lastnll = 0;
+    int lastnll = 0;    
     int bestBernsteinOrder = 0;
     vector<RooArgList> parListBernstein;
-    vector<RooBernstein> pdfBernstein;
+    RooArgList bgBernsteinPDFs;
     vector<double> chi2BernsteinPvalue;
+    vector<RooFitResult> fitResultBernstein;
     vector<int> fitStatusBernstein;
     for (int to=0; to<maxpolyorder+1; to++) { 
       RooArgList parList(Form("bernstein_order%d_%s_mass%.0f",to,mmumu.GetName(),mass));
@@ -517,28 +778,27 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	return;
       }
       nFitParams = to+1;
-      RooBernstein background(Form("background_bernstein_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("background_bernstein_order%d_%s_%.0f",to,mmumu.GetName(),mass),x,parList);
+      RooBernstein background(Form("background_bernstein_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),Form("background_bernstein_order%d_%s_mass%.0f",to,mmumu.GetName(),mass),x,parList);
 
-      // Fit
-      int nFits = 0;
+      //////Fit
+      nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
       }
-      parListBernstein.push_back(parList);
-      pdfBernstein.push_back(background);
+      parListBernstein.push_back(*((RooArgSet*) parList.snapshot(kTRUE)));
       //if ( r->status()!=0 ) continue;
-      background.plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",to,mass)));
+      background.plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",to,mass)),Range("fitRange"),RooFit::NormRange("fitRange"));
 
-      double chi2 = 0.0;
-      int nEmptyBins = 0;
-      // Construct histograms with residuals and pulls of the data w.r.t. the curve
+      chi2 = 0.0;
+      nEmptyBins = 0;
+      //////Construct histograms with residuals and pulls of the data w.r.t. the curve
       RooHist *hresid = frame->residHist();
       RooHist *hpull = frame->pullHist();
       RooCurve *fitcurve = frame->getCurve(Form("background_bernstein_order%d_mass%.0f",to,mass));
-      // Determine range of curve 
+      //////Determine range of curve 
       Double_t xstart,xstop,y;
       fitcurve->GetPoint(0,xstart,y);
       fitcurve->GetPoint(fitcurve->GetN()-1,xstop,y);
@@ -555,103 +815,109 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	  chi2 += point*point / (fitcurve->interpolate(b));
 	}
       }
-      // Access fit result information
+      //////Access fit result information
       //r->Print();
-      // Access basic information
+      //////Access basic information
       cout << "Status = " << r->status() << endl;
       cout << "EDM = " << r->edm() << endl;
       cout << "-log(L) at minimum = " << r->minNll() << endl;
-      // Access list of final fit parameter values
+      //////Access list of final fit parameter values
       cout << "Final value of floating parameters:" << endl;
       r->floatParsFinal().Print("s");
-      // Evaluate chi-square:
+      //////Evaluate chi-square:
       cout << "chiSquare = " << frame->chiSquare(nFitParams) << endl;
       cout << "chiSquare (from residual histogram) / NDOF = " << chi2 << " / " << nPoints-nEmptyBins-nFitParams << endl; 
       cout << "p-value (chiSquare, NDOF) = " << ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)) << endl;
       
       if ( saveFitResult ) {
-	// Save RooFitResult into a ROOT file
+	//////Save RooFitResult into a ROOT file
 	TFile ffitresult(Form("%s/%s_fitResult_bernstein_order%d_mass%.0f.root",outDir,mmumu.GetName(),to,mass),"RECREATE");
 	r->Write("fitResult");
 	ffitresult.Close();
       }
-      
-      // Select PDFs
-      // Chi2-based p-value
+
+      //////Select PDFs
+      //////Chi2-based p-value
+      fitResultBernstein.push_back(*r);
       fitStatusBernstein.push_back(r->status());
       chi2BernsteinPvalue.push_back(ROOT::Math::chisquared_cdf_c(chi2, (double)(nPoints-nEmptyBins-nFitParams)));
-      // Fisher test
+      //////Fisher test
       double thisnll = r->minNll();
       double ftestChi2 = 2*(lastnll-thisnll);
       lastnll = thisnll;
       if ( ftestChi2 < 0.0 ) ftestChi2 = 0.0;
-      if ( fitStatusBernstein[to]==0 && TMath::Prob(ftestChi2,1) > 0.05 && to > 0 && bestBernsteinOrder <= 0 ) bestBernsteinOrder = to;
+      if ( fitStatusBernstein[to-1]==0 && TMath::Prob(ftestChi2,1) > 0.05 && to > 0 && bestBernsteinOrder <= 0 ) bestBernsteinOrder = to-1;
 
-      frame->remove(Form("background_bernstein_order%d_mass%.0f",to,mass));
+      frame->remove(Form("background_bernstein_order%d_mass%.0f",to,mass));      
 
-    }
-    cout << "Best Bernsteind PDF order = " << bestBernsteinOrder << endl;
-    vector<int> bernsteinPDFOrders;
-    for ( int to = bestBernsteinOrder-1; to <= bestBernsteinOrder+1; to++) {
-      if ( to < 0 ) continue;
-      if ( chi2BernsteinPvalue[to] > 0.0 && 
-	   chi2BernsteinPvalue[to] < 1.0 && 
-	   fitStatusBernstein[to]==0 ) {
-	cout << "Pushing order " << to << endl;
-	bernsteinPDFOrders.push_back(to);
+      if ( (bestBernsteinOrder > 0 && to > bestBernsteinOrder) || to >= maxpolyorder ) {
+
+	vector<int> bernsteinPDFOrders;
+	for ( int tto = bestBernsteinOrder-1; tto <= bestBernsteinOrder+1; tto++) {
+	  if ( tto < 0 ) continue;
+	  if ( chi2BernsteinPvalue[tto] > 0.0 && 
+	       chi2BernsteinPvalue[tto] < 1.0 && 
+	       fitStatusBernstein[tto]==0 ) {
+	    bernsteinPDFOrders.push_back(tto);
+	    parListBernstein[tto].Print("v");
+	    RooBernstein background(Form("background_bernstein_order%d_%s_mass%.0f",tto,mmumu.GetName(),mass),Form("background_bernstein_order%d_%s_mass%.0f",tto,mmumu.GetName(),mass),x,parListBernstein[tto]);
+	    RooArgList tbgBernsteinPDFs;
+	    tbgBernsteinPDFs.add(background);
+
+	    if (tto == bestBernsteinOrder) {
+	      background.plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",tto,mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kRed));
+	    }
+	    else {
+	      background.plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",tto,mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kOrange));
+	    }
+
+	    if ( drawFits ) {
+	      //////Draw fit
+	      TCanvas *can = new TCanvas("can","",600,600);
+	      can->cd();
+	      frame->SetLabelSize(0.02,"Y");
+	      frame->SetTitleSize(0.025,"Y");
+	      frame->SetXTitle("Dimuon mass [GeV]");
+	      frame->Draw();
+	      can->SaveAs(Form("%s/%s_fitBackground_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),tto,mass));
+	      can->Update();
+	      can->Clear();
+	      can->Close();
+	    }
+
+	    if ( drawResidual ) {
+	      //Create a dedicated frame to draw the residual distribution and add the distribution to the frame
+	      RooHist *hresid = frame->residHist();
+	      RooPlot *frameres = x.frame(Title("Residual Distribution"));
+	      frameres->addPlotable(hresid, "P");
+	      frameres->SetXTitle("Dimuon mass [GeV]");
+	      TCanvas *can = new TCanvas("can","",600,600);
+	      can->cd();
+	      frameres->Draw();
+	      can->SaveAs(Form("%s/%s_fitResidual_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),tto,mass));
+	      can->Update();
+	      can->Clear();
+
+	      //Create a dedicated frame to draw the pull distribution and add the distribution to the frame
+	      RooHist *hpull = frame->pullHist();
+	      RooPlot *framepull = x.frame(Title("Pull Distribution"));
+	      framepull->addPlotable(hpull, "P");
+	      framepull->SetXTitle("Dimuon mass [GeV]");
+	      can->cd();
+	      framepull->Draw();
+	      can->SaveAs(Form("%s/%s_fitPull_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),tto,mass));
+	      can->Update();
+	      can->Clear();
+	      can->Close();
+	    }
+	    frame->remove(Form("background_bernstein_order%d_mass%.0f",tto,mass));
+	    bgPDFs.add(*((RooArgSet*) tbgBernsteinPDFs.snapshot(kTRUE)));
+	  }
+	}
+	break;
       }
     }
-    
-    for(const auto& to: bernsteinPDFOrders) {
-
-      pdfBernstein[to].plotOn(frame,Name(Form("background_bernstein_order%d_mass%.0f",to,mass)));
-
-      if ( drawFits ) {
-	// Draw fit
-	TCanvas *can = new TCanvas("can","",600,600);
-	can->cd();
-	frame->SetLabelSize(0.01,"Y");
-	frame->SetTitleSize(0.015,"Y");
-	frame->SetXTitle("Dimuon mass [GeV]");
-	frame->Draw();
-	can->SaveAs(Form("%s/%s_fitBackground_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),to,mass));
-	can->Update();
-	can->Clear();
-	can->Close();
-      }
-
-      if ( drawResidual ) {
-	// Create a dedicated frame to draw the residual distribution and add the distribution to the frame
-	RooHist *hresid = frame->residHist();
-	RooPlot *frameres = x.frame(Title("Residual Distribution"));
-	frameres->addPlotable(hresid, "P");
-	frameres->SetXTitle("Dimuon mass [GeV]");
-	TCanvas *can = new TCanvas("can","",600,600);
-	can->cd();
-	frameres->Draw();
-	can->SaveAs(Form("%s/%s_fitResidual_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),to,mass));
-	can->Update();
-	can->Clear();
-	
-	// Create a dedicated frame to draw the pull distribution and add the distribution to the frame
-	RooHist *hpull = frame->pullHist();
-	RooPlot *framepull = x.frame(Title("Pull Distribution"));
-	framepull->addPlotable(hpull, "P");
-	framepull->SetXTitle("Dimuon mass [GeV]");
-	can->cd();
-	framepull->Draw();
-	can->SaveAs(Form("%s/%s_fitPull_bernstein_order%d_mass%.0f.png",outDir,mmumu.GetName(),to,mass));
-	can->Update();
-	can->Clear();
-	can->Close();
-      }
-      
-    }
-
-    // Import model and all its components into the workspace
-    for(const auto& to: bernsteinPDFOrders)
-      wfit.import(pdfBernstein[to]);
-
+    RooMultiPdf multipdf(Form("roomultipdf_%s",mmumu.GetName()),"All PDFs",cat,bgPDFs);
+    wfit.import(multipdf);
   }
-
 }

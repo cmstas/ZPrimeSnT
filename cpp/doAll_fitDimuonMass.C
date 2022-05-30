@@ -2,6 +2,7 @@
   gROOT->ProcessLine(".L fitDimuonMass.C+");  // Macro that performs the selection
 
   bool useData = false;
+  bool writeWS = true;
 
   TString inDir = "temp_data/";
   vector<TString> dNames = { };
@@ -70,8 +71,6 @@
   // Signals
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
   vector<float> sigMass = { /*100.0,*/ 200.0, 400.0, 700.0, 1000.0, 1500.0, 2000.0 };
-  //vector<TString> sigModel = { "Y3" };
-  //vector<float> sigMass = { 200.0 };
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
@@ -135,24 +134,21 @@
 	    fitmass(*mmumu_bkg, "Background", false, false, sigmodels[isample], sigmasses[isample], wfit, "", outDir);
 	}
 
-	//double bgNormalization = mmumu.sumEntries(fitRange.Data());
-	//RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization,0.5*bgNormalization,2.0*bgNormalization);
-	//if ( bgNormalization < 1e-3 ) {
-	//  nBG.setVal(0.0);
-	//  nBG.setRange(0.0,2e-3);
-	//}
-	//wfit->import(nBG);
-
 	// Import data into the workspace
 	wfit.import(*mmumu_bkg);
 
 	// Print workspace contents
 	wfit.Print();
 
-	//// Save the workspace into a ROOT file
-	//TString fws = Form("%s/%s_workspace.root",outDir.Data(),mmumu_sig[isample].GetName());
-	//wfit.writeToFile(fws) ;
-
+	if ( writeWS ) {
+	  // Save the workspace into a ROOT file
+	  TString fwsname = Form("%s/%s_workspace.root",outDir.Data(),mmumu_sig[isample].GetName());
+	  TFile *fws = new TFile(fwsname, "RECREATE");
+	  fws->cd();
+	  cout << "Writing workspace..." << endl;
+	  wfit.Write();
+	  fws->Close();
+	}
 	cout<<endl;
       }
     }
