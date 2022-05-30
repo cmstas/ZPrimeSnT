@@ -168,25 +168,26 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       maxfracL = 1.25*fracL;
     }
 
+    double minMforFit = 175.0;
+    TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+
     //////Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
-    x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
-    int nBins = (mass+10.0*stddev - std::max(150.0,mass-10.0*stddev))/binsize;
+    x.setRange("fitRange",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+    int nBins = (mass+10.0*stddev - std::max(minMforFit,mass-10.0*stddev))/binsize;
     x.setBins(nBins);
 
-    RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
+    RooPlot *frame = x.frame(std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("Signal dimuon mass fit");
+    frame->SetMinimum(0.0);
     //////Plot RooDataSet onto frame
     //mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
     mmumu.plotOn(frame, DataError(RooAbsData::SumW2));
 
     //////Define fit-related variables
     int nMaxFitAttempts = 5;
-    double minMforFit = 175.0;
     int nFitParams = 0;
     RooFitResult *r = new RooFitResult();
-
-    TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
 
     double sigNormalization = mmumu.sumEntries(fitRange.Data());
     RooRealVar nSig("sigNormalization","sigNormalization",sigNormalization);
@@ -199,8 +200,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -220,8 +221,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -247,8 +248,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -276,8 +277,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -309,8 +310,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -341,8 +342,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Fit
       int nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
-	//r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
-	r = signal.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	//r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), /*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = signal.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -397,6 +398,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       //////Draw fit
       TCanvas *can = new TCanvas("can","",600,600);
       can->cd();
+      frame->SetMinimum(0.0);
       frame->SetLabelSize(0.02,"Y");
       frame->SetTitleSize(0.025,"Y");
       frame->SetXTitle("Dimuon mass [GeV]");
@@ -462,14 +464,18 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
     double binsize = 0.1*stddev;
 
+    double minMforFit = 175.0;
+    TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+
     //////Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
-    x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
-    int nBins = (mass+10.0*stddev - std::max(150.0,mass-10.0*stddev))/binsize;
+    x.setRange("fitRange",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
+    int nBins = (mass+10.0*stddev - std::max(minMforFit,mass-10.0*stddev))/binsize;
     x.setBins(nBins);
 
-    RooPlot *frame = x.frame(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
+    RooPlot *frame = x.frame(std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
     frame->SetTitle("BG dimuon mass fit");
+    frame->SetMinimum(0.0);
     //////Plot RooDataSet onto frame
     if ( isData )
       mmumu.plotOn(frame/*, DataError(RooAbsData::SumW2)*/);
@@ -484,12 +490,8 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 
     //////Define fit-related variables
     int nMaxFitAttempts = 5;
-    double minMforFit = 175.0;
     int nFitParams = 0;
     RooFitResult *r = new RooFitResult();
-
-    TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
-    x.setRange("fitRange",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
 
     double bgNormalization = mmumu.sumEntries(fitRange.Data());
     RooRealVar nBG(Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),Form("bgNormalization_%s_%.0f",mmumu.GetName(),mass),bgNormalization);
@@ -507,9 +509,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     int nFits = 0;
     while ( nFits < nMaxFitAttempts ) {
       if ( isData )
-	r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = exponential.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
       else
-	r = exponential.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = exponential.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
       ++nFits;
       if ( r->status()==0 )
 	break;
@@ -577,6 +579,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	//////Draw fit
 	TCanvas *can = new TCanvas("can","",600,600);
 	can->cd();
+	frame->SetMinimum(0.0);
 	frame->SetLabelSize(0.02,"Y");
 	frame->SetTitleSize(0.025,"Y");
 	frame->SetXTitle("Dimuon mass [GeV]");
@@ -621,9 +624,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     nFits = 0;
     while ( nFits < nMaxFitAttempts ) {
       if ( isData )
-	r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	r = powerlaw.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
       else
-	r = powerlaw.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	r = powerlaw.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
       ++nFits;
       if ( r->status()==0 )
 	break;
@@ -690,6 +693,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	//////Draw fit
 	TCanvas *can = new TCanvas("can","",600,600);
 	can->cd();
+	frame->SetMinimum(0.0);
 	frame->SetLabelSize(0.02,"Y");
 	frame->SetTitleSize(0.025,"Y");
 	frame->SetXTitle("Dimuon mass [GeV]");
@@ -798,9 +802,9 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       nFits = 0;
       while ( nFits < nMaxFitAttempts ) {
 	if ( isData )
-	  r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
+	  r = background.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"),/*SumW2Error(kTRUE), */PrintLevel(-1), PrintEvalErrors(-1));
 	else
-	  r = background.fitTo(mmumu, Range(std::max(minMforFit,mass-10.0*stddev), mass+10.0*stddev), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
+	  r = background.fitTo(mmumu, Range("fitRange"), Save(), Minimizer("Minuit2","minimize"), SumW2Error(kTRUE), PrintLevel(-1), PrintEvalErrors(-1));
 	++nFits;
 	if ( r->status()==0 )
 	  break;
@@ -892,6 +896,7 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
 	      //////Draw fit
 	      TCanvas *can = new TCanvas("can","",600,600);
 	      can->cd();
+	      frame->SetMinimum(0.0);
 	      frame->SetLabelSize(0.02,"Y");
 	      frame->SetTitleSize(0.025,"Y");
 	      frame->SetXTitle("Dimuon mass [GeV]");
