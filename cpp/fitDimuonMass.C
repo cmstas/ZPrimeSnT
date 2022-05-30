@@ -40,9 +40,9 @@ using namespace std;
 using namespace RooFit;
 
 bool drawFits = true;
-bool saveFitResult = true;
 bool drawResidual = false;
 bool useFixedSigma = false;
+bool saveFitResult = false;
 
 void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TString sigmodel, float mass, RooWorkspace &wfit, TString sigshape="dcbvoigt", const char* outDir = "fitResults")
 {
@@ -74,8 +74,6 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
       maxstddev = 1.25*stddev;
     }
     double binsize = 0.1*stddev;
-
-    cout << "Range: "<< mass-10.0*stddev <<"-"<<mass+10.0*stddev << endl;
 
     //////Set starting alphaR
     double alphaR = 1.0;
@@ -454,8 +452,6 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     }
     double binsize = 0.1*stddev;
 
-    cout << "Range: "<< mass-10.0*stddev <<"-"<<mass+10.0*stddev << endl;
-
     //////Get RooRealVar from RooDataSet
     RooRealVar x = *((RooRealVar*) mmumu.get()->find("mfit"));
     x.setRange(std::max(150.0,mass-10.0*stddev),mass+10.0*stddev);
@@ -557,7 +553,6 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     if ( chi2ExponentialPvalue > 0.0 && 
 	 chi2ExponentialPvalue < 1.0 && 
 	 fitStatusExponential==0 ) {
-      cout << "Pushing exponential" << endl;
       bgPDFs.add(exponential);
 
       exponential.plotOn(frame,Name(Form("background_exponential_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kRed));
@@ -668,7 +663,6 @@ void fitmass(RooDataSet mmumu, TString sample, bool isData, bool isSignal, TStri
     if ( chi2PowerlawPvalue > 0.0 && 
 	 chi2PowerlawPvalue < 1.0 && 
 	 fitStatusPowerlaw==0 ) {
-      cout << "Pushing power-law" << endl;
       bgPDFs.add(powerlaw);
 
       powerlaw.plotOn(frame,Name(Form("background_powerlaw_mass%.0f",mass)),Range("fitRange"),RooFit::NormRange("fitRange"),LineColor(kRed));
