@@ -145,7 +145,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   TFile* fout = new TFile("temp_data/output_"+process+"_"+year+"_mll.root", "RECREATE");
 
   // Define histogram for m_ll resolution
+  H1(mll_res,100,-100,100,"Gen m_{#mu #mu} - Reco m_{#mu #mu} [GeV]");
+  H1(reco_mll,200,150,1000,"Reco m_{#mu #mu} [GeV]");
+  H1(gen_mll,200,150,1000,"Gen m_{#mu #mu} [GeV]");
   
+  bool flag_TM, flag_TM_1b;
+  float m_ll;
+  int nEventsTotal = 0;
   int nEventsChain = ch->GetEntries();
   TFile *currentFile = 0;
   TObjArray *listOfFiles = ch->GetListOfFiles();
@@ -168,11 +174,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       tree->LoadTree(event);
 
       float weight = 1.0;
-      wgt = 1.0;
+      //wgt = 1.0;
       if ( isMC )
 	weight = genWeight();
-        wgt = weight;
-        weighted_evts = weight*factor;
+        //wgt = weight;
+        //weighted_evts = weight*factor;
       if(removeSpikes && weight*factor>1e2) continue;
 
       int runnb = nt.run();
@@ -424,71 +430,23 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       if (bjet_idx_tight_20.size() < 1) continue;
 
       bool pass_any_flag = false;
-      flag_TL_1b = false;
       flag_TM_1b = false;
-      flag_TT_1b = false;
-      flag_TL = false;
       flag_TM = false;
-      flag_TT = false;
-      float min_mlb_tl = -1;
       float min_mlb_tm = -1;
-      float min_mlb_tt = -1;
-      float min_mlb_tl_1b = -1;
       float min_mlb_tm_1b = -1;
-      float min_mlb_tt_1b = -1;
     
       if ( bjet_idx_tight_20.size() == 1 ){
-           //min_mlb_tl_1b = 1e9;
            auto bjet_p4 = nt.Jet_p4().at(bjet_idx_tight_20[0]);
            float m_mu1_tb = (leadingMu_p4+bjet_p4).M();
            float m_mu2_tb = (subleadingMu_p4+bjet_p4).M();
-           if (bjet_idx_loose_20.size() < 2 ){
-               min_mlb_tl_1b = 1e9;
-               min_mlb_tl_1b = std::min(min_mlb_tl_1b,std::min(m_mu1_tb,m_mu2_tb));
-               //std::cout << "minimum mlb = " << min_mlb_tl_1b << endl;
-              // if (min_mlb_tl_1b > 175.0){
-                   flag_TL_1b = true;
-                   nEvents_TL_1b++;
-              // }    
-           }
-        
-           // Do the same for the TM case
            if (bjet_idx_med_20.size() < 2 ){
                min_mlb_tm_1b = 1e9;
                min_mlb_tm_1b = std::min(min_mlb_tm_1b,std::min(m_mu1_tb,m_mu2_tb));
-               //if (min_mlb_tm_1b > 175.0){
+               if (min_mlb_tm_1b > 175.0){
                    flag_TM_1b = true;
-                   nEvents_TM_1b++;
-               //}
-           }
-  
-           // And for the TT case       
-           min_mlb_tt_1b = 1e9;
-           min_mlb_tt_1b = std::min(min_mlb_tt_1b,std::min(m_mu1_tb,m_mu2_tb));
-           //if (min_mlb_tt_1b > 175.0){
-               flag_TT_1b = true;
-               nEvents_TT_1b++;
-          // }
-           
-      }
-
-      // Now consider the case where number of tight b jets is greater than one.......
-      
-      if ( bjet_idx_loose_20.size() > 1 ){
-           min_mlb_tl = 1e9;
-               float min_mlb_l = 1e9;
-               for (int i = 0; i < bjet_idx_loose_20.size(); i++ ){
-                    auto bjet_p4_1 = nt.Jet_p4().at(bjet_idx_loose_20[i]);
-                    float m_mu1_lb = (leadingMu_p4+bjet_p4_1).M();
-                    float m_mu2_lb = (subleadingMu_p4+bjet_p4_1).M();
-                    min_mlb_l = std::min(min_mlb_l,std::min(m_mu1_lb,m_mu2_lb));
                }
-               //flag_TL = false;
-               min_mlb_tl = min_mlb_l;
-               //if (min_mlb_tl > 175.0 ){
-                   flag_TL = true;
-                   nEvents_TL++;
-               //}      
+           }
+           
       }
 
       if ( bjet_idx_med_20.size() > 1 ){
@@ -500,41 +458,52 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
                 float m_mu2_mb = (subleadingMu_p4+bjet_p4_2).M();
                 min_mlb_m = std::min(min_mlb_m,std::min(m_mu1_mb,m_mu2_mb));
            }
-           //flag_TM = false;
+           
            min_mlb_tm = min_mlb_m;
-           //if (min_mlb_tm > 175.0 ){
+           if (min_mlb_tm > 175.0 ){
                flag_TM = true;
-               nEvents_TM++;
-           //}
-
-      }
-
-      if ( bjet_idx_tight_20.size() > 1 ){
-           min_mlb_tt = 1e9;
-           //flag_TT = false;    
-           for ( int n = 0; n < bjet_idx_tight_20.size(); n++ ){
-                auto bjet_p4_7 = nt.Jet_p4().at(bjet_idx_tight_20[n]);
-                float m_mu1_b_7 = (leadingMu_p4+bjet_p4_7).M();
-                float m_mu2_b_7 = (subleadingMu_p4+bjet_p4_7).M();
-                min_mlb_tt = std::min(min_mlb_tt,std::min(m_mu1_b_7,m_mu2_b_7));
-
            }
-          
-           //if ( min_mlb_tt > 175.0 ){
-                flag_TT = true;
-                nEvents_TT++;
-           //}
-      }
-      
-      //if (min_mlb_tt > 175) flag_TT = true;
 
-      pass_any_flag = ( flag_TT || flag_TT_1b || flag_TM || flag_TM_1b || flag_TL || flag_TL_1b );
+      }
+
+      pass_any_flag = ( flag_TM || flag_TM_1b );
 
       // Do not record if none of the flags are true.
       if (!pass_any_flag) continue;
 
-      // Fill the tree
-      tree_out.Fill();    
+      //std::cout << "Gen Muons" << endl;
+
+      // Loop over GenPart collection to construct the gen m_ll mass
+      std::vector<int> genMuons;
+      float gen_mll = -1;
+      for ( int gen = 0; gen < nt.nGenPart(); gen++ ){
+            if ( std::abs(nt.GenPart_pdgId().at(gen)) == 13 ){
+                 int statusFlag = (nt.GenPart_statusFlags().at(gen) >> 7) & 1;
+                 if ( statusFlag == 1 ){
+                     genMuons.push_back(gen);
+                 }     
+            }
+      }
+
+      if ( genMuons.size() < 2 ) continue;
+
+      //std::cout << "Passed gen muons selection" << endl;
+
+      if ( (nt.GenPart_pdgId().at(genMuons[0])+nt.GenPart_pdgId().at(genMuons[1])) == 0 ){
+           gen_mll = (nt.GenPart_p4().at(genMuons[0])+nt.GenPart_p4().at(genMuons[1])).M();
+      }
+
+      //std::cout << "Gen m_ll = " << gen_mll << endl;
+
+      if ( gen_mll < 0 ) continue;
+ 
+
+      float mll_res = gen_mll - m_ll;
+
+      // Fill the histogram
+      h_mll_res->Fill(mll_res,weight*factor);
+      h_reco_mll->Fill(m_ll,weight*factor); 
+      h_gen_mll->Fill(gen_mll,weight*factor);
 
     } // Event loop
 
@@ -542,13 +511,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
   } // File loop
   bar.finish();
-
-  std::cout << "Number of events in 1b TL = " << nEvents_TL_1b << endl;
-  std::cout << "Number of events in 2b TL = " << nEvents_TL << endl;
-  std::cout << "Number of events in 1b TM = " << nEvents_TM_1b << endl;
-  std::cout << "Number of events in 2b TM = " << nEvents_TM << endl;
-  std::cout << "Number of events in 1b TT = " << nEvents_TT_1b << endl;
-  std::cout << "Number of events in 2b TT = " << nEvents_TT << endl;
   
   fout->Write();
   fout->Close();
