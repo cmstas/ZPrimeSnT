@@ -11,6 +11,11 @@
 #include "TVector2.h"
 #include "TVector3.h"
 
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooDataHist.h"
+#include "RooCategory.h"
+
 #include "../NanoCORE/Nano.h"
 #include "../NanoCORE/Base.h"
 #include "../NanoCORE/tqdm.h"
@@ -57,6 +62,7 @@ bool removeSpikes = true;
 bool removeDataDuplicates = false;
 bool useTuneP = true;
 bool usePuppiMET = true;
+bool fillRooDataSet = true;
 //
 // Event weights / scale factors
 bool applyTopPtWeight = true;
@@ -104,6 +110,7 @@ struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<
 using namespace std;
 using namespace tas;
 using namespace duplicate_removal;
+using namespace RooFit;
 
 int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
@@ -531,6 +538,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   MuDetRegionbinlabel["BB"] = "2 muons in Barrel";
   MuDetRegionbinlabel["BE"] = "1 muon in Barrel, 1 muon in Endcap)";
   MuDetRegionbinlabel["EE"] = "2 muons in Endcap";
+
+  // Define RooDataSet's for fit
+  RooRealVar mfit("mfit", "mfit", 150.0, 3000.0);
+  RooRealVar roow("roow", "roow", 1.0);
+  map<TString, RooDataSet> roods;
+  for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+    for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+      for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++){
+        TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
+	TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
+	if ( fillRooDataSet )
+	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar(roow))});
+      }
+    }
+  }
 
   // Define cutflow histograms in bins of mll and number of b-tags
   map<TString, TH1F*> slicedcutflows;
@@ -2097,8 +2119,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
 	    for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
 	      TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-	      if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
+	      if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet]) {
 		slicedcutflows[slice]->Fill(icutflow, weight * factor);
+		if ( fillRooDataSet ) {
+		  mfit.setVal(selectedPair_M);
+		  roods[slice].add(RooArgSet(mfit), weight * factor);
+		}
+	      }
 	      slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
 	    }
 	  }
@@ -2167,6 +2194,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
   }
 
   fout->Write();
+  if ( fillRooDataSet ) {
+    fout->cd();
+    for (const auto& d : roods )
+      d.second.Write();
+  }
   fout->Close();
 
   return 0;

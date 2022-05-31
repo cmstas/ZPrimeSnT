@@ -3,9 +3,17 @@
 git clone git@github.com:cmstas/ZPrimeSnT.git
 pushd ZPrimeSnT/
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-pushd /cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/cmssw/CMSSW_10_2_9/
+export SCRAM_ARCH=slc7_amd64_gcc700
+cmsrel CMSSW_10_2_13
+cd CMSSW_10_2_13/src
 cmsenv
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+pushd HiggsAnalysis/CombinedLimit
+git fetch origin
+git checkout v8.2.0
+scramv1 b clean; scramv1 b # always make a clean build
 popd
+cd -
 pushd NanoCORE
 make -j12
 popd
@@ -25,7 +33,8 @@ root -b -q -l -n doAll_Zp.C
 popd
 ```
 
-This loops and creates a number of output files of the form `output_"process"_"year".root`, which contains a handful of histograms. 
+This loops and creates a number of output files of the form `output_"process"_"year".root` containing histograms. 
+Optionally, the file also contains a `RooDataSet` to be used as input for fitting (see below).
 
 To produce plots:
 ```bash
@@ -36,6 +45,26 @@ To produce cutflow table:
 ```bash
 python python/make_cutflow_table.py
 ```
+
+
+## Fitting code:
+
+```bash
+pushd CMSSW_10_2_13/src/
+cmsenv
+popd
+pushd cpp/
+root -b -q -l -n doAll_fitDimuonMass.C
+popd
+```
+
+This creates a ROOT file with a workspace containing all relevant PDFs, to be used as input to `combine`.
+Optionally, fits are drawn and fit results are saved in a dedicated ROOT file.
+In order to plot fit results:
+```bash
+python python/plot_fitResults.py
+```
+
 
 ## Pull requests:
 
