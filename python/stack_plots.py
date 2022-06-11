@@ -561,6 +561,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     g_data = ROOT.TGraphAsymmErrors()
     g_ratio = ROOT.TGraphAsymmErrors()
     g_ratio_unc = ROOT.TGraphAsymmErrors()
+    g_ratio_signal = ROOT.TMultiGraph()
 
     h_axis = ROOT.TH1D()
     h_axis_ratio = ROOT.TH1D()
@@ -594,6 +595,53 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         g_ratio.SetMarkerStyle(20)
         g_ratio.SetMarkerSize(1.2)
         g_ratio.SetLineWidth(1)
+
+    if not plotData and args.shape:
+      doRatio=True
+
+      for i,sample in enumerate(plotDict.keys()):
+          # Signal
+          if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+              model = sample.split("_")[0]
+              mass = sample.split("_")[1].lstrip("M")
+              if "mmumu" not in plotname and mass in massToExclude:
+                  continue
+              if "mmumu" not in plotname:
+                  g_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                  g_signal_temp.SetMarkerStyle(20)
+                  g_signal_temp.SetMarkerSize(1.2)
+                  g_signal_temp.SetLineWidth(1)
+
+                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                  g_signal_temp_clone = g_signal_temp.Clone()
+                  g_signal_temp_clone.SetMarkerSize(0.0)
+
+                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                  g_ratio_signal_temp.SetMarkerStyle(20)
+                  g_ratio_signal_temp.SetMarkerSize(1.2)
+                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model]+i%len(args.signalMass))
+                  g_ratio_signal_temp.SetLineWidth(1)
+                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
+              else:
+                  g_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                  g_signal_temp.SetMarkerStyle(20)
+                  g_signal_temp.SetMarkerSize(1.2)
+                  g_signal_temp.SetLineWidth(1)
+
+                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                  g_signal_temp_clone = g_signal_temp.Clone()
+                  g_signal_temp_clone.SetMarkerSize(0.0)
+
+                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                  g_ratio_signal_temp.SetMarkerStyle(20)
+                  g_ratio_signal_temp.SetMarkerSize(1.2)
+                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model])
+                  g_ratio_signal_temp.SetLineWidth(1)
+                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
 
     for b in range(1,MCplot.GetNbinsX()+1):
         thisPoint = g_ratio_unc.GetN()
@@ -645,16 +693,41 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if logX:
             h_axis_ratio.GetXaxis().SetMoreLogLabels()
             pads[1].SetLogx()
-        h_axis_ratio.Draw("")
-        g_ratio_unc.Draw("SAME,2")
-        g_ratio.Draw("SAME,P0")
+        if plotData:
+            h_axis_ratio.Draw("")
+            g_ratio_unc.Draw("SAME,2")
+            g_ratio.Draw("SAME,P0")
+        else:
+            g_ratio_signal.Draw("SAME,P0")
+            g_ratio_signal.GetXaxis().SetLimits(h_axis.GetXaxis().GetBinLowEdge(1),h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()));
+            g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()));
+            g_ratio_signal.GetHistogram().GetYaxis().SetRangeUser(0.,2.0);
+
+            g_ratio_signal.GetHistogram().SetTitle(";;Signal / MC")
+            g_ratio_signal.GetHistogram().GetYaxis().SetTitleSize(0.16)
+            g_ratio_signal.GetHistogram().GetYaxis().SetTitleOffset(0.25)
+            g_ratio_signal.GetHistogram().GetYaxis().SetLabelSize(0.12)
+            g_ratio_signal.GetHistogram().GetYaxis().CenterTitle()
+            g_ratio_signal.GetHistogram().GetYaxis().SetTickLength(0.02)
+
+            g_ratio_signal.GetHistogram().GetXaxis().SetLabelSize(0)
+            g_ratio_signal.GetHistogram().GetXaxis().SetTitle("")
+            g_ratio_signal.GetHistogram().GetXaxis().SetTickSize(0.06)
+            if logX:
+                if MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
+                  g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+                g_ratio_signal.GetHistogram().GetXaxis().SetMoreLogLabels()
+                pads[1].SetLogx()
+
         #
         line.SetLineStyle(2)
         line.SetLineColor(sampleLineColor["data"])
         line.SetLineWidth(1)
         line.Draw("SAME")
         #
-        pads[1].RedrawAxis()
+        #pads[1].RedrawAxis()
+        pads[1].Modified();
+        pads[1].Update();
 
     else:
         pads.append(ROOT.TPad("1","1",0,0,1,1))
