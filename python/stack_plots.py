@@ -16,6 +16,7 @@ parser.add_argument("--data", default=False, action="store_true", help="Plot dat
 parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
+parser.add_argument("--cumulative", default=False, action="store_true", help="Cumulative distributions")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
@@ -405,6 +406,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     curPlots=OrderedDict()
 
     totalSM = None
+    lowToHighBinsCumulative = True
     for i,sample in enumerate(plotDict.keys()):
         # Signal
         if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
@@ -421,12 +423,16 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
                     curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
+                    if args.cumulative:
+                        curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
                 else:
                     curPlots[sample].Scale(1.0/curPlots[sample].GetBinContent(1))
         # Data
         elif sample=="data": 
             if plotData:
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+                if args.cumulative:
+                    curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
         # Bkg
         else:
             curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
@@ -438,6 +444,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 totalSM.Add(curPlots[sample])
 
     totalScale   = totalSM.Integral(0,-1)
+    if args.cumulative:
+        totalSM = plotUtils.GetCumulative(totalSM,lowToHighBinsCumulative)
     if "cutflow" in plotname:
         totalScale = totalSM.GetBinContent(1)
     if args.shape and totalScale>0.0:
@@ -451,6 +459,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or sample=="data"):
             if args.shape and totalScale>0.0:
                 curPlots[sample].Scale(1.0/totalScale)
+            if args.cumulative:
+                curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
             stack.Add(curPlots[sample])
 
 
@@ -861,6 +871,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         extension = extension+"_logY"
     if args.shape:
         extension = extension+"_areaNormalized"
+    if args.cumulative:
+        extension = extension+"_cumulative"
     
     canvas.SaveAs(args.outDir + plotname + extension + ".png")
 

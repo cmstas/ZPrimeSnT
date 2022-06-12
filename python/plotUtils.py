@@ -171,6 +171,24 @@ def GetEfficRatioGraph(hnum, hden, g_ratio):
             g_ratio.SetPoint(thisPoint, x, val)
             g_ratio.SetPointError(thisPoint, xerr, xerr, errdn, errup)
 
+def GetCumulative(h,lowToHighBinsCumulative=True):
+    hout = h.Clone()
+    sumOfBins = 0
+    sumOfBinsError = 0
+    if lowToHighBinsCumulative:
+        for i in range(1, h.GetNbinsX()+1):
+            sumOfBins = sumOfBins + h.GetBinContent(i)
+            sumOfBinsError = (sumOfBinsError*sumOfBinsError + h.GetBinError(i)*h.GetBinError(i))**0.5
+            hout.SetBinContent(i,sumOfBins)
+            hout.SetBinError(i,sumOfBinsError)
+    else:
+        for i in range(h.GetNbinsX(),0,-1):
+            sumOfBins = sumOfBins + h.GetBinContent(i)
+            sumOfBinsError = (sumOfBinsError*sumOfBinsError + h.GetBinError(i)*h.GetBinError(i))**0.5
+            hout.SetBinContent(i,sumOfBins)
+            hout.SetBinError(i,sumOfBinsError)
+    return hout
+
 def DrawCmsText(canvas, text="CMS Preliminary", textFont=62, textSize=0.035, insideAxes=False):
     ttext = ROOT.TLatex()
     ttext.SetNDC(1)
