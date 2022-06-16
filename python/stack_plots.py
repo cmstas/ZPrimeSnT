@@ -16,6 +16,7 @@ parser.add_argument("--data", default=False, action="store_true", help="Plot dat
 parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
+parser.add_argument("--cumulative", default=False, action="store_true", help="Cumulative distributions")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
@@ -405,6 +406,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     curPlots=OrderedDict()
 
     totalSM = None
+    lowToHighBinsCumulative = True
     for i,sample in enumerate(plotDict.keys()):
         # Signal
         if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
@@ -421,12 +423,16 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
                     curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
+                    if args.cumulative:
+                        curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
                 else:
                     curPlots[sample].Scale(1.0/curPlots[sample].GetBinContent(1))
         # Data
         elif sample=="data": 
             if plotData:
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+                if args.cumulative:
+                    curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
         # Bkg
         else:
             curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
@@ -438,6 +444,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 totalSM.Add(curPlots[sample])
 
     totalScale   = totalSM.Integral(0,-1)
+    if args.cumulative:
+        totalSM = plotUtils.GetCumulative(totalSM,lowToHighBinsCumulative)
     if "cutflow" in plotname:
         totalScale = totalSM.GetBinContent(1)
     if args.shape and totalScale>0.0:
@@ -451,6 +459,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or sample=="data"):
             if args.shape and totalScale>0.0:
                 curPlots[sample].Scale(1.0/totalScale)
+            if args.cumulative:
+                curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
             stack.Add(curPlots[sample])
 
 
@@ -561,6 +571,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     g_data = ROOT.TGraphAsymmErrors()
     g_ratio = ROOT.TGraphAsymmErrors()
     g_ratio_unc = ROOT.TGraphAsymmErrors()
+    g_ratio_signal = ROOT.TMultiGraph()
 
     h_axis = ROOT.TH1D()
     h_axis_ratio = ROOT.TH1D()
@@ -594,6 +605,53 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         g_ratio.SetMarkerStyle(20)
         g_ratio.SetMarkerSize(1.2)
         g_ratio.SetLineWidth(1)
+
+    if not plotData and args.shape:
+      doRatio=True
+
+      for i,sample in enumerate(plotDict.keys()):
+          # Signal
+          if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+              model = sample.split("_")[0]
+              mass = sample.split("_")[1].lstrip("M")
+              if "mmumu" not in plotname and mass in massToExclude:
+                  continue
+              if "mmumu" not in plotname:
+                  g_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                  g_signal_temp.SetMarkerStyle(20)
+                  g_signal_temp.SetMarkerSize(1.2)
+                  g_signal_temp.SetLineWidth(1)
+
+                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                  g_signal_temp_clone = g_signal_temp.Clone()
+                  g_signal_temp_clone.SetMarkerSize(0.0)
+
+                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                  g_ratio_signal_temp.SetMarkerStyle(20)
+                  g_ratio_signal_temp.SetMarkerSize(1.2)
+                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model]+i%len(args.signalMass))
+                  g_ratio_signal_temp.SetLineWidth(1)
+                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
+              else:
+                  g_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                  g_signal_temp.SetMarkerStyle(20)
+                  g_signal_temp.SetMarkerSize(1.2)
+                  g_signal_temp.SetLineWidth(1)
+
+                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                  g_signal_temp_clone = g_signal_temp.Clone()
+                  g_signal_temp_clone.SetMarkerSize(0.0)
+
+                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                  g_ratio_signal_temp.SetMarkerStyle(20)
+                  g_ratio_signal_temp.SetMarkerSize(1.2)
+                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model])
+                  g_ratio_signal_temp.SetLineWidth(1)
+                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
 
     for b in range(1,MCplot.GetNbinsX()+1):
         thisPoint = g_ratio_unc.GetN()
@@ -645,16 +703,41 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if logX:
             h_axis_ratio.GetXaxis().SetMoreLogLabels()
             pads[1].SetLogx()
-        h_axis_ratio.Draw("")
-        g_ratio_unc.Draw("SAME,2")
-        g_ratio.Draw("SAME,P0")
+        if plotData:
+            h_axis_ratio.Draw("")
+            g_ratio_unc.Draw("SAME,2")
+            g_ratio.Draw("SAME,P0")
+        else:
+            g_ratio_signal.Draw("SAME,P0")
+            g_ratio_signal.GetXaxis().SetLimits(h_axis.GetXaxis().GetBinLowEdge(1),h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()));
+            g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()));
+            g_ratio_signal.GetHistogram().GetYaxis().SetRangeUser(0.,2.0);
+
+            g_ratio_signal.GetHistogram().SetTitle(";;Signal / MC")
+            g_ratio_signal.GetHistogram().GetYaxis().SetTitleSize(0.16)
+            g_ratio_signal.GetHistogram().GetYaxis().SetTitleOffset(0.25)
+            g_ratio_signal.GetHistogram().GetYaxis().SetLabelSize(0.12)
+            g_ratio_signal.GetHistogram().GetYaxis().CenterTitle()
+            g_ratio_signal.GetHistogram().GetYaxis().SetTickLength(0.02)
+
+            g_ratio_signal.GetHistogram().GetXaxis().SetLabelSize(0)
+            g_ratio_signal.GetHistogram().GetXaxis().SetTitle("")
+            g_ratio_signal.GetHistogram().GetXaxis().SetTickSize(0.06)
+            if logX:
+                if MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
+                  g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+                g_ratio_signal.GetHistogram().GetXaxis().SetMoreLogLabels()
+                pads[1].SetLogx()
+
         #
         line.SetLineStyle(2)
         line.SetLineColor(sampleLineColor["data"])
         line.SetLineWidth(1)
         line.Draw("SAME")
         #
-        pads[1].RedrawAxis()
+        #pads[1].RedrawAxis()
+        pads[1].Modified();
+        pads[1].Update();
 
     else:
         pads.append(ROOT.TPad("1","1",0,0,1,1))
@@ -788,6 +871,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         extension = extension+"_logY"
     if args.shape:
         extension = extension+"_areaNormalized"
+    if args.cumulative:
+        extension = extension+"_cumulative"
     
     canvas.SaveAs(args.outDir + plotname + extension + ".png")
 

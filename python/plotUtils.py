@@ -103,14 +103,14 @@ def SetYBounds(stack, isLog, h_bkg_vec, data_max, xRangeUser):
     else:
         stack.SetMaximum(tmax*1.33)
 
-def ConvertToPoissonGraph(h_data, graph, drawZeros=True, drawXerr=True):
+def ConvertToPoissonGraph(h_data, graph, drawZeros=True, drawXerr=True, drawYerr=True):
 
     alpha = 1-0.6827
 
     for i in range(1,h_data.GetNbinsX()+1):
         x = h_data.GetBinCenter(i)
         xerr = h_data.GetBinWidth(i)/2 if drawXerr else 0.0
-        y = h_data.GetBinContent(i)
+        y = h_data.GetBinContent(i) if drawYerr else 0.0
 
         if y < 0:
             continue
@@ -128,7 +128,7 @@ def ConvertToPoissonGraph(h_data, graph, drawZeros=True, drawXerr=True):
         graph.SetPoint(thisPoint, x, y)
         graph.SetPointError(thisPoint, xerr, xerr, yerrminus, yerrplus)
 
-def GetPoissonRatioGraph(h_mc, h_data, g_ratio, drawZeros=True, drawXerr=True, useMCErr=True):
+def GetPoissonRatioGraph(h_mc, h_data, g_ratio, drawZeros=True, drawXerr=True, drawYerr=True, useMCErr=True):
 
     alpha = 1-0.6827
 
@@ -147,8 +147,8 @@ def GetPoissonRatioGraph(h_mc, h_data, g_ratio, drawZeros=True, drawXerr=True, u
         dataerrdown = 0 if datay==0 else (datay-ROOT.Math.gamma_quantile(alpha/2, datay, 1))
 
         r = datay/mcy
-        rerrup = ROOT.TMath.Sqrt((dataerrup/mcy)**2 + (mcerr*datay/mcy**2)**2)
-        rerrdown = ROOT.TMath.Sqrt((dataerrdown/mcy)**2 + (mcerr*datay/mcy**2)**2)
+        rerrup = ROOT.TMath.Sqrt((dataerrup/mcy)**2 + (mcerr*datay/mcy**2)**2) if drawYerr else 0.0
+        rerrdown = ROOT.TMath.Sqrt((dataerrdown/mcy)**2 + (mcerr*datay/mcy**2)**2) if drawYerr else 0.0
 
         xerr = h_mc.GetBinWidth(i)/2 if drawXerr else 0.0
 
@@ -170,6 +170,24 @@ def GetEfficRatioGraph(hnum, hden, g_ratio):
             thisPoint = g_ratio.GetN()
             g_ratio.SetPoint(thisPoint, x, val)
             g_ratio.SetPointError(thisPoint, xerr, xerr, errdn, errup)
+
+def GetCumulative(h,lowToHighBinsCumulative=True):
+    hout = h.Clone()
+    sumOfBins = 0
+    sumOfBinsError = 0
+    if lowToHighBinsCumulative:
+        for i in range(1, h.GetNbinsX()+1):
+            sumOfBins = sumOfBins + h.GetBinContent(i)
+            sumOfBinsError = (sumOfBinsError*sumOfBinsError + h.GetBinError(i)*h.GetBinError(i))**0.5
+            hout.SetBinContent(i,sumOfBins)
+            hout.SetBinError(i,sumOfBinsError)
+    else:
+        for i in range(h.GetNbinsX(),0,-1):
+            sumOfBins = sumOfBins + h.GetBinContent(i)
+            sumOfBinsError = (sumOfBinsError*sumOfBinsError + h.GetBinError(i)*h.GetBinError(i))**0.5
+            hout.SetBinContent(i,sumOfBins)
+            hout.SetBinError(i,sumOfBinsError)
+    return hout
 
 def DrawCmsText(canvas, text="CMS Preliminary", textFont=62, textSize=0.035, insideAxes=False):
     ttext = ROOT.TLatex()
