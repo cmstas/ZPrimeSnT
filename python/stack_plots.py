@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import ROOT
+import numpy
 import copy
 import argparse
 import os
@@ -110,6 +111,7 @@ samples.append("Y3")
 #samples.append("DYp3")
 samples.append("B3mL2")
 # SM MC
+#samples.append("DYbb")
 samples.append("ZToMuMu")
 samples.append("ttbar")
 samples.append("tW")
@@ -129,6 +131,7 @@ sampleFillColor["Y3"]       = None
 sampleFillColor["DY3"]      = None
 sampleFillColor["DYp3"]     = None
 sampleFillColor["B3mL2"]    = None
+sampleFillColor["DYbb"]     = ROOT.kRed
 sampleFillColor["ZToMuMu"]  = ROOT.kGreen+1
 sampleFillColor["ttbar"]    = ROOT.kAzure+1
 sampleFillColor["tW+tZq"]   = ROOT.kAzure+2
@@ -143,6 +146,7 @@ sampleLineColor["Y3"]       = ROOT.kViolet
 sampleLineColor["DY3"]      = ROOT.kMagenta
 sampleLineColor["DYp3"]     = ROOT.kRed
 sampleLineColor["B3mL2"]    = ROOT.kCyan
+sampleLineColor["DYbb"]     = None
 sampleLineColor["ZToMuMu"]  = None
 sampleLineColor["ttbar"]    = None
 sampleLineColor["tW+tZq"]   = None
@@ -157,6 +161,7 @@ sampleLineWidth["Y3"]       = 2
 sampleLineWidth["DY3"]      = 2
 sampleLineWidth["DYp3"]     = 2
 sampleLineWidth["B3mL2"]    = 2
+sampleLineWidth["DYbb"]     = 0
 sampleLineWidth["ZToMuMu"]  = 0
 sampleLineWidth["ttbar"]    = 0
 sampleLineWidth["tW+tZq"]   = 0
@@ -171,6 +176,7 @@ sampleMarkerStyle["Y3"]       = None
 sampleMarkerStyle["DY3"]      = None
 sampleMarkerStyle["DYp3"]     = None
 sampleMarkerStyle["B3mL2"]    = None
+sampleMarkerStyle["DYbb"]     = None
 sampleMarkerStyle["ZToMuMu"]  = None
 sampleMarkerStyle["ttbar"]    = None
 sampleMarkerStyle["tW+tZq"]   = None
@@ -185,6 +191,7 @@ sampleMarkerSize["Y3"]       = None
 sampleMarkerSize["DY3"]      = None
 sampleMarkerSize["DYp3"]     = None
 sampleMarkerSize["B3mL2"]    = None
+sampleMarkerSize["DYbb"]     = None
 sampleMarkerSize["ZToMuMu"]  = None
 sampleMarkerSize["ttbar"]    = None
 sampleMarkerSize["tW+tZq"]   = None
@@ -199,6 +206,7 @@ sampleLegend["Y3"]       = "Y3"
 sampleLegend["DY3"]      = "DY3"
 sampleLegend["DYp3"]     = "DYp3"
 sampleLegend["B3mL2"]    = "B3mL2"
+sampleLegend["DYbb"]     = "DY(#mu#mu)+bb"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
 sampleLegend["tW+tZq"]   = "tW+tZq"
@@ -234,6 +242,49 @@ def get_files(samples,year):
                     sampleDict[sample]=[]
                 sampleDict[sample].append(ROOT.TFile(args.inDir+"output_"+sample+"_"+tyear+".root"))
     return sampleDict
+
+
+def get_nan_plots(sampleDict, plotname):
+    plotDict=OrderedDict()
+    groupedSamples = OrderedDict()
+    tempGroups = OrderedDict()
+    tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
+    tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
+    for sample in sampleDict.keys():
+        if sample in tempGroups["tW+tZq"]:
+            if "tW+tZq" not in groupedSamples.keys():
+                groupedSamples["tW+tZq"]=[]
+            groupedSamples["tW+tZq"].append(sample)
+        elif sample in tempGroups["TTX"]:
+            if "TTX" not in groupedSamples.keys():
+                groupedSamples["TTX"]=[]
+            groupedSamples["TTX"].append(sample)
+        else:
+            groupedSamples[sample] = [sample]
+
+    for gsample in groupedSamples.keys():
+        tplot=None
+        for sample in groupedSamples[gsample]:
+            for tsample in sampleDict.keys():
+                if sample not in tsample:
+                    continue
+                for inFile in sampleDict[tsample]:
+                    if not tplot:
+                        tplot = copy.deepcopy(inFile.Get(plotname))
+                        for b in range(0, tplot.GetNbinsX()+2):
+                            if numpy.isnan(tplot.GetBinContent(b)) or tplot.GetBinContent(b)<0.0 or not numpy.isfinite(tplot.GetBinContent(b)):
+                                tplot.SetBinContent(b,0.0)
+                                tplot.SetBinError(b,0.0)
+                    else:
+                        temphist = inFile.Get(plotname).Clone()
+                        for b in range(0, temphist.GetNbinsX()+2):
+                            if numpy.isnan(temphist.GetBinContent(b)) or temphist.GetBinContent(b)<0.0 or not numpy.isfinite(temphist.GetBinContent(b)):
+                                temphist.SetBinContent(b,0.0)
+                                temphist.SetBinError(b,0.0)
+                        tplot.Add(temphist)
+        plotDict[gsample] = tplot
+
+    return plotDict
 
 
 def get_plots(sampleDict, plotname):
@@ -402,7 +453,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             return(0)
 
     # Get histograms
-    plotDict = get_plots(sampleDict, plotname)
+    plotDict = get_nan_plots(sampleDict, plotname)
     curPlots=OrderedDict()
 
     totalSM = None
@@ -882,8 +933,19 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-year="2018"
-lumi=59.83
+year="all"
+#year="2018"
+lumi=0.0 #fb^-1
+if year == "2018":
+    lumi = 59.83
+elif year == "2017":
+    lumi = 41.48
+elif year == "2016APV":
+    lumi = 19.5
+elif year == "2016nonAPV":
+    lumi = 16.8
+elif year == "all":
+    lumi = 59.83 + 41.48 + 19.5 + 16.8
 # Open files
 sampleDict=get_files(samples,year)
 # List of plots
