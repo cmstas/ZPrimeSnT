@@ -1926,11 +1926,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       if ( isMC && applyBTagSF ) {
         if ( varyBTagSFUp )
-          weight *= btag_up_prob_DATA / btag_prob_MC;
+          weight *= ( btag_up_prob_DATA ==0 || btag_prob_MC == 0 ) ? 1.0 : btag_up_prob_DATA / btag_prob_MC;
         else if ( varyBTagSFDown )
-          weight *= btag_dn_prob_DATA / btag_prob_MC;
+          weight *= ( btag_dn_prob_DATA ==0 || btag_prob_MC == 0 ) ? 1.0 : btag_dn_prob_DATA / btag_prob_MC;
         else
-          weight *= btag_prob_DATA / btag_prob_MC;
+          weight *= ( btag_prob_DATA ==0 || btag_prob_MC == 0 ) ? 1.0 : btag_prob_DATA / btag_prob_MC;
       }
 
       float bjet1_pt = nt.Jet_pt().at(cand_bJets[0]);
