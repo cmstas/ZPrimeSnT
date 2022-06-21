@@ -453,7 +453,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             return(0)
 
     # Get histograms
-    plotDict = get_nan_plots(sampleDict, plotname)
+    #plotDict = get_nan_plots(sampleDict, plotname)
+    plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
 
     totalSM = None
