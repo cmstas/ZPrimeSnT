@@ -12,7 +12,7 @@
   int muonSF=1;
   int triggerSF=1;
   int bTagSF=1;
-  int JECUnc=1;
+  int JECUnc=0; // No central value, set to +/-2 to get variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017

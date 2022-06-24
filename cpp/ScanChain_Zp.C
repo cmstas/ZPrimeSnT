@@ -831,10 +831,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       vector<LorentzVector> Jet_p4 = {};
       for ( unsigned int ijet=0; ijet < nt.nJet(); ijet++ ) {
         LorentzVector jet_p4 = nt.Jet_p4()[ijet];
-        if ( JECUnc!=0 && isMC ) {
+        if ( abs(JECUnc)==2 && isMC ) { // 2 means that variation are to be applied
           jec_unc->setJetEta(jet_p4.eta());
           jec_unc->setJetPt(jet_p4.pt());
-          jet_p4 *= (1. + abs(jec_unc->getUncertainty(JECUnc > 0))); // true = up variation, false = down variation
+          jet_p4 *= ( 1. + jec_unc->getUncertainty(JECUnc > 0) ); // true = up variation, false = down variation
         }
         Jet_p4.push_back(jet_p4);
       }
