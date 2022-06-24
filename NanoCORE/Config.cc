@@ -114,7 +114,6 @@ void GlobalConfig::GetConfigs(int in_year) {
 
         jecEraB = jecEraC = jecEraD = "Summer19UL16APV_RunBCDEF_V7_DATA";
         jecEraE = jecEraF = "Summer19UL16APV_RunBCDEF_V7_DATA";
-        jecEraG = jecEraH = "Summer19UL16APV_RunBCDEF_V7_DATA";
         jecEraMC = "Summer19UL16APV_V7_MC";
 
         // B-tag working points
@@ -137,9 +136,7 @@ void GlobalConfig::GetConfigs(int in_year) {
     } else if (year == 2016 && nanoAOD_ver >= 8 and not isAPV) {
         lumi = 16.81;
 
-        jecEraB = jecEraC = jecEraD = "Summer19UL16_RunBCDEFGH_Combined_V7_DATA";
-        jecEraE = jecEraF = "Summer19UL16_RunBCDEFGH_Combined_V7_DATA";
-        jecEraG = jecEraH = "Summer19UL16_RunBCDEFGH_Combined_V7_DATA";
+        jecEraF = jecEraG = jecEraH = "Summer19UL16_RunFGH_V7_DATA";
         jecEraMC = "Summer19UL16_V7_MC";
 
         // B-tag working points

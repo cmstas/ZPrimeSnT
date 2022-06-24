@@ -2,6 +2,18 @@
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
   gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
 
+  // Event weights / scale factors:
+  //  0: Do not apply
+  //  1: Apply central value
+  // +2: Apply positive variation
+  // -2: Apply negative variation
+  int topPtWeight=1;
+  int PUWeight=1;
+  int muonSF=1;
+  int triggerSF=1;
+  int bTagSF=1;
+  int JECUnc=0; // No central value, set to +/-2 to get variations
+
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
   // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2018
@@ -177,8 +189,8 @@
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
     }
     cout<<endl;
   }
