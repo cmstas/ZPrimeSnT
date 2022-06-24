@@ -1,6 +1,6 @@
 {
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
-  gROOT->ProcessLine(".L ScanChain_Zprime.C+");  // Macro that performs the selection
+  gROOT->ProcessLine(".L ScanChain_Zprime_thirdlep.C+");  // Macro that performs the selection
 
 
   vector<TString> years = { };
@@ -46,14 +46,14 @@
 						} } } });
   */
   // ttbar
-  /*
+  
   samples.push_back("ttbar");
   sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
   sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  */
+  
   // DY
   //samples.push_back("DY");
   //sample_names.insert({"DY","DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8"});
@@ -63,7 +63,7 @@
   //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
 
   // ZToMuMu
-  /*
+  
   vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
   vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
   for ( unsigned int imass=0; imass<lowM.size(); imass++ )
@@ -75,9 +75,9 @@
                                                                   { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                                                   { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
-  */
+  
   // VV
-  /*
+  
   vector<TString> VV = { "WW", "WZ", "ZZ" };
   for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
   {
@@ -127,9 +127,9 @@
                                                 { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
-*/
+
   // Signals
-  
+  /*
   vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
   vector<TString> sigMass = { "200", "400", "700", "1000", "1500", "2000" };
   
@@ -145,7 +145,7 @@
                                                                   { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
     }
   }
-  
+  */
 
   TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/skim2mu_1muPt50_1Mll100_allBranches";
   TString baseSignalDir = baseDir;
