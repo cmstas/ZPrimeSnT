@@ -457,12 +457,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
   // Setting up JEC uncertainties
   JetCorrectionUncertainty* jec_unc = new JetCorrectionUncertainty(
-        "../NanoCORE/Tools/jetcorr/data/"
-        + gconf.jecEraMC 
-        + "/"
-        + gconf.jecEraMC
-        + "_Uncertainty_AK4PFchs.txt"
-    );
+    "../NanoCORE/Tools/jetcorr/data/"
+    + gconf.jecEraMC 
+    + "/"
+    + gconf.jecEraMC
+    + "_Uncertainty_AK4PFchs.txt"
+  );
 
   int nEventsTotal = 0;
   int nDuplicates = 0;
@@ -547,7 +547,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  }
 	  weight *= TMath::Sqrt(topweight);
 	}
-
       }
 
       unsigned int runnb = nt.run();
@@ -777,10 +776,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       // Apply trigger SF:
       if ( isMC && triggerSF!=0 )  {
- 	 if ( triggerWeight < 0.0 )
- 	   weight *= 0.0;
- 	 else
- 	   weight *= triggerWeight;
+        if ( triggerWeight < 0.0 )
+ 	  weight *= 0.0;
+ 	else
+ 	  weight *= triggerWeight;
       }
 
       label = "HLT";
@@ -828,17 +827,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       if ( nt.nMuon()>0 && Muon_pt.at(0)>13000.0 )
 	continue;
 
-  // Application of JEC uncertainties
-  vector<LorentzVector> Jet_p4 = {};
-  for ( unsigned int ijet=0; ijet < nt.nJet(); ijet++ ) {
-    LorentzVector jet_p4 = nt.Jet_p4()[ijet];
-    if ( JECUnc!=0 && isMC ) {
-      jec_unc->setJetEta(jet_p4.eta());
-      jec_unc->setJetPt(jet_p4.pt());
-      jet_p4 *= (1. + abs(jec_unc->getUncertainty(JECUnc > 0))); // true = up variation, false = down variation
-    }
-    Jet_p4.push_back(jet_p4);
-  }
+      // Application of JEC uncertainties
+      vector<LorentzVector> Jet_p4 = {};
+      for ( unsigned int ijet=0; ijet < nt.nJet(); ijet++ ) {
+        LorentzVector jet_p4 = nt.Jet_p4()[ijet];
+        if ( JECUnc!=0 && isMC ) {
+          jec_unc->setJetEta(jet_p4.eta());
+          jec_unc->setJetPt(jet_p4.pt());
+          jet_p4 *= (1. + abs(jec_unc->getUncertainty(JECUnc > 0))); // true = up variation, false = down variation
+        }
+        Jet_p4.push_back(jet_p4);
+      }
 
       // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
       if ( !isMC )
@@ -1697,7 +1696,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    max_mbb = mbb;
 	  }
 	}
-
       }
 
       // Add histos: sel8
