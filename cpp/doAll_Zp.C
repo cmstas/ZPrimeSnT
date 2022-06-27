@@ -7,6 +7,7 @@
   //  1: Apply central value
   // +2: Apply positive variation
   // -2: Apply negative variation
+  int prefireWeight=1; // +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
   int topPtWeight=1;
   int PUWeight=1;
   int muonSF=1;
@@ -189,8 +190,8 @@
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
     }
     cout<<endl;
   }

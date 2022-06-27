@@ -96,7 +96,7 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int topPtWeight=1, int PUWeight=1, int muonSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0) {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0) {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
@@ -515,7 +515,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
-	weight *= nt.L1PreFiringWeight_Muon_Nom();
+  if ( prefireWeight!=0 ) {
+    if ( prefireWeight==1 ) weight *= nt.L1PreFiringWeight_Muon_Nom();
+    if ( prefireWeight==2 ) weight *= nt.L1PreFiringWeight_Muon_SystUp(); // Syst unc. up --> Possibly merge with Stat up?
+    if ( prefireWeight==3 ) weight *= nt.L1PreFiringWeight_Muon_StatUp(); // Stat unc. up --> Possibly merge with Syst up?
+    if ( prefireWeight==-2 ) weight *= nt.L1PreFiringWeight_Muon_SystDn(); // Syst unc. dn --> Possibly merge with Stat dn?
+    if ( prefireWeight==-3 ) weight *= nt.L1PreFiringWeight_Muon_StatDn(); // Stat unc. dn --> Possibly merge with Syst dn?
+  }
 
 	// Apply PU reweight
 	if ( PUWeight!=0 ) {
