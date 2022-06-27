@@ -47,7 +47,7 @@
 #define Zmass 91.1876
 
 // For testing purposes only
-bool useOnlyRun2018B = true;
+bool useOnlyRun2018B = false;
 
 // Looper setup flags
 bool muonDebug = false;
@@ -1182,9 +1182,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
       icutflow++;
 
       // HLT selection
-      if ( (year=="2016nonAPV" || year=="2016APV") && !( nt.HLT_Mu50() || nt.HLT_TkMu50() ) ) continue;
-      if ( (year=="2017" || year=="2018") && !(nt.HLT_Mu50() || nt.HLT_OldMu100() || nt.HLT_TkMu100()) ) continue;
-
+      if ( (year=="2016nonAPV" || year=="2016APV") &&
+              !( (tree->GetBranch("HLT_Mu50") ? nt.HLT_Mu50() : 0)
+                || (tree->GetBranch("HLT_TkMu50") ? nt.HLT_TkMu50() : 0) ) ) continue;
+       if ( (year=="2017" || year=="2018") &&
+               !( (tree->GetBranch("HLT_Mu50") ? nt.HLT_Mu50() : 0)
+                 || (tree->GetBranch("HLT_OldMu100") ? nt.HLT_OldMu100() : 0)
+                 || (tree->GetBranch("HLT_TkMu100") ? nt.HLT_TkMu100() : 0) ) ) continue;
+                 
       // Apply trigger SF:
       if ( isMC && applyTriggerSF )  {
 	if ( triggerSF < 0.0 )
@@ -1239,7 +1244,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	continue;
 
       // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
-      if ( !isMC )
+      if ( !isMC && useOnlyRun2018B)
 	if ( runnb >= HEM_startRun )
 	  continue;
 
