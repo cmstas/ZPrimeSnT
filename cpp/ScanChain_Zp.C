@@ -53,8 +53,8 @@ bool useOnlyRun2018B = false;
 bool muonDebug = false;
 bool doMllBins = false;
 bool doNbTagBins = true;
-bool doTTEnriched = true;
-bool doDYEnriched = true;
+bool doTTEnriched = false;
+bool doDYEnriched = false;
 bool doMuDetRegionBins = false;
 
 // General flags
@@ -982,7 +982,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(mu));
 	//
         bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
-        bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
+        bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 ) && (fabs(nt.Muon_dxy().at(mu))<0.02) && (fabs(nt.Muon_dz().at(mu))<0.1);
 	bool mu_pt = false;
 	bool mu_relIso = false;
         if ( mu_trk_and_global && mu_id ) {
@@ -1005,7 +1005,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 	    Muon_tkRelIso[mu] *= nt.Muon_tunepRelPt().at(mu);
 	  }
 	  mu_pt = ( Muon_pt.at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-	  mu_relIso = ( Muon_tkRelIso.at(mu) < 0.1 );
+	  mu_relIso = ( Muon_tkRelIso.at(mu) < 0.05 && (Muon_tkRelIso.at(mu) * Muon_pt.at(mu)) <5);
           if ( mu_pt ) {
             nMu_pt++;
             cand_muons_id_pteta.push_back(mu);
@@ -1273,7 +1273,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 		break;
 	      if ( nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
 		   nt.Muon_highPtId().at(i) >= 2 &&
-		   Muon_tkRelIso.at(i) < 0.1 &&
+       fabs(nt.Muon_dxy().at(i))<0.02 && 
+       fabs(nt.Muon_dz().at(i))<0.1 &&
+		   Muon_tkRelIso.at(i) < 0.05 &&
+       (Muon_tkRelIso.at(i)*Muon_pt.at(i)) < 5 &&
 		   nt.Muon_eta().at(i) > HEM_region[0] && nt.Muon_eta().at(i) < HEM_region[1] &&
 		   nt.Muon_phi().at(i) > HEM_region[2] && nt.Muon_phi().at(i) < HEM_region[3] ) {
 		hasHEMmuon = true;
@@ -1533,6 +1536,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process) {
 
       auto leadingMu_p4 = Muon_p4.at(leadingMu_idx);
       auto subleadingMu_p4 = Muon_p4.at(subleadingMu_idx);
+
+//      if (nt.Muon_dxy().at(leadingMu_idx)>0.02) cout<<nt.Muon_dxy().at(leadingMu_idx)<<endl;
+
       auto selectedPair_p4 = leadingMu_p4 + subleadingMu_p4;
       float dPhi_ll_MET = fabs(TVector2::Phi_mpi_pi(selectedPair_p4.Phi() - puppimet_phi));
       if ( !(usePuppiMET) )
