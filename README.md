@@ -7,6 +7,7 @@ export SCRAM_ARCH=slc7_amd64_gcc700
 cmsrel CMSSW_10_2_13
 pushd CMSSW_10_2_13/src
 cmsenv
+git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
 git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 pushd HiggsAnalysis/CombinedLimit
 git fetch origin
