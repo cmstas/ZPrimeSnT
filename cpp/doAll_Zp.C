@@ -14,6 +14,7 @@
   int triggerSF=1;
   int bTagSF=1;
   int JECUnc=0; // No central value, set to +/-2 to get variations
+  int JERUnc=0; // No central value, set to +/-2 to get variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -190,8 +191,8 @@
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
     }
     cout<<endl;
   }
