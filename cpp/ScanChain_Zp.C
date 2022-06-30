@@ -264,7 +264,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   selection.push_back("sel3"); // Relative track isolation < 0.1
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
-  selection.push_back("sel6"); // Mmumu > 150 GeV
+  selection.push_back("sel6"); // Mmumu > 175 GeV
   selection.push_back("sel7"); // No extra lepton / isoTrack
   selection.push_back("sel8"); // NbTag >= 1 (medium WP)
   selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
@@ -1378,9 +1378,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	}
       }
 
-      if ( selectedPair_M < 150 ) continue;
+      if ( selectedPair_M < 175 ) continue;
       // Fill histos: sel6
-      label = "m_{#mu#mu}>150 GeV";
+      label = "m_{#mu#mu}>175 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1690,7 +1690,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       else nbtagsel[0] = false;
       if (doNbTagBins) {
         if ( doDYEnriched ) {
-          if (cand_bJets_tight.size() == 0) nbtagsel[1] = true;
+          if (cand_bJets.size() == 0) nbtagsel[1] = true;
           else nbtagsel[1] = false;
           if (cand_bJets_tight.size() == 1 && cand_bJets.size() == 1) nbtagsel[2] = true;
           else nbtagsel[2] = false;

@@ -61,7 +61,7 @@ sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
 sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
 sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
 sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
-sels.append("m_{#mu#mu}>150 GeV")
+sels.append("m_{#mu#mu}>175 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
 sels.append("E_{T}^{miss}<250 GeV, if aligned")
@@ -83,7 +83,7 @@ nsel["sel10"]=12
 nsel["antisel10"]=13
 
 nbbin=dict()
-nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, T WP)"
+nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, M WP)"
 nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
 nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
