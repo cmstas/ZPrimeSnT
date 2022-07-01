@@ -36,6 +36,8 @@ class GlobalConfig {
     std::string jecEraH;
     std::string jecEraMC;
 
+    std::string jerEra;
+
     //_________________________________
     // B-tag working points
     float WP_DeepFlav_tight = -1;

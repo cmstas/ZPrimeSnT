@@ -469,8 +469,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   // Setting up JER uncertainties
   TRandom3 rnd(12345);
   JetResolutionUncertainty* jer_unc = new JetResolutionUncertainty(
-    "../NanoCORE/Tools/jetcorr/data/Summer19UL18_JRV2_MC/Summer19UL18_JRV2_MC_PtResolution_AK4PFchs.txt",
-    "../NanoCORE/Tools/jetcorr/data/Summer19UL18_JRV2_MC/Summer19UL18_JRV2_MC_SF_AK4PFchs.txt"
+    "../NanoCORE/Tools/jetcorr/data/"+gconf.jerEra+"/"+gconf.jerEra+"_PtResolution_AK4PFchs.txt",
+    "../NanoCORE/Tools/jetcorr/data/"+gconf.jerEra+"/"+gconf.jerEra+"_SF_AK4PFchs.txt"
   );
 
   int nEventsTotal = 0;
