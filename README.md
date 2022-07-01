@@ -13,7 +13,9 @@ pushd HiggsAnalysis/CombinedLimit
 git fetch origin
 git checkout v8.2.0
 scramv1 b clean; scramv1 b # always make a clean build
-popd; popd
+popd
+scram b
+popd
 pushd NanoCORE
 make -j12
 popd
