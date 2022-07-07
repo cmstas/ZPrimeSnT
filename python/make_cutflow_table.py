@@ -73,6 +73,7 @@ def reformat_label(tlabel):
     tlabel = tlabel.replace("|eta|","$|\\eta|$")
     tlabel = tlabel.replace("m_{#mu#mu}","$m_{\\mu\\mu}$")
     tlabel = tlabel.replace("m_{#mu b}","$m_{\\mu\\mathrm{b}}$")
+    tlabel = tlabel.replace("#mu","$\\mu$")
     tlabel = tlabel.replace("N_{b-tag}","$N_{\\mathrm{b-tag}}$")
     tlabel = tlabel.replace("p_{T}","$p_{\\mathrm{T}}$")
     tlabel = tlabel.replace("E_{T}^{miss}","$E_{\\mathrm{T}}^{\\mathrm{miss}}$")
