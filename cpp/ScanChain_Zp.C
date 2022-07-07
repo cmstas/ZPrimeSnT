@@ -51,7 +51,8 @@
 #define Zmass 91.1876
 
 // For testing purposes only
-bool useOnlyRun2018B = true;
+bool useOnlyRun2018B = false;
+bool doPartialUnblinding = true;
 
 // Looper setup flags
 bool muonDebug = false;
@@ -59,6 +60,7 @@ bool doMllBins = false;
 bool doNbTagBins = true;
 bool doTTEnriched = false;
 bool doDYEnriched = false;
+bool doOnlyDYEnriched = false;
 bool doMuDetRegionBins = true;
 
 // General flags
@@ -67,7 +69,7 @@ bool removeDataDuplicates = false;
 bool useTuneP = true;
 bool usePuppiMET = true;
 bool fillRooDataSet = true;
-//
+
 // HEM15/16 veto
 bool doHEMveto = true;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
@@ -272,6 +274,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
   selection.push_back("sel10"); // minMlb > 175 GeV
   if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
+  if (doOnlyDYEnriched) doDYEnriched = true;
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
@@ -599,6 +602,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    ++nDuplicates;
 	    continue;
 	  }
+	}
+	// Unblind only 10% of data set
+	if ( doPartialUnblinding && !doOnlyDYEnriched ) {
+	  if ( rnd.Rndm() > 0.1 )
+	    continue;
 	}
       }
 
@@ -961,10 +969,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
 
       // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
-      if ( !isMC )
+      if ( !isMC ) {
 	if ( !doHEMveto && useOnlyRun2018B && runnb >= HEM_startRun )
 	  continue;
-
+      }
       // HEM15/16 veto
       if ( doHEMveto && year == "2018" ) {
 	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC ) ) { //&& evtnb % HEM_fracDen < HEM_fracNum ) ) {
@@ -1755,7 +1763,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( cand_bJets_tight.size() < 1 ) continue;
+      if ( cand_bJets_tight.size() < 1 && !doDYEnriched ) continue;
+      if ( cand_bJets_tight.size() > 0 && !doOnlyDYEnriched ) continue;
 
       if ( isMC && bTagSF!=0 ) {
         if ( bTagSF==2 )
@@ -1766,10 +1775,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           weight *= ( btag_prob_DATA ==0 || btag_prob_MC == 0 ) ? 1.0 : btag_prob_DATA / btag_prob_MC;
       }
 
-      float bjet1_pt = Jet_p4.at(cand_bJets[0]).Pt();
+      float bjet1_pt = (cand_bJets.size() > 0 ? Jet_p4.at(cand_bJets[0]).Pt() : -1.0);
       float bjet2_pt = (cand_bJets.size() > 1 ? Jet_p4.at(cand_bJets[1]).Pt() : -1.0);
-      float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
-      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
+      float bjet1_eta = (cand_bJets.size() > 0 ? nt.Jet_eta().at(cand_bJets[0]) : -999.0);
+      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -999.0);
 
       // Construct mlb pairs from selected muon pair and candidate b jets
       float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9, minDPhi_l_b = 1e9;
@@ -1873,7 +1882,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Fill histos: sel8
       label = ">0 b-tag (Tight+Mediums WP)";
       slicedlabel = "";
-      h_cutflow->Fill(icutflow,weight*factor);
+      if ( cand_bJets_tight.size() >= 1 )
+	h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -1913,7 +1923,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Fill histos: sel9
       label = "E_{T}^{miss}<250 GeV (if aligned)";
       slicedlabel = label;
-      h_cutflow->Fill(icutflow,weight*factor);
+      if ( cand_bJets_tight.size() >= 1 )
+	h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -1945,7 +1956,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	// Fill histos: sel10
 	label = "min m_{#mu b}>175 GeV";
 	slicedlabel = label;
-	h_cutflow->Fill(icutflow,weight*factor);
+	if ( cand_bJets_tight.size() >= 1 )
+	  h_cutflow->Fill(icutflow,weight*factor);
 	h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
