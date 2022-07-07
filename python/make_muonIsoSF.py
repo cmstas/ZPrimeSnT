@@ -17,7 +17,7 @@ def print_header(fout):
     fout.write('map<TString,map<TString,map<TString,float>>> isosfunc = { };\n')
     fout.write('\n')
     tf = ROOT.TFile(indir+"/Efficiencies_muon_generalTracks_Z_Run2018_UL_ISO.root")
-    th   = tf.Get("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut_abseta_pt").Clone("thist")
+    th   = tf.Get("NUM_TightRelTkIso_DEN_HighPtIDandIPCut_abseta_pt").Clone("thist")
     fout.write('constexpr int nptbins_iso = '+str(th.GetNbinsY())+';\n')
     fout.write('constexpr int netabins_iso = '+str(th.GetNbinsX())+';\n')
     fout.write('\n')
@@ -69,7 +69,7 @@ def get_muonIsoSF(fout, year = "2018"):
         os.makedirs(outdir)
 
     tf = ROOT.TFile(indir+"/Efficiencies_muon_generalTracks_Z_Run"+year+"_UL_ISO.root")
-    th   = tf.Get("NUM_LooseRelTkIso_DEN_HighPtIDandIPCut_abseta_pt").Clone("thist")
+    th   = tf.Get("NUM_TightRelTkIso_DEN_HighPtIDandIPCut_abseta_pt").Clone("thist")
     sfname = "isosf"
     uncname = "isosfunc"
     fout.write('\t'+sfname +'.insert({"'+year+'", { }});\n')
