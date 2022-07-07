@@ -7,12 +7,14 @@
   //  1: Apply central value
   // +2: Apply positive variation
   // -2: Apply negative variation
+  int prefireWeight=1; // +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
   int topPtWeight=1;
   int PUWeight=1;
   int muonSF=1;
   int triggerSF=1;
   int bTagSF=1;
   int JECUnc=0; // No central value, set to +/-2 to get variations
+  int JERUnc=0; // No central value, set to +/-2 to get variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -189,8 +191,8 @@
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
     }
     cout<<endl;
   }

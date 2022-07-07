@@ -116,6 +116,8 @@ void GlobalConfig::GetConfigs(int in_year) {
         jecEraE = jecEraF = "Summer19UL16APV_RunBCDEF_V7_DATA";
         jecEraMC = "Summer19UL16APV_V7_MC";
 
+        jerEra = "Summer20UL16APV_JRV3_MC";
+
         // B-tag working points
         // https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16preVFP
         WP_DeepFlav_tight = 0.6502;
@@ -138,6 +140,8 @@ void GlobalConfig::GetConfigs(int in_year) {
 
         jecEraF = jecEraG = jecEraH = "Summer19UL16_RunFGH_V7_DATA";
         jecEraMC = "Summer19UL16_V7_MC";
+
+        jerEra = "Summer20UL16_JRV3_MC";
 
         // B-tag working points
         // https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL16postVFP
@@ -190,6 +194,8 @@ void GlobalConfig::GetConfigs(int in_year) {
         jecEraF = "Summer19UL17_RunF_V5_DATA";
         // https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC#Recommended_for_MC
         jecEraMC = "Summer19UL17_V5_MC";
+
+        jerEra = "Summer19UL17_JRV2_MC";
 
         // B-tag working points
         // https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL17
@@ -246,6 +252,8 @@ void GlobalConfig::GetConfigs(int in_year) {
         jecEraC = "Summer19UL18_RunC_V5_DATA";
         jecEraD = "Summer19UL18_RunD_V5_DATA";
         jecEraMC = "Summer19UL18_V5_MC";
+
+        jerEra = "Summer19UL18_JRV2_MC";
 
         // B-tag working points
         // https://twiki.cern.ch/twiki/bin/view/CMS/BtagRecommendation106XUL18#AK4_b_tagging
