@@ -95,7 +95,6 @@ for y in years:
                 card.write("lumi lnN 1.016 -\n") #2.5% uncertainty on signal (fully correlated)
                 card.write("sig_normsyst lnN 1.05 -\n") #10% example systematic uncertainty on signal (fully correlated)
                 card.write("sig_mcstat lnN %f -\n"%(1.0+mcstatunc)) #MC stat. uncertainty
-                card.write("bg_normsyst lnU - 2.0\n") #Floating background normalization
                 card.write("\n")
                 card.write("pdf_index_%s_%s_%s discrete\n"%(d,ext,y))
                 card.close()
