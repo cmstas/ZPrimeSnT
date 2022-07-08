@@ -52,6 +52,10 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
 
   int mdir = mkdir(outDir,0755);
 
+  double minmass = 175.0;
+  double maxmass = 6500.0;
+  double minMforFit = minmass;
+
   if ( isSignal ) {
     set_widths();
 
@@ -67,7 +71,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     double p0 = 8.53e-06;
     double p1 = 2.27e-02;
     double p2 = -2.22;
-    TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",175.0,3000.0);
+    TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",minmass,maxmass);
     fstddev->SetParameter(0, p0);
     fstddev->SetParameter(1, p1);
     fstddev->SetParameter(2, p2);
@@ -86,7 +90,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = 2.58e-04;
     p1 = 6.89e-01;
-    TF1 *falphaR = new TF1("falphaR","[0]*x+[1]",175.0,3000.0);
+    TF1 *falphaR = new TF1("falphaR","[0]*x+[1]",minmass,maxmass);
     falphaR->SetParameter(0, p0);
     falphaR->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -101,7 +105,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = -6.42e-05;
     p1 = -1.20;
-    TF1 *falphaL = new TF1("falphaL","[0]*x+[1]",175.0,3000.0);
+    TF1 *falphaL = new TF1("falphaL","[0]*x+[1]",minmass,maxmass);
     falphaL->SetParameter(0, p0);
     falphaL->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -117,7 +121,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = -8.94e-04;
     p1 = 3.21;
-    TF1 *fnR = new TF1("fnR","[0]*x+[1]",175.0,3000.0);
+    TF1 *fnR = new TF1("fnR","[0]*x+[1]",minmass,maxmass);
     fnR->SetParameter(0, p0);
     fnR->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -132,7 +136,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = 2.33e-03;
     p1 = 6.13;
-    TF1 *fnL = new TF1("fnL","[0]*x+[1]",175.0,3000.0);
+    TF1 *fnL = new TF1("fnL","[0]*x+[1]",minmass,maxmass);
     fnL->SetParameter(0, p0);
     fnL->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -148,7 +152,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = -9.54e-05;
     p1 = 2.19e-01;
-    TF1 *ffracR = new TF1("ffracR","[0]*x+[1]",175.0,3000.0);
+    TF1 *ffracR = new TF1("ffracR","[0]*x+[1]",minmass,maxmass);
     ffracR->SetParameter(0, p0);
     ffracR->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -163,7 +167,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     //
     p0 = 4.12e-05;
     p1 = 5.44e-01;
-    TF1 *ffracL = new TF1("ffracL","[0]*x+[1]",175.0,3000.0);
+    TF1 *ffracL = new TF1("ffracL","[0]*x+[1]",minmass,maxmass);
     ffracL->SetParameter(0, p0);
     ffracL->SetParameter(1, p1);
     if ( !useFixedSigma ) {
@@ -172,7 +176,6 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
       maxfracL = 1.25*fracL;
     }
 
-    double minMforFit = 175.0;
     TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
 
     //////Get RooRealVar from RooDataSet
@@ -465,7 +468,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     double p0 = 8.53e-06;
     double p1 = 2.27e-02;
     double p2 = -2.22;
-    TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",175.0,3000.0);
+    TF1 *fstddev = new TF1("fstddev","[0]*x*x+[1]*x+[2]",minmass,maxmass);
     fstddev->SetParameter(0, p0);
     fstddev->SetParameter(1, p1);
     fstddev->SetParameter(2, p2);
@@ -477,7 +480,6 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     double binsize = 0.1*stddev;
     double binsizePlot = 1.0*stddev;
 
-    double minMforFit = 175.0;
     //////Get RooRealVar from RooDataSet
     TString fitRange = Form("%f < mfit && mfit < %f",std::max(minMforFit,mass-10.0*stddev),mass+10.0*stddev);
     //////Get RooRealVar from RooDataSet

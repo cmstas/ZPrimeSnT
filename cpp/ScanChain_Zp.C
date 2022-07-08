@@ -61,7 +61,7 @@ bool doNbTagBins = true;
 bool doTTEnriched = false;
 bool doDYEnriched = false;
 bool doOnlyDYEnriched = false;
-bool doMuDetRegionBins = true;
+bool doMuDetRegionBins = false;
 
 // General flags
 bool removeSpikes = true;
@@ -233,7 +233,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   bool MuDetRegionSel[MuDetRegionBins];
 
   // Define RooDataSet's for fit
-  RooRealVar mfit("mfit", "mfit", 150.0, 3000.0);
+  RooRealVar mfit("mfit", "mfit", 150.0, 6500.0);
   RooRealVar roow("roow", "roow", 0.0, 100.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -265,7 +265,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   selection.push_back("sel0"); // Skimming + HLT + Good PV
   selection.push_back("sel1"); // 2 high-pT ID muons with |dxy|<0.02 cm && |dz|<0.1 cm
   selection.push_back("sel2"); // pT > 53 GeV && |eta| < 2.4 muons
-  selection.push_back("sel3"); // Relative track isolation < 0.1
+  selection.push_back("sel3"); // Relative track isolation < 0.05 && absolute track isolation < 5 GeV
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
   selection.push_back("sel6"); // Mmumu > 175 GeV
@@ -478,6 +478,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     "../NanoCORE/Tools/jetcorr/data/"+gconf.jerEra+"/"+gconf.jerEra+"_SF_AK4PFchs.txt"
   );
 
+  // Setting up partial unblinding
+  TRandom3 rnd_data(12345);
+
   int nEventsTotal = 0;
   int nDuplicates = 0;
   int nEventsChain = ch->GetEntries();
@@ -604,8 +607,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  }
 	}
 	// Unblind only 10% of data set
+
 	if ( doPartialUnblinding && !doOnlyDYEnriched ) {
-	  if ( rnd.Rndm() > 0.1 )
+	  if ( rnd_data.Rndm() > 0.1 )
 	    continue;
 	}
       }
@@ -646,7 +650,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
 	bool mu_pt = false;
 	bool mu_iso = false;
-        if ( mu_trk_and_global && mu_id && fabs(nt.Muon_dxy().at(mu))<0.02 && fabs(nt.Muon_dxy().at(mu))<0.1 ) {
+        if ( mu_trk_and_global && mu_id && fabs(nt.Muon_dxy().at(mu))<0.02 && fabs(nt.Muon_dz().at(mu))<0.1 ) {
           nMu_id++;
           cand_muons_id.push_back(mu);
 	  if ( useTuneP ) {
