@@ -51,7 +51,8 @@
 #define Zmass 91.1876
 
 // For testing purposes only
-bool useOnlyRun2018B = true;
+bool useOnlyRun2018B = false;
+bool doPartialUnblinding = true;
 
 // Looper setup flags
 bool muonDebug = false;
@@ -59,6 +60,7 @@ bool doMllBins = false;
 bool doNbTagBins = true;
 bool doTTEnriched = false;
 bool doDYEnriched = false;
+bool doOnlyDYEnriched = false;
 bool doMuDetRegionBins = false;
 
 // General flags
@@ -67,15 +69,16 @@ bool removeDataDuplicates = false;
 bool useTuneP = true;
 bool usePuppiMET = true;
 bool fillRooDataSet = true;
-//
+
 // HEM15/16 veto
 bool doHEMveto = true;
 float HEM_region[4] = {-3.2, -1.3, -1.57, -0.87}; // etalow, etahigh, philow, phihigh
 unsigned int HEM_startRun = 319077; // affects 38.75 out of 59.83 fb-1 in 2018
 unsigned int HEM_fracNum = 1205, HEM_fracDen = 1860; // 38.75/59.83 = 0.648 ~= 1205/1860. Used for figuring out if we should veto MC events
+float HEM_frac = 0.648;
 bool useHEMjets      = true;
 float HEM_jetPtCut = 20.0;  // veto on jets above this threshold
-bool useHEMmuons     = true;
+bool useHEMmuons     = false;
 bool useHEMelectrons = true;
 float HEM_lepPtCut = 10.0;  // veto on leptons above this threshold
 bool useHEMisotracks = false;
@@ -116,6 +119,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   // SM processes and cross-sections:
   else if ( process == "ttbar" )             xsec = 87310.0; // fb
   else if ( process == "DY" )                xsec = 5765400.0; // fb
+  else if ( process == "DYbb" )              xsec = 14670.0; // fb
   else if ( process == "ZToMuMu_50_120" )    xsec = 2112904.0; // fb
   else if ( process == "ZToMuMu_120_200" )   xsec = 20553.0; // fb
   else if ( process == "ZToMuMu_200_400" )   xsec = 2886.0; // fb
@@ -229,8 +233,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   bool MuDetRegionSel[MuDetRegionBins];
 
   // Define RooDataSet's for fit
-  RooRealVar mfit("mfit", "mfit", 150.0, 3000.0);
-  RooRealVar roow("roow", "roow", 1.0);
+  RooRealVar mfit("mfit", "mfit", 150.0, 6500.0);
+  RooRealVar roow("roow", "roow", 0.0, 100.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -238,7 +242,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
 	TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
 	if ( fillRooDataSet )
-	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar(roow))});
+	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar("roow"))});
       }
     }
   }
@@ -259,9 +263,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   // Define selection
   vector<TString> selection = { };
   selection.push_back("sel0"); // Skimming + HLT + Good PV
-  selection.push_back("sel1"); // 2 high-pT ID muons
+  selection.push_back("sel1"); // 2 high-pT ID muons with |dxy|<0.02 cm && |dz|<0.1 cm
   selection.push_back("sel2"); // pT > 53 GeV && |eta| < 2.4 muons
-  selection.push_back("sel3"); // Relative track isolation < 0.1
+  selection.push_back("sel3"); // Relative track isolation < 0.05 && absolute track isolation < 5 GeV
   selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
   selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
   selection.push_back("sel6"); // Mmumu > 175 GeV
@@ -270,6 +274,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
   selection.push_back("sel10"); // minMlb > 175 GeV
   if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
+  if (doOnlyDYEnriched) doDYEnriched = true;
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
@@ -473,6 +478,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     "../NanoCORE/Tools/jetcorr/data/"+gconf.jerEra+"/"+gconf.jerEra+"_SF_AK4PFchs.txt"
   );
 
+  // Setting up partial unblinding
+  TRandom3 rnd_data(12345);
+
   int nEventsTotal = 0;
   int nDuplicates = 0;
   int nEventsChain = ch->GetEntries();
@@ -495,8 +503,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     int icutflow = 0;
     TString label = "Total";
     TString slicedlabel = label;
-    if ( isMC )
-      h_cutflow->Fill(icutflow,xsec*lumi);
+    if ( isMC ) {
+      if ( process!="DYbb") {
+	h_cutflow->Fill(icutflow,xsec*lumi);
+      }
+      else {
+	h_cutflow->Fill(icutflow,2./3.*xsec*lumi);
+      }
+    }
     h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
     for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -521,10 +535,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       if ( isMC ) {
 	weight = nt.genWeight();
 	if(removeSpikes && weight*factor>1e2) continue;
+	if (process=="DYbb") {
+	  int nGluons = 0;
+	  for ( unsigned int p=0; p<nt.nLHEPart(); p++ ) {
+	    if ( nt.LHEPart_pdgId().at(p)==21 && nt.LHEPart_status().at(p)==-1 ) nGluons+=1;
+	  }
+	  if ( nGluons != 2 )
+	    continue;
+	}
 
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
-  if ( prefireWeight!=0 ) {
+  if ( prefireWeight!=0 && process!="DYbb") {
     if ( prefireWeight==1 ) weight *= nt.L1PreFiringWeight_Muon_Nom();
     if ( prefireWeight==2 ) weight *= nt.L1PreFiringWeight_Muon_SystUp(); // Syst unc. up --> Possibly merge with Stat up?
     if ( prefireWeight==3 ) weight *= nt.L1PreFiringWeight_Muon_StatUp(); // Stat unc. up --> Possibly merge with Syst up?
@@ -584,6 +606,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    continue;
 	  }
 	}
+	// Unblind only 10% of data set
+
+	if ( doPartialUnblinding && !doOnlyDYEnriched ) {
+	  if ( rnd_data.Rndm() > 0.1 )
+	    continue;
+	}
       }
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
@@ -621,8 +649,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         bool mu_trk_and_global = ( nt.Muon_isGlobal().at(mu) && nt.Muon_isTracker().at(mu) );
         bool mu_id = ( nt.Muon_highPtId().at(mu) >= 2 );
 	bool mu_pt = false;
-	bool mu_relIso = false;
-        if ( mu_trk_and_global && mu_id ) {
+	bool mu_iso = false;
+        if ( mu_trk_and_global && mu_id && fabs(nt.Muon_dxy().at(mu))<0.02 && fabs(nt.Muon_dz().at(mu))<0.1 ) {
           nMu_id++;
           cand_muons_id.push_back(mu);
 	  if ( useTuneP ) {
@@ -642,11 +670,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    Muon_tkRelIso[mu] *= nt.Muon_tunepRelPt().at(mu);
 	  }
 	  mu_pt = ( Muon_pt.at(mu) > 53 && fabs(nt.Muon_eta().at(mu)) < 2.4 );
-	  mu_relIso = ( Muon_tkRelIso.at(mu) < 0.1 );
+	  mu_iso = ( Muon_tkRelIso.at(mu) < 0.05 && (Muon_tkRelIso.at(mu)) * (Muon_pt.at(mu)) < 5.0 );
           if ( mu_pt ) {
             nMu_pt++;
             cand_muons_id_pteta.push_back(mu);
-            if ( mu_relIso ) {
+            if ( mu_iso ) {
               nMu_iso++;
               cand_muons.push_back(mu);
             }
@@ -667,7 +695,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    weight *= get_muonRecoSF(Muon_p4.at(mu).P(), Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
 	    if ( mu_id ) {
 	      weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	      if ( mu_relIso ) {
+	      if ( mu_iso ) {
 		weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
 	      }
 	    }
@@ -824,18 +852,32 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // MET filters: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#UL_data
-      if ( // process.Contains("data") &&
-	  !( nt.Flag_goodVertices()>=1 &&
-	     nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
-	     nt.Flag_HBHENoiseFilter()>=1 &&
-	     nt.Flag_HBHENoiseIsoFilter()>=1 &&
-	     nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
-	     nt.Flag_BadPFMuonFilter()>=1 &&
-	     nt.Flag_BadPFMuonDzFilter()>=1 &&
-	     nt.Flag_eeBadScFilter()>=1 &&
-	     ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
-	     ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
-	   ) continue;
+      if ( process != "DYbb" ) { //v9
+	if ( // process.Contains("data") &&
+	    !( nt.Flag_goodVertices()>=1 &&
+	       nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
+	       nt.Flag_HBHENoiseFilter()>=1 &&
+	       nt.Flag_HBHENoiseIsoFilter()>=1 &&
+	       nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
+	       nt.Flag_BadPFMuonFilter()>=1 &&
+	       nt.Flag_BadPFMuonDzFilter()>=1 &&
+	       nt.Flag_eeBadScFilter()>=1 &&
+	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
+	       ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
+	     ) continue;
+      }
+      else {
+	if ( // process.Contains("data") &&
+	    !( nt.Flag_goodVertices()>=1 &&
+	       nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
+	       nt.Flag_HBHENoiseFilter()>=1 &&
+	       nt.Flag_HBHENoiseIsoFilter()>=1 &&
+	       nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
+	       nt.Flag_BadPFMuonFilter()>=1 &&
+	       nt.Flag_eeBadScFilter()>=1 &&
+	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) )
+	     ) continue;
+      }
 
       // Apply extra noise cleaning
       if ( !usePuppiMET ) {
@@ -867,11 +909,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( abs(JERUnc)==2 && isMC ) { // 2 means that variation are to be applied
           jer_unc->setJetEta(jet_p4.eta());
           jer_unc->setJetPt(jet_p4.pt());
-
+	
           float jerSFNom, jerSFVar, smearFactor;
           jerSFNom = jer_unc->getScaleFactor(Variation::NOMINAL);
           jerSFVar = ( JERUnc==2 ) ? jer_unc->getScaleFactor(Variation::UP) : jer_unc->getScaleFactor(Variation::DOWN);
-
+	
           int genJet_idx=-1;
           float drmin = 1e9;
           for ( unsigned int igenjet=0; igenjet < nt.nGenJet(); igenjet++ ) {
@@ -885,27 +927,27 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           }
           if ( drmin < 0.4 ) {
             float dPt = jet_p4.pt() - nt.GenJet_pt().at(genJet_idx);
-
+	
             float smearFactorNom = ( 1.0 + ( jerSFNom - 1.0 ) * dPt / jet_p4.pt() );
             if ( smearFactorNom * jet_p4.E() < 1e-2 ) smearFactorNom = 1e-2 / jet_p4.E();
             float smearFactorVar = ( 1.0 + ( jerSFVar - 1.0 ) * dPt / jet_p4.pt() );
             if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-
+	
             smearFactor = smearFactorVar / smearFactorNom; // Calculate smear factor, taking into account that the nominal correction is already applied. Same in the cases below.
           }
           else {
             jer_unc->setRho(nt.fixedGridRhoFastjetAll());
             float jerRes = jer_unc->getResolution();
-
+	
             float rand = rnd.Gaus(0, jerRes);
             if ( jerSFNom > 1. ) {
               float smearFactorNom = ( 1.0 + rand * TMath::Sqrt( jerSFNom*jerSFNom - 1.0 ) );
               if ( smearFactorNom * jet_p4.E() < 1e-2 ) smearFactorNom = 1e-2 / jet_p4.E();
-
+	
               if ( jerSFVar > 1. ) {
                 float smearFactorVar = ( 1.0 + rand * TMath::Sqrt( jerSFVar*jerSFVar - 1.0 ) );
                 if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-
+	
                 smearFactor = smearFactorVar / smearFactorNom;
               }
               else {
@@ -916,7 +958,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
               if ( jerSFVar > 1. ) {
                 float smearFactorVar = ( 1.0 + rand * TMath::Sqrt( jerSFVar*jerSFVar - 1.0 ) );
                 if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-
+	
                 smearFactor = smearFactorVar;
               }
               else {
@@ -931,13 +973,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
 
       // For test: use Run2018B, with exclusion of HEM15/16 affcted runs:
-      if ( !isMC )
-	if ( runnb >= HEM_startRun )
+      if ( !isMC ) {
+	if ( !doHEMveto && useOnlyRun2018B && runnb >= HEM_startRun )
 	  continue;
-
+      }
       // HEM15/16 veto
       if ( doHEMveto && year == "2018" ) {
-	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC && evtnb % HEM_fracDen < HEM_fracNum ) ) {
+	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC ) ) { //&& evtnb % HEM_fracDen < HEM_fracNum ) ) {
 	  // Jets
 	  bool hasHEMjet = false;
 	  if ( useHEMjets )
@@ -960,7 +1002,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 		break;
 	      if ( nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
 		   nt.Muon_highPtId().at(i) >= 2 &&
-		   Muon_tkRelIso.at(i) < 0.1 &&
+		   fabs(nt.Muon_dxy().at(i)) < 0.02 && fabs(nt.Muon_dz().at(i)) < 0.1 &&
+		   Muon_tkRelIso.at(i) < 0.05 && (Muon_tkRelIso.at(i)) * (Muon_pt.at(i)) < 5.0 &&
 		   nt.Muon_eta().at(i) > HEM_region[0] && nt.Muon_eta().at(i) < HEM_region[1] &&
 		   nt.Muon_phi().at(i) > HEM_region[2] && nt.Muon_phi().at(i) < HEM_region[3] ) {
 		hasHEMmuon = true;
@@ -1003,7 +1046,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    }
 	  // Apply HEM veto
 	  if( hasHEMjet || hasHEMmuon || hasHEMelectron || hasHEMisotrack ) {
-	    continue;
+	    if ( !isMC ) 
+	      continue;
+	    else
+	      weight *= (1.0 - HEM_frac);
 	  }
 	}
       }
@@ -1037,7 +1083,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       if ( !id_req ) continue;
       // Fill histos: sel1
-      label = ">1 muons w/ highPt ID";
+      label = ">1 #mu w/ highPt ID, |dxy|<0.02 cm & |dz|<0.1 cm";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1075,7 +1121,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       if ( !pt_req ) continue;
       // Fill histos: sel2
-      label = ">1 muons w/ pT>53 GeV & |eta|<2.4";
+      label = ">1 #mu w/ pT>53 GeV & |eta|<2.4";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1113,7 +1159,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       if ( !iso_req ) continue;
       // Fill histos: sel3
-      label = ">1 muons w/ track iso./pT<0.1";
+      label = ">1 #mu w/ track iso./pT<0.05 & track iso.<5 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1404,7 +1450,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	     fabs(nt.Muon_eta().at(i)) < 2.4 &&
 	     nt.Muon_isGlobal().at(i) && nt.Muon_isTracker().at(i) &&
 	     nt.Muon_highPtId().at(i) >= 2 &&
-	     Muon_tkRelIso.at(i) < 0.1 &&
+	     fabs(nt.Muon_dxy().at(i)) < 0.02 && fabs(nt.Muon_dz().at(i)) < 0.1 &&
+	     Muon_tkRelIso.at(i) < 0.05 && (Muon_tkRelIso.at(i)) * (Muon_pt.at(i)) < 5.0 &&
 	     !( i == leadingMu_idx || i == subleadingMu_idx)) {
           extra_muons.push_back(i);
         }
@@ -1720,7 +1767,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( cand_bJets_tight.size() < 1 ) continue;
+      if ( cand_bJets_tight.size() < 1 && !doDYEnriched ) continue;
+      if ( cand_bJets_tight.size() > 0 && !doOnlyDYEnriched ) continue;
 
       if ( isMC && bTagSF!=0 ) {
         if ( bTagSF==2 )
@@ -1731,10 +1779,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           weight *= ( btag_prob_DATA ==0 || btag_prob_MC == 0 ) ? 1.0 : btag_prob_DATA / btag_prob_MC;
       }
 
-      float bjet1_pt = Jet_p4.at(cand_bJets[0]).Pt();
+      float bjet1_pt = (cand_bJets.size() > 0 ? Jet_p4.at(cand_bJets[0]).Pt() : -1.0);
       float bjet2_pt = (cand_bJets.size() > 1 ? Jet_p4.at(cand_bJets[1]).Pt() : -1.0);
-      float bjet1_eta = nt.Jet_eta().at(cand_bJets[0]);
-      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -1.0);
+      float bjet1_eta = (cand_bJets.size() > 0 ? nt.Jet_eta().at(cand_bJets[0]) : -999.0);
+      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -999.0);
 
       // Construct mlb pairs from selected muon pair and candidate b jets
       float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9, minDPhi_l_b = 1e9;
@@ -1838,7 +1886,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Fill histos: sel8
       label = ">0 b-tag (Tight+Mediums WP)";
       slicedlabel = "";
-      h_cutflow->Fill(icutflow,weight*factor);
+      if ( cand_bJets_tight.size() >= 1 )
+	h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -1878,7 +1927,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Fill histos: sel9
       label = "E_{T}^{miss}<250 GeV (if aligned)";
       slicedlabel = label;
-      h_cutflow->Fill(icutflow,weight*factor);
+      if ( cand_bJets_tight.size() >= 1 )
+	h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -1910,7 +1960,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	// Fill histos: sel10
 	label = "min m_{#mu b}>175 GeV";
 	slicedlabel = label;
-	h_cutflow->Fill(icutflow,weight*factor);
+	if ( cand_bJets_tight.size() >= 1 )
+	  h_cutflow->Fill(icutflow,weight*factor);
 	h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
 	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
 	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -1920,7 +1971,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 		slicedcutflows[slice]->Fill(icutflow, weight * factor);
 		if ( fillRooDataSet ) {
 		  mfit.setVal(selectedPair_M);
-		  roods[slice].add(RooArgSet(mfit), weight * factor);
+		  roow.setVal(weight*factor);
+		  roods[slice].add(RooArgSet(mfit,roow),roow.getVal());
 		}
 	      }
 	      slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
