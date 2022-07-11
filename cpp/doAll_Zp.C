@@ -2,14 +2,28 @@
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
   gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
 
+  // Event weights / scale factors:
+  //  0: Do not apply
+  //  1: Apply central value
+  // +2: Apply positive variation
+  // -2: Apply negative variation
+  int prefireWeight=1; // +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
+  int topPtWeight=1;
+  int PUWeight=1;
+  int muonSF=1;
+  int triggerSF=1;
+  int bTagSF=1;
+  int JECUnc=0; // No central value, set to +/-2 to get variations
+  int JERUnc=0; // No central value, set to +/-2 to get variations
+
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
   // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2018
   vector<TString> years = { };
   years.push_back("2018");
-  //years.push_back("2017");
-  //years.push_back("2016APV");
-  //years.push_back("2016nonAPV");
+  years.push_back("2017");
+  years.push_back("2016APV");
+  years.push_back("2016nonAPV");
 
   vector<TString> samples = { };
   map<TString,TString> sample_names = { };
@@ -19,10 +33,10 @@
   samples.push_back("data");
   sample_names.insert({"data", "SingleMuon"});
   sample_prod.insert({"data", { { "2018",       {
-						 //"Run2018A-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						 "Run2018A-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
 						 "Run2018B-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
-						 //"Run2018C-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
-						 //"Run2018D-UL2018_MiniAODv2_NanoAODv9_GT36-v1"
+						 "Run2018C-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						 "Run2018D-UL2018_MiniAODv2_NanoAODv9_GT36-v1"
 						} },
                                 { "2017",       {
 						 "Run2017B-UL2017_MiniAODv2_NanoAODv9-v1",
@@ -62,6 +76,14 @@
   //                            { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v2" } }.
   //                            { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
   //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+
+  // DYbb
+  samples.push_back("DYbb");
+  sample_names.insert({"DYbb","DYBBJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8"});
+  sample_prod.insert({"DYbb", { { "2018",       { "RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1" } },
+	                         { "2017",       { "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1" } },
+				 { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
+				 { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
 
   // ZToMuMu
   vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
@@ -171,14 +193,16 @@
       TChain *ch_temp = new TChain("Events");
       TChain *chaux_temp = new TChain("Runs");
       for ( unsigned int d=0; d<sample_prod[sample][year].size(); d++ ) {
+	if (year.Contains("2016") && sample=="DYbb")
+	  sample_names[sample] = "DYBBJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8";
         TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
         ch_temp->Add(dir);
         chaux_temp->Add(dir);
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
     }
     cout<<endl;
   }

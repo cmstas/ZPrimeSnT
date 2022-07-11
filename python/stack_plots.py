@@ -10,6 +10,7 @@ import plotUtils
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
+
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
@@ -51,17 +52,20 @@ testLumi = -1.0
 if args.data:
     testLumi=7.050180294
 
+# Do signal/MC ratio
+doSignalMCRatio = False
+
 # Selection
 sels = []
 sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
 sels.append("HLT selection")
 sels.append("N_{good PV}#geq 1 & E_{T}^{miss} filters")
-sels.append("N_{highPt ID #mu}#geq 2")
+sels.append("N_{highPt ID #mu}#geq 2 (d_{xy, z} < 0.02, 0.1 cm)")
 sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
-sels.append("Track iso./p_{T} (#mu_{1,2})<0.1")
+sels.append("Track iso.(/p_{T})^{#mu_{1,2}}< 5.0 GeV (0.05)")
 sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
 sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
-sels.append("m_{#mu#mu}>150 GeV")
+sels.append("m_{#mu#mu}>175 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
 sels.append("E_{T}^{miss}<250 GeV, if aligned")
@@ -83,7 +87,7 @@ nsel["sel10"]=12
 nsel["antisel10"]=13
 
 nbbin=dict()
-nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, T WP)"
+nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, M WP)"
 nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
 nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
@@ -111,7 +115,7 @@ samples.append("Y3")
 #samples.append("DYp3")
 samples.append("B3mL2")
 # SM MC
-#samples.append("DYbb")
+samples.append("DYbb")
 samples.append("ZToMuMu")
 samples.append("ttbar")
 samples.append("tW")
@@ -358,6 +362,12 @@ def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSiz
         else:
             plot.Rebin(2)
 
+    ### Remove spikes
+    for b in range(1, plot.GetNbinsX()+1):
+        if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
+            plot.SetBinContent(b,0.0)
+            plot.SetBinError(b,0.0)
+
     return plot
 
 
@@ -453,7 +463,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             return(0)
 
     # Get histograms
-    #plotDict = get_nan_plots(sampleDict, plotname)
     plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
 
@@ -658,8 +667,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         g_ratio.SetMarkerSize(1.2)
         g_ratio.SetLineWidth(1)
 
-    if not plotData and args.shape:
-      doRatio=True
+    if not plotData and args.shape and doSignalMCRatio:
+        doRatio=True
 
       for i,sample in enumerate(plotDict.keys()):
           # Signal
