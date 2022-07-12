@@ -670,49 +670,49 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if not plotData and args.shape and doSignalMCRatio:
         doRatio=True
 
-      for i,sample in enumerate(plotDict.keys()):
-          # Signal
-          if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
-              model = sample.split("_")[0]
-              mass = sample.split("_")[1].lstrip("M")
-              if "mmumu" not in plotname and mass in massToExclude:
-                  continue
-              if "mmumu" not in plotname:
-                  g_signal_temp = ROOT.TGraphAsymmErrors()
-                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
-                  g_signal_temp.SetMarkerStyle(20)
-                  g_signal_temp.SetMarkerSize(1.2)
-                  g_signal_temp.SetLineWidth(1)
+        for i,sample in enumerate(plotDict.keys()):
+            # Signal
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+                model = sample.split("_")[0]
+                mass = sample.split("_")[1].lstrip("M")
+                if "mmumu" not in plotname and mass in massToExclude:
+                    continue
+                if "mmumu" not in plotname:
+                    g_signal_temp = ROOT.TGraphAsymmErrors()
+                    plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                    g_signal_temp.SetMarkerStyle(20)
+                    g_signal_temp.SetMarkerSize(1.2)
+                    g_signal_temp.SetLineWidth(1)
 
-                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
-                  g_signal_temp_clone = g_signal_temp.Clone()
-                  g_signal_temp_clone.SetMarkerSize(0.0)
+                    # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                    g_signal_temp_clone = g_signal_temp.Clone()
+                    g_signal_temp_clone.SetMarkerSize(0.0)
 
-                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
-                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
-                  g_ratio_signal_temp.SetMarkerStyle(20)
-                  g_ratio_signal_temp.SetMarkerSize(1.2)
-                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model]+i%len(args.signalMass))
-                  g_ratio_signal_temp.SetLineWidth(1)
-                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
-              else:
-                  g_signal_temp = ROOT.TGraphAsymmErrors()
-                  plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
-                  g_signal_temp.SetMarkerStyle(20)
-                  g_signal_temp.SetMarkerSize(1.2)
-                  g_signal_temp.SetLineWidth(1)
+                    g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                    plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                    g_ratio_signal_temp.SetMarkerStyle(20)
+                    g_ratio_signal_temp.SetMarkerSize(1.2)
+                    g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model]+i%len(args.signalMass))
+                    g_ratio_signal_temp.SetLineWidth(1)
+                    g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
+                else:
+                    g_signal_temp = ROOT.TGraphAsymmErrors()
+                    plotUtils.ConvertToPoissonGraph(curPlots[sample], g_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False)
+                    g_signal_temp.SetMarkerStyle(20)
+                    g_signal_temp.SetMarkerSize(1.2)
+                    g_signal_temp.SetLineWidth(1)
 
-                  # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
-                  g_signal_temp_clone = g_signal_temp.Clone()
-                  g_signal_temp_clone.SetMarkerSize(0.0)
+                    # draw with zero marker size so error bars drawn all the way to x axis in the case of 0 content
+                    g_signal_temp_clone = g_signal_temp.Clone()
+                    g_signal_temp_clone.SetMarkerSize(0.0)
 
-                  g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
-                  plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
-                  g_ratio_signal_temp.SetMarkerStyle(20)
-                  g_ratio_signal_temp.SetMarkerSize(1.2)
-                  g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model])
-                  g_ratio_signal_temp.SetLineWidth(1)
-                  g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
+                    g_ratio_signal_temp = ROOT.TGraphAsymmErrors()
+                    plotUtils.GetPoissonRatioGraph(MCplot, curPlots[sample], g_ratio_signal_temp, drawZeros=False, drawXerr=False, drawYerr=False, useMCErr=False)
+                    g_ratio_signal_temp.SetMarkerStyle(20)
+                    g_ratio_signal_temp.SetMarkerSize(1.2)
+                    g_ratio_signal_temp.SetMarkerColor(sampleLineColor[model])
+                    g_ratio_signal_temp.SetLineWidth(1)
+                    g_ratio_signal.Add(copy.deepcopy(g_ratio_signal_temp))
 
     for b in range(1,MCplot.GetNbinsX()+1):
         thisPoint = g_ratio_unc.GetN()
