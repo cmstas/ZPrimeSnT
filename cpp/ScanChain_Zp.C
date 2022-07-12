@@ -195,6 +195,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       set_goodrun_file_json("../utils/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt");
   }
 
+  if (doOnlyDYEnriched) doDYEnriched = true;
+
   if ( isMC )
     factor = xsec*lumi/genEventSumw;
 
@@ -274,7 +276,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
   selection.push_back("sel10"); // minMlb > 175 GeV
   if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
-  if (doOnlyDYEnriched) doDYEnriched = true;
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
@@ -1735,7 +1736,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
 
       if ( cand_bJets_tight.size() < 1 && !doDYEnriched ) continue;
-      if ( cand_bJets_tight.size() > 0 && !doOnlyDYEnriched ) continue;
+      if ( cand_bJets_tight.size() > 0 && doOnlyDYEnriched ) continue;
 
       if ( isMC && bTagSF!=0 ) {
         if ( bTagSF==2 )
