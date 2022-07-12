@@ -619,7 +619,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
       double pfmet_pt  = pfmet.first;
       double pfmet_phi = pfmet.second;
-      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(nt.PuppiMET_pt(), nt.PuppiMET_phi(), runnb, year, isMC, npv, true, true);
+
+      double puppimet_variation_pt = nt.PuppiMET_pt();
+      double puppimet_variation_phi = nt.PuppiMET_phi();
+      if ( isMC ) {
+        // JEC uncertainties on PUPPI MET
+        if ( JECUnc==2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJESUp();
+          puppimet_variation_phi = nt.PuppiMET_phiJESUp();
+        }
+        if ( JECUnc==-2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJESDown();
+          puppimet_variation_phi = nt.PuppiMET_phiJESDown();
+        }
+        // JER uncertainties on PUPPI MET
+        if ( JERUnc==2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJERUp();
+          puppimet_variation_phi = nt.PuppiMET_phiJERUp();
+        }
+        if ( JERUnc==-2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJERDown();
+          puppimet_variation_phi = nt.PuppiMET_phiJERDown();
+        }
+      }
+      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(puppimet_variation_pt, puppimet_variation_phi, runnb, year, isMC, npv, true, true);
       double puppimet_pt  = puppimet.first;
       double puppimet_phi = puppimet.second;
 
