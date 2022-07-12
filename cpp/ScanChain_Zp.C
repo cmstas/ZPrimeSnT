@@ -619,7 +619,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
       double pfmet_pt  = pfmet.first;
       double pfmet_phi = pfmet.second;
-      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(nt.PuppiMET_pt(), nt.PuppiMET_phi(), runnb, year, isMC, npv, true, true);
+
+      double puppimet_variation_pt = nt.PuppiMET_pt();
+      double puppimet_variation_phi = nt.PuppiMET_phi();
+      if ( isMC ) {
+        // JEC uncertainties on PUPPI MET
+        if ( JECUnc==2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJESUp();
+          puppimet_variation_phi = nt.PuppiMET_phiJESUp();
+        }
+        if ( JECUnc==-2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJESDown();
+          puppimet_variation_phi = nt.PuppiMET_phiJESDown();
+        }
+        // JER uncertainties on PUPPI MET
+        if ( JERUnc==2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJERUp();
+          puppimet_variation_phi = nt.PuppiMET_phiJERUp();
+        }
+        if ( JERUnc==-2 ) {
+          puppimet_variation_pt = nt.PuppiMET_ptJERDown();
+          puppimet_variation_phi = nt.PuppiMET_phiJERDown();
+        }
+      }
+      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(puppimet_variation_pt, puppimet_variation_phi, runnb, year, isMC, npv, true, true);
       double puppimet_pt  = puppimet.first;
       double puppimet_phi = puppimet.second;
 
@@ -906,67 +929,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
 
         // JERs
-        if ( abs(JERUnc)==2 && isMC ) { // 2 means that variation are to be applied
+        if ( isMC ) { // JERUnc == 1 means the nominal value is applied, +/-2 means a variation is applied, anything else means JERs are not applied.
           jer_unc->setJetEta(jet_p4.eta());
           jer_unc->setJetPt(jet_p4.pt());
-	
-          float jerSFNom, jerSFVar, smearFactor;
-          jerSFNom = jer_unc->getScaleFactor(Variation::NOMINAL);
-          jerSFVar = ( JERUnc==2 ) ? jer_unc->getScaleFactor(Variation::UP) : jer_unc->getScaleFactor(Variation::DOWN);
-	
-          int genJet_idx=-1;
-          float drmin = 1e9;
-          for ( unsigned int igenjet=0; igenjet < nt.nGenJet(); igenjet++ ) {
-            float deta = nt.GenJet_eta().at(igenjet) - nt.Jet_eta().at(ijet);
-            float dphi = TVector2::Phi_mpi_pi(nt.GenJet_phi().at(igenjet) - nt.Jet_phi().at(ijet));
-            float dr = TMath::Sqrt( deta*deta+dphi*dphi );
-            if ( dr < drmin ) {
-              drmin = dr;
-              genJet_idx = igenjet;
-            }
-          }
-          if ( drmin < 0.4 ) {
-            float dPt = jet_p4.pt() - nt.GenJet_pt().at(genJet_idx);
-	
-            float smearFactorNom = ( 1.0 + ( jerSFNom - 1.0 ) * dPt / jet_p4.pt() );
-            if ( smearFactorNom * jet_p4.E() < 1e-2 ) smearFactorNom = 1e-2 / jet_p4.E();
-            float smearFactorVar = ( 1.0 + ( jerSFVar - 1.0 ) * dPt / jet_p4.pt() );
-            if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-	
-            smearFactor = smearFactorVar / smearFactorNom; // Calculate smear factor, taking into account that the nominal correction is already applied. Same in the cases below.
-          }
-          else {
-            jer_unc->setRho(nt.fixedGridRhoFastjetAll());
-            float jerRes = jer_unc->getResolution();
-	
-            float rand = rnd.Gaus(0, jerRes);
-            if ( jerSFNom > 1. ) {
-              float smearFactorNom = ( 1.0 + rand * TMath::Sqrt( jerSFNom*jerSFNom - 1.0 ) );
-              if ( smearFactorNom * jet_p4.E() < 1e-2 ) smearFactorNom = 1e-2 / jet_p4.E();
-	
-              if ( jerSFVar > 1. ) {
-                float smearFactorVar = ( 1.0 + rand * TMath::Sqrt( jerSFVar*jerSFVar - 1.0 ) );
-                if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-	
-                smearFactor = smearFactorVar / smearFactorNom;
-              }
-              else {
-                smearFactor = 1.0 / smearFactorNom;
-              }
-            }
-            else {
-              if ( jerSFVar > 1. ) {
-                float smearFactorVar = ( 1.0 + rand * TMath::Sqrt( jerSFVar*jerSFVar - 1.0 ) );
-                if ( smearFactorVar * jet_p4.E() < 1e-2 ) smearFactorVar = 1e-2 / jet_p4.E();
-	
-                smearFactor = smearFactorVar;
-              }
-              else {
-                smearFactor = 1.0;
-              }
-            }
-          }
-          jet_p4 *= smearFactor;
+          jer_unc->setRho(nt.fixedGridRhoFastjetAll());
+          jer_unc->applyJER(jet_p4, JERUnc, nt.GenJet_p4(), rnd);
         }
         
         Jet_p4.push_back(jet_p4);
