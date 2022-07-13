@@ -8,7 +8,7 @@
   // +2: Apply positive variation
   // -2: Apply negative variation
   int prefireWeight=1; // +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
-  int topPtWeight=1;
+  int topPtWeight=1; // bool variable, only have or not have
   int PUWeight=1;
   int muonSF=1;
   int triggerSF=1;
@@ -29,6 +29,12 @@
   map<TString,TString> sample_names = { };
   map<TString,map<TString,vector<TString>>> sample_prod = { };
 
+  bool run_data = 0;
+  bool run_MCbkg = 0;
+  bool run_signal = 1;
+//  bool pick_signal_mass = 0;
+
+  if(run_data){
   // SingleMuon data
   samples.push_back("data");
   sample_names.insert({"data", "SingleMuon"});
@@ -60,7 +66,9 @@
 						 "Run2016G-UL2016_MiniAODv2_NanoAODv9-v1",
 						 "Run2016H-UL2016_MiniAODv2_NanoAODv9-v1",
 						} } } });
+  }
 
+  if(run_MCbkg){
   // ttbar
   samples.push_back("ttbar");
   sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
@@ -156,23 +164,30 @@
                                                 { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
   }
+  }
 
   // Signals
-  vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-  vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
-  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
-  {
-    for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
+  if(run_signal){
+    vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
+//    if (pick_signal_mass) {
+//      vector<TString> sigMass = { "200", "700", "1500" };
+//    }
+//    else {
+      vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
+//    }
+    for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
-      samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
-      sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
-      sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
+      for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
+      {
+        samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
+        sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+        sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
                                                                   { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
                                                                   { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
                                                                   { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
+      }
     }
   }
-
 
   TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches_allFiles";
   TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/"+skimPackage;
