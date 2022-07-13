@@ -66,30 +66,80 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"mu1_dxy", 1.01});
   title.insert({"mu1_dxy", "d_{xy} (leading #mu)"});
 
+  nbins.insert({"mu1_dxyZoom", 200});
+  low.insert({"mu1_dxyZoom", 0.001});
+  high.insert({"mu1_dxyZoom", 0.21});
+  title.insert({"mu1_dxyZoom", "d_{xy} (leading #mu)"});
+
   nbins.insert({"mu2_dxy", 100});
   low.insert({"mu2_dxy", 0.01});
   high.insert({"mu2_dxy", 1.01});
   title.insert({"mu2_dxy", "d_{xy} (subleading #mu)"});
+
+  nbins.insert({"mu2_dxyZoom", 200});
+  low.insert({"mu2_dxyZoom", 0.001});
+  high.insert({"mu2_dxyZoom", 0.21});
+  title.insert({"mu2_dxyZoom", "d_{xy} (leading #mu)"});
 
   nbins.insert({"mu1_dz", 100});
   low.insert({"mu1_dz", 0.01});
   high.insert({"mu1_dz", 1.01});
   title.insert({"mu1_dz", "d_{z} (leading #mu)"});
 
+  nbins.insert({"mu1_dzZoom", 500});
+  low.insert({"mu1_dzZoom", 0.001});
+  high.insert({"mu1_dzZoom", 0.501});
+  title.insert({"mu1_dzZoom", "d_{z} (leading #mu)"});
+
   nbins.insert({"mu2_dz", 100});
   low.insert({"mu2_dz", 0.01});
   high.insert({"mu2_dz", 1.01});
   title.insert({"mu2_dz", "d_{z} (subleading #mu)"});
+
+  nbins.insert({"mu2_dzZoom", 500});
+  low.insert({"mu2_dzZoom", 0.001});
+  high.insert({"mu2_dzZoom", 0.501});
+  title.insert({"mu2_dzZoom", "d_{z} (leading #mu)"});
 
   nbins.insert({"mu1_trkRelIso", 50});
   low.insert({"mu1_trkRelIso", 0.01});
   high.insert({"mu1_trkRelIso", 0.51});
   title.insert({"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"});
 
+  nbins.insert({"mu1_trkRelIsoZoom", 100});
+  low.insert({"mu1_trkRelIsoZoom", 0.001});
+  high.insert({"mu1_trkRelIsoZoom", 0.1});
+  title.insert({"mu1_trkRelIsoZoom", "Track iso./p_{T} (leading #mu)"});
+
+  nbins.insert({"mu1_trkAbsIso", 50});
+  low.insert({"mu1_trkAbsIso", 1.0});
+  high.insert({"mu1_trkAbsIso", 51});
+  title.insert({"mu1_trkAbsIso", "Track iso. (leading #mu)"});
+
+  nbins.insert({"mu1_trkAbsIsoZoom", 100});
+  low.insert({"mu1_trkAbsIsoZoom", 0.1});
+  high.insert({"mu1_trkAbsIsoZoom", 10.0});
+  title.insert({"mu1_trkAbsIsoZoom", "Track iso. (leading #mu)"});
+
   nbins.insert({"mu2_trkRelIso", 50});
   low.insert({"mu2_trkRelIso", 0.01});
   high.insert({"mu2_trkRelIso", 0.51});
   title.insert({"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"});
+
+  nbins.insert({"mu2_trkRelIsoZoom", 100});
+  low.insert({"mu2_trkRelIsoZoom", 0.001});
+  high.insert({"mu2_trkRelIsoZoom", 0.1});
+  title.insert({"mu2_trkRelIsoZoom", "Track iso./p_{T} (leading #mu)"});
+
+  nbins.insert({"mu2_trkAbsIso", 50});
+  low.insert({"mu2_trkAbsIso", 1.0});
+  high.insert({"mu2_trkAbsIso", 51});
+  title.insert({"mu2_trkAbsIso", "Track iso. (subleading #mu)"});
+
+  nbins.insert({"mu2_trkAbsIsoZoom", 100});
+  low.insert({"mu2_trkAbsIsoZoom", 0.1});
+  high.insert({"mu2_trkAbsIsoZoom", 10.0});
+  title.insert({"mu2_trkAbsIsoZoom", "Track iso. (leading #mu)"});
 
   nbins.insert({"nCand_Muons", 4});
   low.insert({"nCand_Muons", 2});
@@ -116,6 +166,11 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   low.insert({"mu3_trkRelIso", 0.01});
   high.insert({"mu3_trkRelIso", 0.51});
   title.insert({"mu3_trkRelIso", "Track iso./p_{T} (third #mu)"});
+
+  nbins.insert({"mu3_trkAbsIso", 50});
+  low.insert({"mu3_trkAbsIso", 1.0});
+  high.insert({"mu3_trkAbsIso", 51});
+  title.insert({"mu3_trkAbsIso", "Track iso. (third #mu)"});
 
   // Extra lepton properties: Electrons
   nbins.insert({"nExtra_electrons", 6});

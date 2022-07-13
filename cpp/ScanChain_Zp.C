@@ -292,11 +292,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     plot_names.push_back("mu1_phi");
     plot_names.push_back("mu2_phi");
     plot_names.push_back("mu1_dxy");
+    plot_names.push_back("mu1_dxyZoom");
     plot_names.push_back("mu2_dxy");
+    plot_names.push_back("mu2_dxyZoom");
     plot_names.push_back("mu1_dz");
+    plot_names.push_back("mu1_dzZoom");
     plot_names.push_back("mu2_dz");
+    plot_names.push_back("mu2_dzZoom");
     plot_names.push_back("mu1_trkRelIso");
+    plot_names.push_back("mu1_trkRelIsoZoom");
+    plot_names.push_back("mu1_trkAbsIso");
+    plot_names.push_back("mu1_trkAbsIsoZoom");
     plot_names.push_back("mu2_trkRelIso");
+    plot_names.push_back("mu2_trkRelIsoZoom");
+    plot_names.push_back("mu2_trkAbsIso");
+    plot_names.push_back("mu2_trkAbsIsoZoom");
     plot_names.push_back("nCand_Muons");
   }
   map<TString, TH1F*> histos;
@@ -312,11 +322,21 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         plot_names.push_back("mu1_phi");
         plot_names.push_back("mu2_phi");
         plot_names.push_back("mu1_dxy");
+        plot_names.push_back("mu1_dxyZoom");
         plot_names.push_back("mu2_dxy");
+        plot_names.push_back("mu2_dxyZoom");
         plot_names.push_back("mu1_dz");
+        plot_names.push_back("mu1_dzZoom");
         plot_names.push_back("mu2_dz");
+        plot_names.push_back("mu2_dzZoom");
         plot_names.push_back("mu1_trkRelIso");
+        plot_names.push_back("mu1_trkRelIsoZoom");
+        plot_names.push_back("mu1_trkAbsIso");
+        plot_names.push_back("mu1_trkAbsIsoZoom");        
         plot_names.push_back("mu2_trkRelIso");
+        plot_names.push_back("mu2_trkRelIsoZoom");        
+        plot_names.push_back("mu2_trkAbsIso");
+        plot_names.push_back("mu2_trkAbsIsoZoom"); 
         plot_names.push_back("nCand_Muons");
       }
       plot_names.push_back("dPhi_ll");
@@ -335,6 +355,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       plot_names.push_back("mu3_pt"); ++nExtraHistos;
       plot_names.push_back("mu3_eta"); ++nExtraHistos;
       plot_names.push_back("mu3_trkRelIso"); ++nExtraHistos;
+      plot_names.push_back("mu3_trkAbsIso"); ++nExtraHistos;
       plot_names.push_back("ele_extra_pt"); ++nExtraHistos;
       plot_names.push_back("ele_extra_eta"); ++nExtraHistos;
       plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
@@ -805,20 +826,50 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         plot_names.push_back("mu1_dxy");
         variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(0))});
 
+        plot_names.push_back("mu1_dxyZoom");
+        variable.insert({"mu1_dxyZoom", fabs(nt.Muon_dxy().at(0))});
+
         plot_names.push_back("mu2_dxy");
         variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(1))});
+
+        plot_names.push_back("mu2_dxyZoom");
+        variable.insert({"mu2_dxyZoom", fabs(nt.Muon_dxy().at(1))});  
 
         plot_names.push_back("mu1_dz");
         variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(0))});
 
+        plot_names.push_back("mu1_dzZoom");
+        variable.insert({"mu1_dzZoom", fabs(nt.Muon_dz().at(0))});
+
         plot_names.push_back("mu2_dz");
         variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
+
+        plot_names.push_back("mu2_dzZoom");
+        variable.insert({"mu2_dzZoom", fabs(nt.Muon_dz().at(1))});
 
         plot_names.push_back("mu1_trkRelIso");
         variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(0)});
 
+        plot_names.push_back("mu1_trkRelIsoZoom");
+        variable.insert({"mu1_trkRelIsoZoom", Muon_tkRelIso.at(0)});
+
+        plot_names.push_back("mu1_trkAbsIso");
+        variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(0) *  Muon_pt.at(0)});
+
+        plot_names.push_back("mu1_trkAbsIsoZoom");
+        variable.insert({"mu1_trkAbsIsoZoom", Muon_tkRelIso.at(0) *  Muon_pt.at(0)});
+
         plot_names.push_back("mu2_trkRelIso");
         variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(1)});
+
+        plot_names.push_back("mu2_trkRelIsoZoom");
+        variable.insert({"mu2_trkRelIsoZoom", Muon_tkRelIso.at(1)});
+
+        plot_names.push_back("mu2_trkAbsIso");
+        variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(1) *  Muon_pt.at(1)});
+
+        plot_names.push_back("mu2_trkAbsIsoZoom");
+        variable.insert({"mu2_trkAbsIsoZoom", Muon_tkRelIso.at(1) *  Muon_pt.at(1)});
 
         plot_names.push_back("nCand_Muons");
         variable.insert({"nCand_Muons", nt.nMuon()});
@@ -1078,7 +1129,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[0]));
         variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[1]));
         variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[0]);
+        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[0]) * Muon_pt.at(cand_muons_id[0]);
         variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[1]);
+        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[1]) * Muon_pt.at(cand_muons_id[1]);
         variable["nCand_Muons"] = cand_muons.size();
       }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1116,7 +1169,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[0]));
         variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[1]));
         variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]);
+        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]) * Muon_pt.at(cand_muons_id_pteta[0]);
         variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]);
+        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]) * Muon_pt.at(cand_muons_id_pteta[1]);
         variable["nCand_Muons"] = cand_muons.size();
       }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1155,7 +1210,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons[0]));
         variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons[1]));
         variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons[0]);
+        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[0]) * Muon_pt.at(cand_muons[0]);
         variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons[1]);
+        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[1]) * Muon_pt.at(cand_muons[1]);
         variable["nCand_Muons"] = cand_muons.size();
       }
       for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
@@ -1300,7 +1357,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
         variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
         variable["mu1_trkRelIso"] = Muon_tkRelIso.at(leadingMu_idx);
+        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx);
         variable["mu2_trkRelIso"] = Muon_tkRelIso.at(subleadingMu_idx);
+        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx);
         variable["nCand_Muons"] = cand_muons.size();
       }
       else {
@@ -1325,20 +1384,50 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         plot_names.push_back("mu1_dxy");
         variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(leadingMu_idx))});
 
+        plot_names.push_back("mu1_dxyZoom");
+        variable.insert({"mu1_dxyZoom", fabs(nt.Muon_dxy().at(leadingMu_idx))});
+
         plot_names.push_back("mu2_dxy");
         variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(subleadingMu_idx))});
+
+        plot_names.push_back("mu2_dxyZoom");
+        variable.insert({"mu2_dxyZoom", fabs(nt.Muon_dxy().at(subleadingMu_idx))});
 
         plot_names.push_back("mu1_dz");
         variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(leadingMu_idx))});
 
+        plot_names.push_back("mu1_dzZoom");
+        variable.insert({"mu1_dzZoom", fabs(nt.Muon_dz().at(leadingMu_idx))});
+
         plot_names.push_back("mu2_dz");
         variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
+
+        plot_names.push_back("mu2_dzZoom");
+        variable.insert({"mu2_dzZoom", fabs(nt.Muon_dz().at(subleadingMu_idx))});
 
         plot_names.push_back("mu1_trkRelIso");
         variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(leadingMu_idx)});
 
+        plot_names.push_back("mu1_trkRelIsoZoom");
+        variable.insert({"mu1_trkRelIsoZoom", Muon_tkRelIso.at(leadingMu_idx)});
+
+        plot_names.push_back("mu1_trkAbsIso");
+        variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx)});
+
+        plot_names.push_back("mu1_trkAbsIsoZoom");
+        variable.insert({"mu1_trkAbsIsoZoom", Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx)});
+
         plot_names.push_back("mu2_trkRelIso");
         variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(subleadingMu_idx)});
+
+        plot_names.push_back("mu2_trkRelIsoZoom");
+        variable.insert({"mu2_trkRelIsoZoom", Muon_tkRelIso.at(subleadingMu_idx)});
+
+        plot_names.push_back("mu2_trkAbsIso");
+        variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx)});
+
+        plot_names.push_back("mu2_trkAbsIsoZoom");
+        variable.insert({"mu2_trkAbsIsoZoom", Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx)});
 
         plot_names.push_back("nCand_Muons");
         variable.insert({"nCand_Muons", cand_muons.size()});
@@ -1511,6 +1600,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
 	extra_plot_names.push_back("mu3_trkRelIso");
 	extra_variable.insert({"mu3_trkRelIso", Muon_tkRelIso.at(extra_muons[0])});
+
+  extra_plot_names.push_back("mu3_trkAbsIso");
+ 	extra_variable.insert({"mu3_trkAbsIso", Muon_tkRelIso.at(extra_muons[0]) * Muon_pt.at(extra_muons[0])});
       }
 
       if ( extra_electrons.size() > 0 ) {
