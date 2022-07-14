@@ -21,6 +21,7 @@ parser.add_argument("--shape", default=False, action="store_true", help="Shape n
 parser.add_argument("--cumulative", default=False, action="store_true", help="Cumulative distributions")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
+parser.add_argument("--years", default=[], nargs="+", help="List of years to be plotted. Default: all years")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
 parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
 args = parser.parse_args()
@@ -45,6 +46,9 @@ if len(args.signalMass)>3:
 
 if len(args.selections)==0:
     args.selections = ["sel10"]
+
+if len(args.years)==0:
+    args.selections = ["all"]
 
 # Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
@@ -326,6 +330,7 @@ def get_plots(sampleDict, plotname):
 
 
 def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
+
     error = ROOT.TMath.Sqrt(plot.GetBinError(0)*plot.GetBinError(0)+plot.GetBinError(1)*plot.GetBinError(1))
     plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
     plot.SetBinError(1, error)
@@ -492,6 +497,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         elif sample=="data": 
             if plotData:
                 curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+                if args.shape and curPlots[sample].Integral(0,-1)>0.0:
+                    if "cutflow" not in plotname:
+                        curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
                 if args.cumulative:
                     curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
         # Bkg
@@ -921,7 +929,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
 
     # Print and save
-    extension = ""
+    extension = "_"+year
     if plotData:
         extension = extension+"_mc+data"
     else:
@@ -943,35 +951,34 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-year="all"
-#year="2018"
-lumi=0.0 #fb^-1
-if year == "2018":
-    lumi = 59.83
-elif year == "2017":
-    lumi = 41.48
-elif year == "2016APV":
-    lumi = 19.5
-elif year == "2016nonAPV":
-    lumi = 16.8
-elif year == "all":
-    lumi = 59.83 + 41.48 + 19.5 + 16.8
-# Open files
-sampleDict=get_files(samples,year)
-# List of plots
-listofplots = []
-listfile = sampleDict[sampleDict.keys()[0]][0]
-listkeys = listfile.GetListOfKeys()
-size = listkeys.GetSize()
-for i in range(0,size):
-    listofplots.append(listkeys.At(i).GetName())
-toexclude = []
+for year in args.years:
+    lumi=0.0 #fb^-1
+    if year == "2018":
+        lumi = 59.83
+    elif year == "2017":
+        lumi = 41.48
+    elif year == "2016APV":
+        lumi = 19.5
+    elif year == "2016nonAPV":
+        lumi = 16.8
+    elif year == "all":
+        lumi = 59.83 + 41.48 + 19.5 + 16.8
+    # Open files
+    sampleDict=get_files(samples,year)
+    # List of plots
+    listofplots = []
+    listfile = sampleDict[sampleDict.keys()[0]][0]
+    listkeys = listfile.GetListOfKeys()
+    size = listkeys.GetSize()
+    for i in range(0,size):
+        listofplots.append(listkeys.At(i).GetName())
+    toexclude = []
 
-for plot in listofplots:
-    if plot in toexclude:
-        continue
-    draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
-    draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
-    if ("pt" in plot) or ("mmumu" in plot) or ("mlb" in plot) or ("mbb" in plot) or ("RelIso" in plot) or ("dxy" in plot) or ("dz" in plot):
-      draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
-      draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
+    for plot in listofplots:
+        if plot in toexclude:
+            continue
+        draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
+        draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
+        if ("pt" in plot) or ("mmumu" in plot) or ("mlb" in plot) or ("mbb" in plot) or ("RelIso" in plot) or ("dxy" in plot) or ("dz" in plot):
+          draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
+          draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
