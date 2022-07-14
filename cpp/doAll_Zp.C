@@ -34,135 +34,135 @@
   bool run_signal = 1;
 
   if(run_data){
-  // SingleMuon data
-  samples.push_back("data");
-  sample_names.insert({"data", "SingleMuon"});
-  sample_prod.insert({"data", { { "2018",       {
-						 "Run2018A-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
-						 "Run2018B-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
-						 "Run2018C-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
-						 "Run2018D-UL2018_MiniAODv2_NanoAODv9_GT36-v1"
-						} },
-                                { "2017",       {
-						 "Run2017B-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017C-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017D-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017E-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017F-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017G-UL2017_MiniAODv2_NanoAODv9-v1",
-						 "Run2017H-UL2017_MiniAODv2_NanoAODv9-v1",
-						} },
-                                { "2016APV",    {
-						 "Run2016B-ver1_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						 "Run2016B-ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						 "Run2016C-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						 "Run2016D-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						 "Run2016E-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						 "Run2016F-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
-						} },
-                                { "2016nonAPV", {
-						 "Run2016F-UL2016_MiniAODv2_NanoAODv9-v1",
-						 "Run2016G-UL2016_MiniAODv2_NanoAODv9-v1",
-						 "Run2016H-UL2016_MiniAODv2_NanoAODv9-v1",
-						} } } });
+    // SingleMuon data
+    samples.push_back("data");
+    sample_names.insert({"data", "SingleMuon"});
+    sample_prod.insert({"data", { { "2018",       {
+  						   "Run2018A-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						   "Run2018B-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						   "Run2018C-UL2018_MiniAODv2_NanoAODv9_GT36-v1",
+						   "Run2018D-UL2018_MiniAODv2_NanoAODv9_GT36-v1"
+						  } },
+                                  { "2017",       {
+						   "Run2017B-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017C-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017D-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017E-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017F-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017G-UL2017_MiniAODv2_NanoAODv9-v1",
+						   "Run2017H-UL2017_MiniAODv2_NanoAODv9-v1",
+						  } },
+                                  { "2016APV",    {
+						   "Run2016B-ver1_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						   "Run2016B-ver2_HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						   "Run2016C-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						   "Run2016D-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						   "Run2016E-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						   "Run2016F-HIPM_UL2016_MiniAODv2_NanoAODv9-v2",
+						  } },
+                                  { "2016nonAPV", {
+						   "Run2016F-UL2016_MiniAODv2_NanoAODv9-v1",
+						   "Run2016G-UL2016_MiniAODv2_NanoAODv9-v1",
+						   "Run2016H-UL2016_MiniAODv2_NanoAODv9-v1",
+						  } } } });
   }
 
   if(run_MCbkg){
-  // ttbar
-  samples.push_back("ttbar");
-  sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
-  sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+    // ttbar
+    samples.push_back("ttbar");
+    sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
+    sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                   { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                   { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                   { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+
+    // DY
+    //samples.push_back("DY");
+    //sample_names.insert({"DY","DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8"});
+    //sample_prod.insert({"DY", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v2" } },
+    //                            { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v2" } }.
+    //                            { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+    //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+
+    // DYbb
+    samples.push_back("DYbb");
+    sample_names.insert({"DYbb","DYBBJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8"});
+    sample_prod.insert({"DYbb", { { "2018",       { "RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1" } },
+	                          { "2017",       { "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1" } },
+				  { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
+				  { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+
+    // ZToMuMu
+    vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
+    vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
+    for ( unsigned int imass=0; imass<lowM.size(); imass++ )
+    {
+      samples.push_back("ZToMuMu_"+lowM[imass]+"_"+uppM[imass]);
+      sample_names.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass],"ZToMuMu_M-"+lowM[imass]+"To"+uppM[imass]+"_TuneCP5_13TeV-powheg-pythia8"});
+      sample_prod.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                                                    { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                                                    { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                                                    { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+    }
+
+    // VV
+    vector<TString> VV = { "WW", "WZ", "ZZ" };
+    for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
+    {
+      samples.push_back(VV[iVV]);
+      sample_names.insert({VV[iVV],VV[iVV]+"_TuneCP5_13TeV-pythia8"});
+      sample_prod.insert({VV[iVV], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                     { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                     { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                     { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+    }
+
+    // tW
+    vector<TString> top = { "", "anti" };
+    vector<TString> top_name = { "tW", "tbarW" };
+    for ( unsigned int itop=0; itop<top.size(); itop++)
+    {
+      samples.push_back(top_name[itop]);
+      sample_names.insert({top_name[itop],"ST_tW_"+top[itop]+"top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8"});
+      sample_prod.insert({top_name[itop], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                            { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                            { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+    }
+
+    // tZq
+    samples.push_back("tZq");
+    sample_names.insert({"tZq","tZq_ll_4f_ckm_NLO_TuneCP5_13TeV-amcatnlo-pythia8"});
+    sample_prod.insert({"tZq", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
 
-  // DY
-  //samples.push_back("DY");
-  //sample_names.insert({"DY","DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8"});
-  //sample_prod.insert({"DY", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v2" } },
-  //                            { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v2" } }.
-  //                            { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-  //                            { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+    // TTX
+    samples.push_back("TTW");
+    sample_names.insert({"TTW","TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8"});
+    sample_prod.insert({"TTW", { { "2018", { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                 { "2017", { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                 { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v2" } },
+                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
 
-  // DYbb
-  samples.push_back("DYbb");
-  sample_names.insert({"DYbb","DYBBJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8"});
-  sample_prod.insert({"DYbb", { { "2018",       { "RunIIAutumn18NanoAODv7-Nano02Apr2020_102X_upgrade2018_realistic_v21-v1" } },
-	                         { "2017",       { "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1" } },
-				 { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
-				 { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+    samples.push_back("TTZ");
+    sample_names.insert({"TTZ","TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8"});
+    sample_prod.insert({"TTZ", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                 { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                 { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                 { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
 
-  // ZToMuMu
-  vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
-  vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
-  for ( unsigned int imass=0; imass<lowM.size(); imass++ )
-  {
-    samples.push_back("ZToMuMu_"+lowM[imass]+"_"+uppM[imass]);
-    sample_names.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass],"ZToMuMu_M-"+lowM[imass]+"To"+uppM[imass]+"_TuneCP5_13TeV-powheg-pythia8"});
-    sample_prod.insert({"ZToMuMu_"+lowM[imass]+"_"+uppM[imass], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  }
-
-  // VV
-  vector<TString> VV = { "WW", "WZ", "ZZ" };
-  for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
-  {
-    samples.push_back(VV[iVV]);
-    sample_names.insert({VV[iVV],VV[iVV]+"_TuneCP5_13TeV-pythia8"});
-    sample_prod.insert({VV[iVV], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                   { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                   { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                   { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  }
-
-  // tW
-  vector<TString> top = { "", "anti" };
-  vector<TString> top_name = { "tW", "tbarW" };
-  for ( unsigned int itop=0; itop<top.size(); itop++)
-  {
-    samples.push_back(top_name[itop]);
-    sample_names.insert({top_name[itop],"ST_tW_"+top[itop]+"top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8"});
-    sample_prod.insert({top_name[itop], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                          { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                          { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                          { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  }
-
-  // tZq
-  samples.push_back("tZq");
-  sample_names.insert({"tZq","tZq_ll_4f_ckm_NLO_TuneCP5_13TeV-amcatnlo-pythia8"});
-  sample_prod.insert({"tZq", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                               { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                               { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                               { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-
-  // TTX
-  samples.push_back("TTW");
-  sample_names.insert({"TTW","TTWJetsToLNu_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8"});
-  sample_prod.insert({"TTW", { { "2018", { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                               { "2017", { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                               { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v2" } },
-                               { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-
-  samples.push_back("TTZ");
-  sample_names.insert({"TTZ","TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8"});
-  sample_prod.insert({"TTZ", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                               { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                               { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                               { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-
-  vector<TString> bb = { "", "Non" };
-  for ( unsigned int ibb=0; ibb<bb.size(); ibb++ )
-  {
-    samples.push_back("TTHTo"+bb[ibb]+"bb");
-    sample_names.insert({"TTHTo"+bb[ibb]+"bb","ttHJetTo"+bb[ibb]+"bb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8"});
-    sample_prod.insert({"TTHTo"+bb[ibb]+"bb", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                                { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                                { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                                { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
-  }
+    vector<TString> bb = { "", "Non" };
+    for ( unsigned int ibb=0; ibb<bb.size(); ibb++ )
+    {
+      samples.push_back("TTHTo"+bb[ibb]+"bb");
+      sample_names.insert({"TTHTo"+bb[ibb]+"bb","ttHJetTo"+bb[ibb]+"bb_M125_TuneCP5_13TeV_amcatnloFXFX_madspin_pythia8"});
+      sample_prod.insert({"TTHTo"+bb[ibb]+"bb", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                                  { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                                  { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                                  { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+    }
   }
 
   // Signals
