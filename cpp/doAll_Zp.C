@@ -29,10 +29,9 @@
   map<TString,TString> sample_names = { };
   map<TString,map<TString,vector<TString>>> sample_prod = { };
 
-  bool run_data = 0;
-  bool run_MCbkg = 0;
+  bool run_data = 1;
+  bool run_MCbkg = 1;
   bool run_signal = 1;
-//  bool pick_signal_mass = 0;
 
   if(run_data){
   // SingleMuon data
@@ -169,12 +168,7 @@
   // Signals
   if(run_signal){
     vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-//    if (pick_signal_mass) {
-//      vector<TString> sigMass = { "200", "700", "1500" };
-//    }
-//    else {
-      vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
-//    }
+    vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
     for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
       for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
