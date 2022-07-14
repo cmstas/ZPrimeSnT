@@ -808,6 +808,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         variable.insert({"mu2_phi", nt.Muon_phi().at(1)});
 
         plot_names.push_back("mu1_dxy");
+	variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(0))});
 
         plot_names.push_back("mu2_dxy");
         variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(1))});
