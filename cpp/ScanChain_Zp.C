@@ -622,6 +622,42 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       // MET xy correction: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETRun2Corrections#xy_Shift_Correction_MET_phi_modu
       // METXYCorr_Met_MetPhi(double uncormet, double uncormet_phi, int runnb, TString year, bool isMC, int npv, bool isUL =false,bool ispuppi=false)
+
+      // Before MET xy correction, apply check for inf and nans:
+      if ( !usePuppiMET ) {
+	if( isinf(nt.MET_pt()) || isnan(nt.MET_pt()) )
+	  continue;
+	if( isinf(nt.MET_phi()) || isnan(nt.MET_phi()) )
+	  continue;
+      }
+      else {
+	// Central value
+	if ( isinf(nt.PuppiMET_pt()) || isnan(PuppiMET_pt()) )
+	  continue;
+	if ( isinf(nt.PuppiMET_phi()) || isnan(PuppiMET_phi()) )
+	  continue;
+	// JES up
+	if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(PuppiMET_ptJESUp()) )
+	  continue;
+	if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(PuppiMET_phiJESUp()) )
+	  continue;
+	// JES down
+	if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(PuppiMET_ptJESDown()) )
+	  continue;
+	if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(PuppiMET_phiJESDown()) )
+	  continue;
+	// JER up
+	if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(PuppiMET_ptJERUp()) )
+	  continue;
+	if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(PuppiMET_phiJERUp()) )
+	  continue;
+	// JER down
+	if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(PuppiMET_ptJERDown()) )
+	  continue;
+	if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(PuppiMET_phiJERDown()) )
+	  continue;
+      }
+
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
       double pfmet_pt  = pfmet.first;
       double pfmet_phi = pfmet.second;
