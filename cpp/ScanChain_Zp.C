@@ -46,6 +46,7 @@
 
 #define H1(name,nbins,low,high,xtitle) TH1F *h_##name = new TH1F(#name,"",nbins,low,high); h_##name->GetXaxis()->SetTitle(xtitle); h_##name->GetYaxis()->SetTitle("Events");
 #define HTemp(name,nbins,low,high,xtitle) TH1F *h_temp = new TH1F(name,"",nbins,low,high); h_temp->GetXaxis()->SetTitle(xtitle); h_temp->GetYaxis()->SetTitle("Events");
+#define HVaryingBinSize(name,nbins,binsx,xtitle) TH1F *h_varyingBinSize = new TH1F(name,"",nbins,(float *)binsx.data()); h_varyingBinSize->GetXaxis()->SetTitle(xtitle); h_varyingBinSize->GetYaxis()->SetTitle("Events");
 
 // #define DEBUG
 #define Zmass 91.1876
@@ -207,11 +208,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   map<TString, int> nbins { };
   map<TString, float> low { };
   map<TString, float> high { };
+  map<TString, vector<float>> binsx { };
   map<TString, TString> title { };
 
   // Define histos
   H1(cutflow,20,0,20,"");
-  histoDefinition(nbins, low, high, title);
+  histoDefinition(nbins, low, high, binsx, title);
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
@@ -390,16 +392,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       if(isel<5) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0];
-	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-	histos[name] = h_temp;
+	if ( binsx[plot_name].size()==0 ) {
+	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	  histos[name] = h_temp;
+	}
+	else {
+	  HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+	  histos[name] = h_varyingBinSize;
+	}
       }
       else if(isel>=5 && isel<8) {
         for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
             TString plot_name = plot_names[iplot];
             TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-            histos[name] = h_temp;
+	    if ( binsx[plot_name].size()==0 ) {
+	      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	      histos[name] = h_temp;
+	    }
+	    else {
+	      HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+	      histos[name] = h_varyingBinSize;
+	    }
           }
         }
       }
@@ -413,8 +427,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
               if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
                 continue;
               TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-              HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-              histos[name] = h_temp;
+	      if ( binsx[plot_name].size()==0 ) {
+		HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+		histos[name] = h_temp;
+	      }
+	      else {
+		HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+		histos[name] = h_varyingBinSize;
+	      }
             }
           }
         }
@@ -529,7 +549,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
     }
 
-    for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
+    //for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
+    for( unsigned int event = 0; event < 10000; ++event) {
 
       nt.GetEntry(event);
       tree->LoadTree(event);
@@ -636,26 +657,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  continue;
 	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
-	// JES up
-	if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(nt.PuppiMET_phiJESUp()) )
-	  continue;
-	// JES down
-	if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(nt.PuppiMET_ptJESDown()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(nt.PuppiMET_phiJESDown()) )
-	  continue;
-	// JER up
-	if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(nt.PuppiMET_ptJERUp()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(nt.PuppiMET_phiJERUp()) )
-	  continue;
-	// JER down
-	if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(nt.PuppiMET_ptJERDown()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
-	  continue;
+	if ( isMC ) {
+	  // JES up
+	  if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(nt.PuppiMET_phiJESUp()) )
+	    continue;
+	  // JES down
+	  if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(nt.PuppiMET_ptJESDown()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(nt.PuppiMET_phiJESDown()) )
+	    continue;
+	  // JER up
+	  if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(nt.PuppiMET_ptJERUp()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(nt.PuppiMET_phiJERUp()) )
+	    continue;
+	  // JER down
+	  if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(nt.PuppiMET_ptJERDown()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
+	    continue;
+	}
       }
 
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
@@ -1301,7 +1324,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       mllbinsel[0] = true;
       if (doMllBins) {
-        if ( selectedPair_M > 150. && selectedPair_M < 250)
+        if ( selectedPair_M > 175. && selectedPair_M < 250)
           mllbinsel[1] = true;
         else mllbinsel[1] = false;
         if ( selectedPair_M > 200. && selectedPair_M < 600)
