@@ -632,29 +632,29 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
       else {
 	// Central value
-	if ( isinf(nt.PuppiMET_pt()) || isnan(PuppiMET_pt()) )
+	if ( isinf(nt.PuppiMET_pt()) || isnan(nt.PuppiMET_pt()) )
 	  continue;
-	if ( isinf(nt.PuppiMET_phi()) || isnan(PuppiMET_phi()) )
+	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
 	// JES up
-	if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(PuppiMET_ptJESUp()) )
+	if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
 	  continue;
-	if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(PuppiMET_phiJESUp()) )
+	if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(nt.PuppiMET_phiJESUp()) )
 	  continue;
 	// JES down
-	if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(PuppiMET_ptJESDown()) )
+	if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(nt.PuppiMET_ptJESDown()) )
 	  continue;
-	if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(PuppiMET_phiJESDown()) )
+	if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(nt.PuppiMET_phiJESDown()) )
 	  continue;
 	// JER up
-	if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(PuppiMET_ptJERUp()) )
+	if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(nt.PuppiMET_ptJERUp()) )
 	  continue;
-	if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(PuppiMET_phiJERUp()) )
+	if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(nt.PuppiMET_phiJERUp()) )
 	  continue;
 	// JER down
-	if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(PuppiMET_ptJERDown()) )
+	if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(nt.PuppiMET_ptJERDown()) )
 	  continue;
-	if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(PuppiMET_phiJERDown()) )
+	if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
 	  continue;
       }
 
