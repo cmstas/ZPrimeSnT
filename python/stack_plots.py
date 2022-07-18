@@ -358,14 +358,15 @@ def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSiz
         plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
-    ### Rebin fine-binned histograms
-    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
-        if plot.GetNbinsX()%5==0:
-            plot.Rebin(5)
-        elif plot.GetNbinsX()%3==0:
-            plot.Rebin(3)
-        else:
-            plot.Rebin(2)
+    ### Rebinning is unnecessary with histograms with varying bin size (unlike in the past). Thus, lines below are commented out
+    #### Rebin fine-binned histograms
+    #if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
+    #    if plot.GetNbinsX()%5==0:
+    #        plot.Rebin(5)
+    #    elif plot.GetNbinsX()%3==0:
+    #        plot.Rebin(3)
+    #    else:
+    #        plot.Rebin(2)
 
     ### Remove spikes
     for b in range(1, plot.GetNbinsX()+1):

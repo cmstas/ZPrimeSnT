@@ -9,11 +9,9 @@ import plotUtils
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
-#inDirRef = "./cpp/temp_data_looseCuts/"
 inDirRef = "./cpp/temp_data_noHEMveto/"
 inDirOther = "./cpp/temp_data/"
-#outDir = "/home/users/"+user+"/public_html/Zprime/looseCuts/"
-outDir = "/home/users/"+user+"/public_html/Zprime/HEMveto/"
+outDir = "/home/users/"+user+"/public_html/Zprime/comparison_noHEMveto/"
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 os.system('cp utils/index.php '+outDir)
@@ -47,10 +45,8 @@ sampleMarkerSize.append(None)
 sampleMarkerSize.append(None)
 
 sampleLegend=[]
-#sampleLegend.append("Without cuts")
-#sampleLegend.append("With cuts")
-sampleLegend.append("Without veto")
-sampleLegend.append("With veto")
+sampleLegend.append("Reference")
+sampleLegend.append("Other")
 
 def get_files(samples,year,inDir):
 
@@ -137,25 +133,26 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
-    ### Rebin fine-binned histograms
-    if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
-        if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
-            if plot.GetNbinsX()%5==0:
-                plot.Rebin(5)
-            elif plot.GetNbinsX()%3==0:
-                plot.Rebin(3)
-            else:
-                plot.Rebin(2)
-    else:
-        model = sample.split("_")[0]
-        mass = sample.split("_")[1].lstrip("M")
-        while plot.GetBinWidth(1)<0.05*float(mass):
-            if plot.GetNbinsX()%2==0:
-                plot.Rebin(2)
-            elif plot.GetNbinsX()%3==0:
-                plot.Rebin(3)
-            else:
-                plot.Rebin(5)
+    ### Rebinning is unnecessary with histograms with varying bin size (unlike in the past). Thus, lines below are commented out
+    #### Rebin fine-binned histograms
+    #if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
+    #    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
+    #        if plot.GetNbinsX()%5==0:
+    #            plot.Rebin(5)
+    #        elif plot.GetNbinsX()%3==0:
+    #            plot.Rebin(3)
+    #        else:
+    #            plot.Rebin(2)
+    #else:
+    #    model = sample.split("_")[0]
+    #    mass = sample.split("_")[1].lstrip("M")
+    #    while plot.GetBinWidth(1)<0.05*float(mass):
+    #        if plot.GetNbinsX()%2==0:
+    #            plot.Rebin(2)
+    #        elif plot.GetNbinsX()%3==0:
+    #            plot.Rebin(3)
+    #        else:
+    #            plot.Rebin(5)
 
     for b in range(1, plot.GetNbinsX()+1):
         if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
@@ -236,11 +233,11 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
         legend.SetHeader(model+" (M="+mass+"GeV)")
         if "mmumu" in curPlotsRef[sample].GetName():
             if float(mass)*0.5>175.0:
-                minX = float(mass)*0.5
-                maxX = float(mass)*1.3
+                minX = curPlotsRef[sample].GetXaxis().GetBinLowEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*0.5))
+                maxX = curPlotsRef[sample].GetXaxis().GetBinUpEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*1.3))
             else:
-                minX = 175.0
-                maxX = float(mass)*1.3
+                minX = curPlotsRef[sample].GetXaxis().GetBinLowEdge(curPlotsRef[sample].GetXaxis().FindBin(175.0+1e-3))
+                maxX = curPlotsRef[sample].GetXaxis().GetBinUpEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*1.3))
     else:
         legend.SetHeader(sample)
 
@@ -312,10 +309,8 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
 
     pads = []
     if doRatio==True:
-        #minR = 0.925
-        #maxR = 1.075
         minR = 0.775
-        maxR = 1.025
+        maxR = 1.225
         h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
         h_axis_ratio.SetMinimum(minR)
         h_axis_ratio.SetMaximum(maxR)
@@ -443,8 +438,8 @@ elif year == "all":
 # Sample
 samplesRef = []
 samplesRef.append("Y3_M200")
-#samplesRef.append("Y3_M700")
-#samplesRef.append("Y3_M1500")
+samplesRef.append("Y3_M700")
+samplesRef.append("Y3_M1500")
 #
 samplesOther = samplesRef
 
@@ -452,7 +447,7 @@ samplesOther = samplesRef
 sampleDictRef=get_files(samplesRef,year,inDirRef)
 sampleDictOther=get_files(samplesOther,year,inDirOther)
 # List of plots
-listofplots=["mmumu_sel10_mllinclusive_nBTag1p_MuDetAll"]
+listofplots=["mmumu_sel10_mllinclusive_nBTag1p_MuDetAll","mmumu_sel10_mllinclusive_nBTag1_MuDetAll","mmumu_sel10_mllinclusive_nBTag2p_MuDetAll"]
 toexclude = []
 
 for plot in listofplots:

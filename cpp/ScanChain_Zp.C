@@ -549,8 +549,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
     }
 
-    //for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
-    for( unsigned int event = 0; event < 10000; ++event) {
+    for( unsigned int event = 0; event < tree->GetEntriesFast(); ++event) {
 
       nt.GetEntry(event);
       tree->LoadTree(event);
