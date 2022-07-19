@@ -11,7 +11,7 @@ today= date.today().strftime("%b-%d-%Y")
 
 inDirRef = "./cpp/temp_data_looseCuts/"
 #inDirRef = "./cpp/temp_data_noHEMveto/"
-inDirOther = "./cpp/temp_data/"
+inDirOther = "./cpp/temp_data_baseline/"
 outDir = "/home/users/"+user+"/public_html/Zprime/looseCuts/"
 #outDir = "/home/users/"+user+"/public_html/Zprime/HEMveto/"
 if not os.path.exists(outDir):
@@ -103,7 +103,6 @@ def get_plots(sampleDict, plotname):
                     else:
                         tplot.Add(inFile.Get(plotname))
         plotDict[gsample] = tplot
-
     return plotDict
 
 minX = 0.0
@@ -137,7 +136,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
-    ### Rebinning is unnecessary when using varying bin size (unlike in the past, with fix bin size)
+    ### Rebinning is unnecessary with varying bin size
     #### Rebin fine-binned histograms
     #if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
     #    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
@@ -198,6 +197,8 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
         yearenergy="%.1f fb^{-1} (%s, 13 TeV)"%(lumi,year)
     elif not shape:
         yearenergy="%.0f fb^{-1} (13 TeV)"%(lumi)
+    elif year=="all":
+        yearenergy="(2016-2018, 13 TeV)"
     else:
         yearenergy="(%s, 13 TeV)"%(year)
     if plotData:
@@ -256,6 +257,7 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
         # Define canvas
         canvas = ROOT.TCanvas("canvas","canvas",800,800)
         refplot = copy.deepcopy(curPlotsRef[sample])
+        print sample, refplot.GetName()
 
         h_axis = ROOT.TH1D()
         h_axis_ratio = ROOT.TH1D()
@@ -453,18 +455,19 @@ samplesRef.append("Y3_M1500")
 #
 samplesOther = samplesRef
 
-# Open files
-sampleDictRef=get_files(samplesRef,year,inDirRef)
-sampleDictOther=get_files(samplesOther,year,inDirOther)
-# List of plots
 listofplots=[]
 listofplots.append("mmumu_sel10_mllinclusive_nBTag1p_MuDetAll")
 listofplots.append("mmumu_sel10_mllinclusive_nBTag1_MuDetAll")
 listofplots.append("mmumu_sel10_mllinclusive_nBTag2p_MuDetAll")
 toexclude = []
 
-for plot in listofplots:
-    if plot in toexclude:
-        continue
-    draw_plot(sampleDictRef, sampleDictOther,  plot, True, False, False, True, lumi, year)
-    draw_plot(sampleDictRef, sampleDictOther,  plot, False, False, False, True, lumi, year)
+# Open files
+for sn,s in enumerate(samplesRef):
+    sampleDictRef=get_files([samplesRef[sn]],year,inDirRef)
+    sampleDictOther=get_files([samplesOther[sn]],year,inDirOther)
+    # List of plots
+    for plot in listofplots:
+        if plot in toexclude:
+            continue
+        draw_plot(sampleDictRef, sampleDictOther,  plot, True, False, False, True, lumi, year)
+        draw_plot(sampleDictRef, sampleDictOther,  plot, False, False, False, True, lumi, year)
