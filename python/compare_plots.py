@@ -319,7 +319,7 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
                 if g_ratio.GetBinContent(b)>0.0 and g_ratio.GetBinContent(b)<minR:
                     minR = g_ratio.GetBinContent(b)
             minR = 0.9*minR
-            maxR = min(1.05, 1.1*g_ratio.GetMaximum())
+            maxR = max(1.05, 1.1*g_ratio.GetMaximum())
             h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
             h_axis_ratio.SetMinimum(minR)
             h_axis_ratio.SetMaximum(maxR)
