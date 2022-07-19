@@ -66,7 +66,7 @@ bool doMuDetRegionBins = false;
 
 // General flags
 bool removeSpikes = true;
-bool removeDataDuplicates = false;
+bool removeDataDuplicates = true;
 bool useTuneP = true;
 bool usePuppiMET = true;
 bool fillRooDataSet = true;
@@ -86,9 +86,6 @@ bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
 //
 
-const char* outdir = "temp_data";
-int mdir = mkdir(outdir,0755);
-
 struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<<v<<" "; return *this; } } dbg;
 #ifdef DEBUG
 #define debug(args...) do {cerr << #args << ": "; dbg,args; cerr << endl;} while(0)
@@ -102,12 +99,15 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0) {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
 // +2: Apply positive variation
 // -2: Apply negative variation
+
+  int mdir = mkdir(outdir,0755);
+  TString oDir(outdir);
 
   float factor = 1.0;
   float lumi = 1.0;
@@ -202,7 +202,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
+  TFile* fout = new TFile(oDir+"/output_"+process+"_"+year+".root", "RECREATE");
 
   // Define histo info maps
   map<TString, int> nbins { };
@@ -443,14 +443,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   }
 
   if ( PUWeight!=0 ) set_puWeights();
-  if ( muonSF!=0 ) {
+  if ( muonRecoSF!=0 ) {
     // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
     // (central high-pT RECO SFs equal zero elsewhere)
     // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
     set_muonRecoSF();
-    set_muonIDSF();
-    set_muonIsoSF();
   }
+  if ( muonIdSF!=0 ) set_muonIDSF();
+  if ( muonIsoSF!=0) set_muonIsoSF();
   if ( triggerSF!=0 ) set_triggerSF();
   if ( bTagSF!=0 ) set_allbTagEff();
 
@@ -656,7 +656,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  continue;
 	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
-	if ( isMC ) {
+	if ( isMC && process!="DYbb" ) {
 	  // JES up
 	  if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
 	    continue;
@@ -686,7 +686,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       double puppimet_variation_pt = nt.PuppiMET_pt();
       double puppimet_variation_phi = nt.PuppiMET_phi();
-      if ( isMC ) {
+      if ( isMC && process!="DYbb" ) {
         // JEC uncertainties on PUPPI MET
         if ( JECUnc==2 ) {
           puppimet_variation_pt = nt.PuppiMET_ptJESUp();
@@ -771,24 +771,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016
 	  // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2017
 	  // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018
-	  if ( muonSF!=0 ) {
-	    // Apply muon (RECO, ID, ISO) SFs
+	  // Apply muon (RECO, ID, ISO) SFs
+	  if ( muonRecoSF!=0 ) {
 	    TString tvariation = "central";
-	    if ( muonSF==2 ) tvariation = "up";
-	    else if ( muonSF==-2 ) tvariation = "down";
+	    if ( muonRecoSF==2 ) tvariation = "up";
+	    else if ( muonRecoSF==-2 ) tvariation = "down";
 	    // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
 	    // (central high-pT RECO SFs equal zero elsewhere)
 	    // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
 	    weight *= get_muonRecoSF(Muon_p4.at(mu).P(), Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	    if ( mu_id ) {
-	      weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	      if ( mu_iso ) {
-		weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	      }
-	    }
 	  }
+	  if ( muonIdSF!=0 && mu_id ) {
+	    TString tvariation = "central";
+	    if ( muonIdSF==2 ) tvariation = "up";
+	    else if ( muonIdSF==-2 ) tvariation = "down";
+	    weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	  }
+	  if ( muonIsoSF!=0 && mu_iso ) {
+	    TString tvariation = "central";
+	    if ( muonIsoSF==2 ) tvariation = "up";
+	    else if ( muonIsoSF==-2 ) tvariation = "down";
+	    weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	  }
+	  // Apply trigger SF
 	  if ( triggerSF!=0 && triggerWeight < 0.0 ) {
-	    // Apply trigger SF
 	    TString tvariation = "central";
 	    if ( triggerSF==2 ) tvariation = "up";
 	    else if ( triggerSF==-2 ) tvariation = "down";
@@ -2072,11 +2078,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   } // File loop
   bar.finish();
 
-  if ( muonSF!=0 ) {
-    reset_muonRecoSF();
-    reset_muonIDSF();
-    reset_muonIsoSF();
-  }
+  if ( muonRecoSF!=0 ) reset_muonRecoSF();
+  if ( muonIdSF!=0 ) reset_muonIDSF();
+  if ( muonIsoSF!=0 ) reset_muonIsoSF();
   if ( triggerSF!=0 ) reset_triggerSF();
   if ( bTagSF!=0 ) reset_bTagEff();
 
