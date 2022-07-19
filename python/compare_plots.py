@@ -137,25 +137,26 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
-    ### Rebin fine-binned histograms
-    if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
-        if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
-            if plot.GetNbinsX()%5==0:
-                plot.Rebin(5)
-            elif plot.GetNbinsX()%3==0:
-                plot.Rebin(3)
-            else:
-                plot.Rebin(2)
-    else:
-        model = sample.split("_")[0]
-        mass = sample.split("_")[1].lstrip("M")
-        while plot.GetBinWidth(1)<0.05*float(mass):
-            if plot.GetNbinsX()%2==0:
-                plot.Rebin(2)
-            elif plot.GetNbinsX()%3==0:
-                plot.Rebin(3)
-            else:
-                plot.Rebin(5)
+    ### Rebinning is unnecessary when using varying bin size (unlike in the past, with fix bin size)
+    #### Rebin fine-binned histograms
+    #if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
+    #    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
+    #        if plot.GetNbinsX()%5==0:
+    #            plot.Rebin(5)
+    #        elif plot.GetNbinsX()%3==0:
+    #            plot.Rebin(3)
+    #        else:
+    #            plot.Rebin(2)
+    #else:
+    #    model = sample.split("_")[0]
+    #    mass = sample.split("_")[1].lstrip("M")
+    #    while plot.GetBinWidth(1)<0.05*float(mass):
+    #        if plot.GetNbinsX()%2==0:
+    #            plot.Rebin(2)
+    #        elif plot.GetNbinsX()%3==0:
+    #            plot.Rebin(3)
+    #        else:
+    #            plot.Rebin(5)
 
     for b in range(1, plot.GetNbinsX()+1):
         if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
