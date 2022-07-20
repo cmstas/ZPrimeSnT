@@ -9,15 +9,6 @@ import plotUtils
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
-inDirRef = "./cpp/temp_data_looseCuts/"
-#inDirRef = "./cpp/temp_data_noHEMveto/"
-inDirOther = "./cpp/temp_data_baseline/"
-outDir = "/home/users/"+user+"/public_html/Zprime/looseCuts/"
-#outDir = "/home/users/"+user+"/public_html/Zprime/HEMveto/"
-if not os.path.exists(outDir):
-    os.makedirs(outDir)
-os.system('cp utils/index.php '+outDir)
-
 doRatio = True
 extendedLegend = False
 shape = True
@@ -45,12 +36,6 @@ sampleMarkerStyle.append(None)
 sampleMarkerSize=[]
 sampleMarkerSize.append(None)
 sampleMarkerSize.append(None)
-
-sampleLegend=[]
-sampleLegend.append("Loose cuts")
-sampleLegend.append("Tight cuts")
-#sampleLegend.append("Without HEM veto")
-#sampleLegend.append("With HEM veto")
 
 def get_files(samples,year,inDir):
 
@@ -136,7 +121,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         plot.SetMarkerSize(markerSize)
     #plot.Sumw2()
 
-    ### Rebinning is unnecessary with varying bin size
+    ### Rebinning is unnecessary with histograms with varying bin size (unlike in the past). Thus, lines below are commented out
     #### Rebin fine-binned histograms
     #if ("Y3" not in sample and "DY3" not in sample and "DYp3" not in sample and "B3mL2" not in sample) or "mmumu" not in plot.GetName():
     #    if plot.GetXaxis().GetBinUpEdge(plot.GetNbinsX())-plot.GetXaxis().GetBinLowEdge(1) > 500.0 and plot.GetXaxis().GetBinWidth(1)<10.0:
@@ -149,7 +134,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #else:
     #    model = sample.split("_")[0]
     #    mass = sample.split("_")[1].lstrip("M")
-    #    while plot.GetBinWidth(1)<0.05*float(mass):
+    #    while plot.GetBinWidth(1)<0.025*float(mass):
     #        if plot.GetNbinsX()%2==0:
     #            plot.Rebin(2)
     #        elif plot.GetNbinsX()%3==0:
@@ -157,6 +142,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #        else:
     #            plot.Rebin(5)
 
+    ### Remove spikes
     for b in range(1, plot.GetNbinsX()+1):
         if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
             plot.SetBinContent(b,0.0)
@@ -164,7 +150,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
 
     return plot
 
-def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, plotData=False, doRatio=True, lumi=59.83, year="2018"):
+def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, thisOutDir, plotname, logY=True, logX=False, plotData=False, doRatio=True, lumi=59.83, year="2018"):
 
     # Labels
     latex = ROOT.TLatex()
@@ -239,13 +225,17 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
             legend.SetHeader(model+" (M="+mass+"GeV)")
             if "mmumu" in curPlotsRef[sample].GetName():
                 if float(mass)*0.5>175.0:
-                    minX = float(mass)*0.65
-                    maxX = float(mass)*1.25
+                    minX = curPlotsRef[sample].GetXaxis().GetBinLowEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*0.65))
+                    maxX = curPlotsRef[sample].GetXaxis().GetBinUpEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*1.25))
                 else:
-                    minX = 175.0
-                    maxX = float(mass)*1.25
+                    minX = curPlotsRef[sample].GetXaxis().GetBinLowEdge(curPlotsRef[sample].GetXaxis().FindBin(175.0+1.0))
+                    maxX = curPlotsRef[sample].GetXaxis().GetBinUpEdge(curPlotsRef[sample].GetXaxis().FindBin(float(mass)*1.25))
         else:
             legend.SetHeader(sample)
+
+        sampleLegend=[]
+        sampleLegend.append(refLegendEntry)
+        sampleLegend.append(otherLegendEntry)
 
         if extendedLegend:
             legend.AddEntry(curPlotsRef[sample],sampleLegend[0]+" %1.2E"%(curPlotsRef[sample].Integral(0,-1)),"L")
@@ -321,8 +311,10 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
                     continue
                 if g_ratio.GetBinContent(b)>0.0 and g_ratio.GetBinContent(b)<minR:
                     minR = g_ratio.GetBinContent(b)
-            minR = 0.9*minR
-            maxR = max(1.05, 1.1*g_ratio.GetMaximum())
+                if g_ratio.GetBinContent(b)>0.0 and g_ratio.GetBinContent(b)>maxR:
+                    maxR = g_ratio.GetBinContent(b)
+            minR = min(0.95, 0.95*minR)
+            maxR = max(1.05, 1.05*maxR)
             h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
             h_axis_ratio.SetMinimum(minR)
             h_axis_ratio.SetMaximum(maxR)
@@ -427,14 +419,63 @@ def draw_plot(sampleDictRef, sampleDictOther, plotname, logY=True, logX=False, p
         if shape:
             extension = extension+"_areaNormalized"
     
-        canvas.SaveAs(outDir + plotname + extension + "_"+sample+".png")
+        canvas.SaveAs(thisOutDir + plotname + extension + "_"+sample+".png")
 
 # Main
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-# year="all"
-year="2018"
+inDirRef = "./cpp/nominal/"
+legRef = "Nominal"
+inDirOther = []
+legOther = []
+inDirOther.append("./cpp/temp_data_JECUp/")
+inDirOther.append("./cpp/temp_data_JECDn/")
+legOther.append("JES up")
+legOther.append("JES down")
+#inDirOther.append("./cpp/temp_data_JERCentral/")
+#inDirOther.append("./cpp/temp_data_JERUp/")
+#inDirOther.append("./cpp/temp_data_JERDn/")
+#legOther.append("JER central")
+#legOther.append("JER up")
+#legOther.append("JER down")
+#inDirOther.append("./cpp/temp_data_PUUp/")
+#inDirOther.append("./cpp/temp_data_PUDn/")
+#legOther.append("PU up")
+#legOther.append("PU down")
+#inDirOther.append("./cpp/temp_data_prefireStatUp/")
+#inDirOther.append("./cpp/temp_data_prefireStatDn/")
+#legOther.append("L1 prefire up (stat.)")
+#legOther.append("L1 prefire down (stat.)")
+#inDirOther.append("./cpp/temp_data_prefireSystUp/")
+#inDirOther.append("./cpp/temp_data_prefireSystDn/")
+#legOther.append("L1 prefire up (syst.)")
+#legOther.append("L1 prefire down (syst.)")
+#inDirOther.append("./cpp/temp_data_bTagUp/")
+#inDirOther.append("./cpp/temp_data_bTagDn/")
+#legOther.append("b-tag SF up")
+#legOther.append("b-tag SF down")
+#inDirOther.append("./cpp/temp_data_muonSFUp/")
+#inDirOther.append("./cpp/temp_data_muonSFDn/")
+#legOther.append("Muon SF up")
+#legOther.append("Muon SF down")
+#inDirOther.append("./cpp/temp_data_triggerSFUp/")
+#inDirOther.append("./cpp/temp_data_triggerSFDn/")
+#legOther.append("Trigger SF up")
+#legOther.append("Trigger SF down")
+
+outDir = ["/home/users/"+user+"/public_html/Zprime/"+inDirRef.replace("/","").split("_")[2]+"/"]
+#outDir = []
+#for d in inDirOther:
+#    to = d.replace("/","").split("_")[2]
+#    outDir.append("/home/users/"+user+"/public_html/Zprime/"+to+"/")
+for d in outDir:
+    if not os.path.exists(d):
+        os.makedirs(d)
+    os.system('cp utils/index.php '+d)
+
+year="all"
+#year="2018"
 lumi=0.0 #fb^-1
 if year == "2018":
     lumi = 59.83
@@ -449,9 +490,12 @@ elif year == "all":
 
 # Sample
 samplesRef = []
-samplesRef.append("Y3_M200")
-samplesRef.append("Y3_M700")
-samplesRef.append("Y3_M1500")
+samplesRef.append("B3mL2_M200")
+samplesRef.append("B3mL2_M700")
+samplesRef.append("B3mL2_M1500")
+#samplesRef.append("Y3_M200")
+#samplesRef.append("Y3_M700")
+#samplesRef.append("Y3_M1500")
 #
 samplesOther = samplesRef
 
@@ -461,13 +505,15 @@ listofplots.append("mmumu_sel10_mllinclusive_nBTag1_MuDetAll")
 listofplots.append("mmumu_sel10_mllinclusive_nBTag2p_MuDetAll")
 toexclude = []
 
-# Open files
-for sn,s in enumerate(samplesRef):
-    sampleDictRef=get_files([samplesRef[sn]],year,inDirRef)
-    sampleDictOther=get_files([samplesOther[sn]],year,inDirOther)
-    # List of plots
-    for plot in listofplots:
-        if plot in toexclude:
-            continue
-        draw_plot(sampleDictRef, sampleDictOther,  plot, True, False, False, True, lumi, year)
-        draw_plot(sampleDictRef, sampleDictOther,  plot, False, False, False, True, lumi, year)
+# Loop over variations
+for on,o in enumerate(inDirOther):
+    # Open files
+    for sn,s in enumerate(samplesRef):
+        sampleDictRef=get_files([samplesRef[sn]],year,inDirRef)
+        sampleDictOther=get_files([samplesOther[sn]],year,inDirOther[on])
+        # List of plots
+        for plot in listofplots:
+            if plot in toexclude:
+                continue
+            draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, True , False, False, True, lumi, year)
+            draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, False, False, False, True, lumi, year)
