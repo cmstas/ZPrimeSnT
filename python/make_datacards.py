@@ -79,6 +79,8 @@ for y in years:
                 mcstatunc = 1.0/ROOT.TMath.Sqrt(w.data("signalRooDataSet").numEntries())
                 # Close input file with workspace
                 f.Close()
+                os.system("cp %s %s/"%(finame,outDir))
+                finame = "%s_%s_M%s_%s_workspace.root"%(d,s,m,y)
 
                 # Define systematics that are independent of signal mass
                 btagsyst = 0.01
