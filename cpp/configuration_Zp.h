@@ -5,7 +5,7 @@ using namespace std;
 
 void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TString, float> &high, map<TString, vector<float>> &binsx, map<TString, TString> &title) {
 
-  float tbsize = 0.05;
+  float tbsize = 0.025;
   float tbedge = 0.0;
 
   // MET Variables
