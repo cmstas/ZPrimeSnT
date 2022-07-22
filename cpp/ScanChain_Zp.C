@@ -1001,7 +1001,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( abs(JECUnc)==2 && isMC ) { // 2 means that variation are to be applied
           jec_unc->setJetEta(jet_p4.eta());
           jec_unc->setJetPt(jet_p4.pt());
-          jet_p4 *= ( 1. + jec_unc->getUncertainty(JECUnc > 0) ); // true = up variation, false = down variation
+          jet_p4 *= ( 1. + 0.5*JECUnc*(jec_unc->getUncertainty(true)) );
         }
 
         // JERs
