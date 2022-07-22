@@ -237,7 +237,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   bool MuDetRegionSel[MuDetRegionBins];
 
   // Define RooDataSet's for fit
-  RooRealVar mfit("mfit", "mfit", 150.0, 6500.0);
+  RooRealVar mfit("mfit", "mfit", 175.0, 6500.0);
   RooRealVar roow("roow", "roow", 0.0, 100.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -1329,16 +1329,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       mllbinsel[0] = true;
       if (doMllBins) {
-        if ( selectedPair_M > 175. && selectedPair_M < 250)
+        if ( selectedPair_M > 175. && selectedPair_M < 300)
           mllbinsel[1] = true;
         else mllbinsel[1] = false;
-        if ( selectedPair_M > 200. && selectedPair_M < 600)
+        if ( selectedPair_M > 300. && selectedPair_M < 500)
           mllbinsel[2] = true;
         else mllbinsel[2] = false;
         if ( selectedPair_M > 500. && selectedPair_M < 900)
           mllbinsel[3] = true;
         else mllbinsel[3] = false;
-        if ( selectedPair_M > 700. && selectedPair_M < 1300.)
+        if ( selectedPair_M > 750. && selectedPair_M < 1250.)
           mllbinsel[4] = true;
         else mllbinsel[4] = false;
         if ( selectedPair_M > 1100. && selectedPair_M < 1900.)
