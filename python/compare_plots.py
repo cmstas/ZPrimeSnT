@@ -143,10 +143,11 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #            plot.Rebin(5)
 
     ### Remove spikes
-    for b in range(1, plot.GetNbinsX()+1):
-        if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
-            plot.SetBinContent(b,0.0)
-            plot.SetBinError(b,0.0)
+    if sample!="data":
+        for b in range(1, plot.GetNbinsX()+1):
+            if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
+                plot.SetBinContent(b,0.0)
+                plot.SetBinError(b,0.0)
 
     return plot
 

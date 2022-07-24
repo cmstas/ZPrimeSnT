@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
 parser.add_argument("--data", default=False, action="store_true", help="Plot data")
+parser.add_argument("--partialUnblinding", default=False, action="store_true", help="Plot 10% of data")
 parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
@@ -48,13 +49,14 @@ if len(args.selections)==0:
     args.selections = ["sel10"]
 
 if len(args.years)==0:
-    args.selections = ["all"]
+    args.years = ["all"]
 
 # Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
 testLumi = -1.0
-if args.data:
-    testLumi=7.050180294
+if args.data and args.partialUnblinding:
+    #testLumi=7.050180294
+    testLumi=0.1*137.61
 
 # Do signal/MC ratio
 doSignalMCRatio = False
@@ -97,10 +99,10 @@ nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
 
 mllbin=dict()
-mllbin["mll150to250"]="150 < m_{#mu#mu} < 250 GeV"
-mllbin["mll200to600"]="200 < m_{#mu#mu} < 600 GeV"
+mllbin["mll175to300"]="175 < m_{#mu#mu} < 300 GeV"
+mllbin["mll300to500"]="300 < m_{#mu#mu} < 500 GeV"
 mllbin["mll500to900"]="500 < m_{#mu#mu} < 900 GeV"
-mllbin["mll700to1300"]="700 <m_{#mu#mu} < 1300 GeV"
+mllbin["mll750to1250"]="750 <m_{#mu#mu} < 1250 GeV"
 mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
 mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
@@ -113,13 +115,13 @@ MuDetbin["EE"]="2 muons in Endcap"
 samples=[]
 if args.data:
     samples.append("data")
-# Signal MC
-samples.append("Y3")
-#samples.append("DY3")
-#samples.append("DYp3")
-samples.append("B3mL2")
+## Signal MC
+#samples.append("Y3")
+##samples.append("DY3")
+##samples.append("DYp3")
+#samples.append("B3mL2")
 # SM MC
-samples.append("DYbb")
+#samples.append("DYbb")
 samples.append("ZToMuMu")
 samples.append("ttbar")
 samples.append("tW")
@@ -229,8 +231,10 @@ def get_files(samples,year):
 
     sampleDict=OrderedDict()
 
-    if year!="all":
+    if year!="all" and year!="2016":
         years=[year]
+    elif year=="2016":
+        years=["2016nonAPV","2016APV"]
     else:
         years=["2016nonAPV","2016APV","2017","2018"]
     for tyear in years:
@@ -329,7 +333,7 @@ def get_plots(sampleDict, plotname):
     return plotDict
 
 
-def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
+def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
 
     error = ROOT.TMath.Sqrt(plot.GetBinError(0)*plot.GetBinError(0)+plot.GetBinError(1)*plot.GetBinError(1))
     plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
@@ -369,10 +373,11 @@ def customize_plot(plot, fillColor, lineColor, lineWidth, markerStyle, markerSiz
     #        plot.Rebin(2)
 
     ### Remove spikes
-    for b in range(1, plot.GetNbinsX()+1):
-        if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
-            plot.SetBinContent(b,0.0)
-            plot.SetBinError(b,0.0)
+    if sample!="data" and not "met_pt" in plot.GetName():
+        for b in range(1, plot.GetNbinsX()+1):
+            if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
+                plot.SetBinContent(b,0.0)
+                plot.SetBinError(b,0.0)
 
     return plot
 
@@ -410,7 +415,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         lumi = testLumi
 
     yearenergy=""
-    if year!="all":
+    if year!="all" or lumi<100.0:
         yearenergy="%.1f fb^{-1} (%s, 13 TeV)"%(lumi,year)
     else:
         yearenergy="%.0f fb^{-1} (13 TeV)"%(lumi)
@@ -482,9 +487,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             if "mmumu" not in plotname and mass in massToExclude:
                 continue
             if "mmumu" not in plotname:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
+                curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
             else:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
+                curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
             if testLumi>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
@@ -497,7 +502,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         # Data
         elif sample=="data": 
             if plotData:
-                curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+                curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
                 if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                     if "cutflow" not in plotname:
                         curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -505,7 +510,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                     curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
         # Bkg
         else:
-            curPlots[sample] = copy.deepcopy(customize_plot(plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+            curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
             if testLumi>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if not totalSM:
@@ -741,9 +746,23 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     pads = []
     if doRatio==True:
-        h_axis_ratio.GetYaxis().SetRangeUser(0.0,2.0)
-        h_axis_ratio.SetMinimum(0.0)
-        h_axis_ratio.SetMaximum(2.0)
+        minR=0.0
+        maxR=2.0
+        ty = numpy.array([])
+        tmax=maxR
+        if args.data:
+            ty = g_ratio.GetY()
+        else:
+            ty = g_ratio_signal.GetY()
+        if len(ty)>0:
+            tmax = numpy.amax(ty)
+        if tmax>maxR:
+            maxR=tmax*1.05
+        if maxR>5.0:
+            minR=0.1
+        h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
+        h_axis_ratio.SetMinimum(minR)
+        h_axis_ratio.SetMaximum(maxR)
         h_axis_ratio.SetTitle(";;Data / MC")
         h_axis_ratio.GetYaxis().SetTitleSize(0.16)
         h_axis_ratio.GetYaxis().SetTitleOffset(0.25)
@@ -769,6 +788,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         pads[0].Draw()
         pads[1].Draw()
         pads[1].cd()
+        if maxR>5.0:
+            pads[1].SetLogy()
         pads[1].SetTickx()
         if logX:
             h_axis_ratio.GetXaxis().SetMoreLogLabels()
@@ -962,6 +983,8 @@ for year in args.years:
         lumi = 19.5
     elif year == "2016nonAPV":
         lumi = 16.8
+    elif year == "2016":
+        lumi = 19.5+16.8
     elif year == "all":
         lumi = 59.83 + 41.48 + 19.5 + 16.8
     # Open files
@@ -974,7 +997,6 @@ for year in args.years:
     for i in range(0,size):
         listofplots.append(listkeys.At(i).GetName())
     toexclude = []
-
     for plot in listofplots:
         if plot in toexclude:
             continue
