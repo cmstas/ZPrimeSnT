@@ -11,6 +11,9 @@ outDir = "./datacards_"+today
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
+useCategorizedSignal = False
+useCategorizedBackgrund = True
+
 useData = False;
 ext = "data"
 if not useData:
@@ -65,18 +68,24 @@ for y in years:
                     binidx=1
                 elif "nBTag2p" in finame:
                     binidx=2
+                catExtS = ""
+                catExtB = ""
+                if useCategorizedSignal:
+                    catExtS = "_ch%d"%binidx
+                if useCategorizedBackground:
+                    catExtB = "_ch%d"%binidx
                 # Open input file with workspace
                 f = ROOT.TFile(finame)
                 # Retrieve workspace from file
                 w = f.Get(wsname)
                 # Retrieve signal normalization
-                nSig = w.var("signalNorm").getValV()
+                nSig = w.var("signalNorm%s"%catExtS).getValV()
                 # Retrieve signal mean
-                mean = w.var("mean").getValV()
+                mean = w.var("mean%s"%catExtS).getValV()
                 # Retrieve signal std. deviation
-                sigma = w.var("sigma").getValV()
+                sigma = w.var("sigma%s"%catExtS).getValV()
                 # Retrieve MC stat. uncertainty from RooDataSet
-                mcstatunc = 1.0/ROOT.TMath.Sqrt(w.data("signalRooDataSet").numEntries())
+                mcstatunc = 1.0/ROOT.TMath.Sqrt(w.data("signalRooDataSet%s"%catExtS).numEntries())
                 # Close input file with workspace
                 f.Close()
                 os.system("cp %s %s/"%(finame,outDir))
@@ -87,12 +96,15 @@ for y in years:
                 if binidx>=2:
                     btagsyst = 0.05
 
-                muonsfsyst = 0.025
                 muonselsyst = 0.05
 
                 # Derive mass-dependent systematic uncertainties
                 minm = 200.0
                 maxm = 2000.0
+                #
+                minsyst = 0.015
+                maxsyst = 0.03
+                muonsfsyst = max(0.0,(maxsyst-minsyst)/(maxm-minm)*float(m) + minsyst - minm/(maxm-minm)*(maxsyst-minsyst))
                 #
                 minsyst = 0.01
                 maxsyst = 0.05
@@ -111,10 +123,10 @@ for y in years:
                 card.write("jmax *\n")
                 card.write("kmax *\n")
                 card.write("------------\n")
-                card.write("shapes data_obs * %s %s:data_obs\n"%(finame,wsname))
-                card.write("shapes signal * %s %s:signal\n"%(finame,wsname))
-                card.write("shapes background * %s %s:roomultipdf_%d\n"%(finame,wsname,binidx))
-                card.write("------------\n")  
+                card.write("shapes data_obs * %s %s:data_obs%s\n"%(finame,wsname,catExtB))
+                card.write("shapes signal * %s %s:signal%s\n"%(finame,wsname,catExtS))
+                card.write("shapes background * %s %s:roomultipdf%s\n"%(finame,wsname,catExtB))
+                card.write("------------\n")
                 # Observation (taken directly from RooDataSet data_obs)
                 card.write("bin ch%d\n"%(binidx))
                 card.write("observation -1\n")
