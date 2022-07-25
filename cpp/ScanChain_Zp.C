@@ -46,6 +46,7 @@
 
 #define H1(name,nbins,low,high,xtitle) TH1F *h_##name = new TH1F(#name,"",nbins,low,high); h_##name->GetXaxis()->SetTitle(xtitle); h_##name->GetYaxis()->SetTitle("Events");
 #define HTemp(name,nbins,low,high,xtitle) TH1F *h_temp = new TH1F(name,"",nbins,low,high); h_temp->GetXaxis()->SetTitle(xtitle); h_temp->GetYaxis()->SetTitle("Events");
+#define HVaryingBinSize(name,nbins,binsx,xtitle) TH1F *h_varyingBinSize = new TH1F(name,"",nbins,(float *)binsx.data()); h_varyingBinSize->GetXaxis()->SetTitle(xtitle); h_varyingBinSize->GetYaxis()->SetTitle("Events");
 
 // #define DEBUG
 #define Zmass 91.1876
@@ -65,7 +66,7 @@ bool doMuDetRegionBins = false;
 
 // General flags
 bool removeSpikes = true;
-bool removeDataDuplicates = false;
+bool removeDataDuplicates = true;
 bool useTuneP = true;
 bool usePuppiMET = true;
 bool fillRooDataSet = true;
@@ -85,9 +86,6 @@ bool useHEMisotracks = false;
 float HEM_trkPtCut = 10.0;  // veto on iso-tracks above this threshold
 //
 
-const char* outdir = "temp_data";
-int mdir = mkdir(outdir,0755);
-
 struct debugger { template<typename T> debugger& operator , (const T& v) { cerr<<v<<" "; return *this; } } dbg;
 #ifdef DEBUG
 #define debug(args...) do {cerr << #args << ": "; dbg,args; cerr << endl;} while(0)
@@ -101,12 +99,15 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0) {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
 // +2: Apply positive variation
 // -2: Apply negative variation
+
+  int mdir = mkdir(outdir,0755);
+  TString oDir(outdir);
 
   float factor = 1.0;
   float lumi = 1.0;
@@ -201,17 +202,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     factor = xsec*lumi/genEventSumw;
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
-  TFile* fout = new TFile("temp_data/output_"+process+"_"+year+".root", "RECREATE");
+  TFile* fout = new TFile(oDir+"/output_"+process+"_"+year+".root", "RECREATE");
 
   // Define histo info maps
   map<TString, int> nbins { };
   map<TString, float> low { };
   map<TString, float> high { };
+  map<TString, vector<float>> binsx { };
   map<TString, TString> title { };
 
   // Define histos
   H1(cutflow,20,0,20,"");
-  histoDefinition(nbins, low, high, title);
+  histoDefinition(nbins, low, high, binsx, title);
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
@@ -235,7 +237,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   bool MuDetRegionSel[MuDetRegionBins];
 
   // Define RooDataSet's for fit
-  RooRealVar mfit("mfit", "mfit", 150.0, 6500.0);
+  RooRealVar mfit("mfit", "mfit", 175.0, 6500.0);
   RooRealVar roow("roow", "roow", 0.0, 100.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
@@ -390,16 +392,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       if(isel<5) {
 	TString plot_name = plot_names[iplot];
 	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0];
-	HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-	histos[name] = h_temp;
+	if ( binsx[plot_name].size()==0 ) {
+	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	  histos[name] = h_temp;
+	}
+	else {
+	  HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+	  histos[name] = h_varyingBinSize;
+	}
       }
       else if(isel>=5 && isel<8) {
         for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
             TString plot_name = plot_names[iplot];
             TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-            histos[name] = h_temp;
+	    if ( binsx[plot_name].size()==0 ) {
+	      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+	      histos[name] = h_temp;
+	    }
+	    else {
+	      HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+	      histos[name] = h_varyingBinSize;
+	    }
           }
         }
       }
@@ -413,8 +427,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
               if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
                 continue;
               TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-              HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-              histos[name] = h_temp;
+	      if ( binsx[plot_name].size()==0 ) {
+		HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+		histos[name] = h_temp;
+	      }
+	      else {
+		HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+		histos[name] = h_varyingBinSize;
+	      }
             }
           }
         }
@@ -423,14 +443,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   }
 
   if ( PUWeight!=0 ) set_puWeights();
-  if ( muonSF!=0 ) {
+  if ( muonRecoSF!=0 ) {
     // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
     // (central high-pT RECO SFs equal zero elsewhere)
     // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
     set_muonRecoSF();
-    set_muonIDSF();
-    set_muonIsoSF();
   }
+  if ( muonIdSF!=0 ) set_muonIDSF();
+  if ( muonIsoSF!=0) set_muonIsoSF();
   if ( triggerSF!=0 ) set_triggerSF();
   if ( bTagSF!=0 ) set_allbTagEff();
 
@@ -636,26 +656,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  continue;
 	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
-	// JES up
-	if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(nt.PuppiMET_phiJESUp()) )
-	  continue;
-	// JES down
-	if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(nt.PuppiMET_ptJESDown()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(nt.PuppiMET_phiJESDown()) )
-	  continue;
-	// JER up
-	if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(nt.PuppiMET_ptJERUp()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(nt.PuppiMET_phiJERUp()) )
-	  continue;
-	// JER down
-	if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(nt.PuppiMET_ptJERDown()) )
-	  continue;
-	if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
-	  continue;
+	if ( isMC && process!="DYbb" ) {
+	  // JES up
+	  if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJESUp()) || isnan(nt.PuppiMET_phiJESUp()) )
+	    continue;
+	  // JES down
+	  if ( isinf(nt.PuppiMET_ptJESDown()) || isnan(nt.PuppiMET_ptJESDown()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJESDown()) || isnan(nt.PuppiMET_phiJESDown()) )
+	    continue;
+	  // JER up
+	  if ( isinf(nt.PuppiMET_ptJERUp()) || isnan(nt.PuppiMET_ptJERUp()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJERUp()) || isnan(nt.PuppiMET_phiJERUp()) )
+	    continue;
+	  // JER down
+	  if ( isinf(nt.PuppiMET_ptJERDown()) || isnan(nt.PuppiMET_ptJERDown()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
+	    continue;
+	}
       }
 
       std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
@@ -664,7 +686,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       double puppimet_variation_pt = nt.PuppiMET_pt();
       double puppimet_variation_phi = nt.PuppiMET_phi();
-      if ( isMC ) {
+      if ( isMC && process!="DYbb" ) {
         // JEC uncertainties on PUPPI MET
         if ( JECUnc==2 ) {
           puppimet_variation_pt = nt.PuppiMET_ptJESUp();
@@ -749,24 +771,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016
 	  // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2017
 	  // 2018: https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018
-	  if ( muonSF!=0 ) {
-	    // Apply muon (RECO, ID, ISO) SFs
+	  // Apply muon (RECO, ID, ISO) SFs
+	  if ( muonRecoSF!=0 ) {
 	    TString tvariation = "central";
-	    if ( muonSF==2 ) tvariation = "up";
-	    else if ( muonSF==-2 ) tvariation = "down";
+	    if ( muonRecoSF==2 ) tvariation = "up";
+	    else if ( muonRecoSF==-2 ) tvariation = "down";
 	    // If muon p>100 GeV or (p>50 GeV and |eta|<1.6), high-pT RECO SF are applied as a function of muon p and |eta|
 	    // (central high-pT RECO SFs equal zero elsewhere)
 	    // Else medium-pT RECO SF are applied as a function of muon pT and |eta|, to avoid zero SFs
 	    weight *= get_muonRecoSF(Muon_p4.at(mu).P(), Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	    if ( mu_id ) {
-	      weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	      if ( mu_iso ) {
-		weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	      }
-	    }
 	  }
+	  if ( muonIdSF!=0 && mu_id ) {
+	    TString tvariation = "central";
+	    if ( muonIdSF==2 ) tvariation = "up";
+	    else if ( muonIdSF==-2 ) tvariation = "down";
+	    weight *= get_muonIDSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	  }
+	  if ( muonIsoSF!=0 && mu_iso ) {
+	    TString tvariation = "central";
+	    if ( muonIsoSF==2 ) tvariation = "up";
+	    else if ( muonIsoSF==-2 ) tvariation = "down";
+	    weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+	  }
+	  // Apply trigger SF
 	  if ( triggerSF!=0 && triggerWeight < 0.0 ) {
-	    // Apply trigger SF
 	    TString tvariation = "central";
 	    if ( triggerSF==2 ) tvariation = "up";
 	    else if ( triggerSF==-2 ) tvariation = "down";
@@ -973,7 +1001,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( abs(JECUnc)==2 && isMC ) { // 2 means that variation are to be applied
           jec_unc->setJetEta(jet_p4.eta());
           jec_unc->setJetPt(jet_p4.pt());
-          jet_p4 *= ( 1. + jec_unc->getUncertainty(JECUnc > 0) ); // true = up variation, false = down variation
+          jet_p4 *= ( 1. + 0.5*JECUnc*(jec_unc->getUncertainty(true)) );
         }
 
         // JERs
@@ -1301,16 +1329,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       mllbinsel[0] = true;
       if (doMllBins) {
-        if ( selectedPair_M > 150. && selectedPair_M < 250)
+        if ( selectedPair_M > 175. && selectedPair_M < 300)
           mllbinsel[1] = true;
         else mllbinsel[1] = false;
-        if ( selectedPair_M > 200. && selectedPair_M < 600)
+        if ( selectedPair_M > 300. && selectedPair_M < 500)
           mllbinsel[2] = true;
         else mllbinsel[2] = false;
         if ( selectedPair_M > 500. && selectedPair_M < 900)
           mllbinsel[3] = true;
         else mllbinsel[3] = false;
-        if ( selectedPair_M > 700. && selectedPair_M < 1300.)
+        if ( selectedPair_M > 750. && selectedPair_M < 1250.)
           mllbinsel[4] = true;
         else mllbinsel[4] = false;
         if ( selectedPair_M > 1100. && selectedPair_M < 1900.)
@@ -2050,11 +2078,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   } // File loop
   bar.finish();
 
-  if ( muonSF!=0 ) {
-    reset_muonRecoSF();
-    reset_muonIDSF();
-    reset_muonIsoSF();
-  }
+  if ( muonRecoSF!=0 ) reset_muonRecoSF();
+  if ( muonIdSF!=0 ) reset_muonIDSF();
+  if ( muonIsoSF!=0 ) reset_muonIsoSF();
   if ( triggerSF!=0 ) reset_triggerSF();
   if ( bTagSF!=0 ) reset_bTagEff();
 
