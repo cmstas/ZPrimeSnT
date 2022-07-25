@@ -465,11 +465,10 @@ legOther.append("JES down")
 #legOther.append("Trigger SF up")
 #legOther.append("Trigger SF down")
 
-outDir = ["/home/users/"+user+"/public_html/Zprime/"+inDirRef.replace("/","").split("_")[2]+"/"]
-#outDir = []
-#for d in inDirOther:
-#    to = d.replace("/","").split("_")[2]
-#    outDir.append("/home/users/"+user+"/public_html/Zprime/"+to+"/")
+outDir = []
+for d in inDirOther:
+    to = d.replace("/","").split("_")[2]
+    outDir.append("/home/users/"+user+"/public_html/Zprime/"+to+"/")
 for d in outDir:
     if not os.path.exists(d):
         os.makedirs(d)

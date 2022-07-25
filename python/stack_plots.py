@@ -115,11 +115,11 @@ MuDetbin["EE"]="2 muons in Endcap"
 samples=[]
 if args.data:
     samples.append("data")
-## Signal MC
-#samples.append("Y3")
-##samples.append("DY3")
-##samples.append("DYp3")
-#samples.append("B3mL2")
+# Signal MC
+samples.append("Y3")
+#samples.append("DY3")
+#samples.append("DYp3")
+samples.append("B3mL2")
 # SM MC
 #samples.append("DYbb")
 samples.append("ZToMuMu")
@@ -416,7 +416,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     yearenergy=""
     if year!="all" or lumi<100.0:
-        yearenergy="%.1f fb^{-1} (%s, 13 TeV)"%(lumi,year)
+        if year!="all":
+            yearenergy="%.1f fb^{-1} (%s, 13 TeV)"%(lumi,year)
+        else:
+            yearenergy="%.1f fb^{-1} (2016-2018, 13 TeV)"%(lumi)
     else:
         yearenergy="%.0f fb^{-1} (13 TeV)"%(lumi)
     if plotData:
@@ -855,7 +858,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     else:
         h_axis.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
     h_axis.GetYaxis().SetLabelSize(0.03)
-    h_axis.GetYaxis().SetMaxDigits(3)
+    if not args.shape:
+        h_axis.GetYaxis().SetMaxDigits(3)
     h_axis.Draw("")
     stack.Draw("HIST,SAME")
     g_unc.Draw("SAME,2")
