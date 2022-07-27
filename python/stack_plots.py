@@ -25,6 +25,7 @@ parser.add_argument("--selections", default=[], nargs="+", help="List of selecti
 parser.add_argument("--years", default=[], nargs="+", help="List of years to be plotted. Default: all years")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
 parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
+parser.add_argument("--plotProdModes", default=False, action="store_true", help="Plot signal samples split in production modes (ss, sb, bb). Bkgs cannot be splt in a simlar way and are plotted inclusively. Default: False")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -111,6 +112,12 @@ MuDetbin["BB"]="2 muons in Barrel"
 MuDetbin["BE"]="1 muon in Barrel, 1 muon in Endcap)"
 MuDetbin["EE"]="2 muons in Endcap"
 
+prodMode=dict()
+prodModelabel["all"]="All production modes"
+prodModelabel["ss"]="bs production mode"
+prodModelabel["bs"]="bs production mode"
+prodModelabel["bb"]="bb production mode"
+
 # Samples
 samples=[]
 if args.data:
@@ -134,6 +141,12 @@ samples.append("TTHTobb")
 samples.append("WW")
 samples.append("ZZ")
 samples.append("WZ")
+# PreUL NanoAODv7 samples for BFF comparison
+# Signal MC
+#samples.append("BFF")
+#samples.append("BFFdbs1p0")
+#samples.append("DY_v7")
+#samples.append("ttbar_v7")
 
 sampleFillColor=dict()
 sampleFillColor["data"]     = None
@@ -149,6 +162,10 @@ sampleFillColor["TTX"]      = ROOT.kAzure+4
 sampleFillColor["WW"]       = ROOT.kOrange-3
 sampleFillColor["ZZ"]       = ROOT.kOrange-2
 sampleFillColor["WZ"]       = ROOT.kOrange-1
+sampleFillColor["BFF"]      = None
+sampleFillColor["BFFdbs1p0"]= None
+sampleFillColor["DY_v7"]    = ROOT.kGreen+1
+sampleFillColor["ttbar_v7"] = ROOT.kAzure+1
 
 sampleLineColor=dict()
 sampleLineColor["data"]     = ROOT.kBlack
@@ -164,6 +181,10 @@ sampleLineColor["TTX"]      = None
 sampleLineColor["WW"]       = None
 sampleLineColor["ZZ"]       = None
 sampleLineColor["WZ"]       = None
+sampleLineColor["BFF"]      = ROOT.kViolet
+sampleLineColor["BFFdbs1p0"]= ROOT.kRed
+sampleLineColor["DY_v7"]    = None
+sampleLineColor["ttbar_v7"] = None
 
 sampleLineWidth=dict()
 sampleLineWidth["data"]     = 1
@@ -179,6 +200,10 @@ sampleLineWidth["TTX"]      = 0
 sampleLineWidth["WW"]       = 0
 sampleLineWidth["ZZ"]       = 0
 sampleLineWidth["WZ"]       = 0
+sampleLineWidth["BFF"]      = 2
+sampleLineWidth["BFFdbs1p0"]= 2
+sampleLineWidth["DY_v7"]    = 0
+sampleLineWidth["ttbar_v7"] = 0
 
 sampleMarkerStyle=dict()
 sampleMarkerStyle["data"]     = 20
@@ -194,6 +219,10 @@ sampleMarkerStyle["TTX"]      = None
 sampleMarkerStyle["WW"]       = None
 sampleMarkerStyle["ZZ"]       = None
 sampleMarkerStyle["WZ"]       = None
+sampleMarkerStyle["BFF"]      = None
+sampleMarkerStyle["BFFdbs1p0"]= None
+sampleMarkerStyle["DY_v7"]    = None
+sampleMarkerStyle["ttbar_v7"] = None
 
 sampleMarkerSize=dict()
 sampleMarkerSize["data"]     = 1.2
@@ -209,6 +238,10 @@ sampleMarkerSize["TTX"]      = None
 sampleMarkerSize["WW"]       = None
 sampleMarkerSize["ZZ"]       = None
 sampleMarkerSize["WZ"]       = None
+sampleMarkerSize["BFF"]      = None
+sampleMarkerSize["BFFdbs1p0"]= None
+sampleMarkerSize["DY_v7"]    = None
+sampleMarkerSize["ttbar_v7"] = None
 
 sampleLegend=dict()
 sampleLegend["data"]     = "Data"
@@ -224,6 +257,10 @@ sampleLegend["TTX"]      = "t#bar{t}X"
 sampleLegend["WW"]       = "WW"
 sampleLegend["ZZ"]       = "ZZ"
 sampleLegend["WZ"]       = "WZ"
+sampleLegend["BFF"]      = "BFF"
+sampleLegend["BFFdbs1p0"]= "BFFdbs1p0"
+sampleLegend["DY_v7"]    = "DY(#mu#mu)"
+sampleLegend["ttbar_v7"] = "t#bar{t}"
 
 epsilon = 1e-6
 
@@ -239,7 +276,7 @@ def get_files(samples,year):
         years=["2016nonAPV","2016APV","2017","2018"]
     for tyear in years:
         for i,sample in enumerate(samples):
-            if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2":
+            if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2" or sample=="BFF" or sample=="BFFdbs1p0":
                 for mass in args.signalMass:
                     if (sample+"_M"+str(mass)) not in sampleDict.keys():
                         sampleDict[sample+"_M"+str(mass)]=[]
@@ -431,49 +468,57 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         thissel=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-4]
+            if not thissel.Contains("sel"):
+                thissel = plotname.split("_")[len(plotname.split("_"))-5]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-3]
+            if not thissel.Contains("sel"):
+                thissel = plotname.split("_")[len(plotname.split("_"))-4]
         else:
             thissel = plotname.split("_")[len(plotname.split("_"))-2]
+            if not thissel.Contains("sel"):
+                thissel = plotname.split("_")[len(plotname.split("_"))-3]
         if thissel not in args.selections:
             return(0)
+
         thismll=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thismll = plotname.split("_")[len(plotname.split("_"))-3]
+            if not thismll.Contains("mll"):
+                thismll = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
-            thissel = plotname.split("_")[len(plotname.split("_"))-2]
+            thismll = plotname.split("_")[len(plotname.split("_"))-2]
+            if not thismll.Contains("mll"):
+                thismll = plotname.split("_")[len(plotname.split("_"))-3]
         else:
             thismll = plotname.split("_")[len(plotname.split("_"))-1]
+            if not thismll.Contains("mll"):
+                thismll = plotname.split("_")[len(plotname.split("_"))-2]
         if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
+
         thisMuDet=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+            if not (thisMuDet.Contains("MuDetAll") or thisMuDet.Contains("BB") or thisMuDet.Contains("BE") or thisMuDet.Contains("EE")):
+                thisMuDet = plotname.split("_")[len(plotname.split("_"))-2]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
-            thissel = plotname.split("_")[len(plotname.split("_"))-1]
+            thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+            if not (thisMuDet.Contains("MuDetAll") or thisMuDet.Contains("BB") or thisMuDet.Contains("BE") or thisMuDet.Contains("EE")):
+                thisMuDet = plotname.split("_")[len(plotname.split("_"))-2]
         else:
             thisMuDet = "All"
         if not args.plotMuonDetRegions and 'All' not in thisMuDet:
+            return(0)
+
+        if not args.plotProdModes and plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
             return(0)
     else:
         if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
             return(0)
         if not args.plotMuonDetRegions and ("cutflow" in plotname and "MuDet" in plotname and "All" not in plotname):
             return(0)
-
-    if "cutflow" not in plotname:
-        thissel=""
-        if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
-            thissel = plotname.split("_")[len(plotname.split("_"))-4]
-        elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
-            thissel = plotname.split("_")[len(plotname.split("_"))-3]
-        else:
-            thissel = plotname.split("_")[len(plotname.split("_"))-2]
-        if thissel not in args.selections:
-            return(0)
-
-    else:
-        if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
+        if not args.plotProdModes and plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
             return(0)
 
     # Get histograms
@@ -484,7 +529,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     lowToHighBinsCumulative = True
     for i,sample in enumerate(plotDict.keys()):
         # Signal
-        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
             model = sample.split("_")[0]
             mass = sample.split("_")[1].lstrip("M")
             if "mmumu" not in plotname and mass in massToExclude:
@@ -534,7 +579,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     stack = ROOT.THStack("stack","")
     for i,sample in enumerate(reversed(plotDict.keys())):
         # Bkg
-        if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or sample=="data"):
+        if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample or sample=="data"):
             if args.shape and totalScale>0.0:
                 curPlots[sample].Scale(1.0/totalScale)
             if args.cumulative:
@@ -546,7 +591,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     signalXSecScale = { }
     if (not logY) and args.signalScale and not args.shape:
         for sample in curPlots.keys():
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
                 model = sample.split("_")[0]
                 if model not in signalXSecScale.keys():
                     signalXSecScale[model] = { }
@@ -586,7 +631,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if args.extendedLegend:
         for sample in curPlots.keys():
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
@@ -616,7 +661,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         entryExists = OrderedDict()
         for sample in curPlots.keys():
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
@@ -689,8 +734,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
         for i,sample in enumerate(plotDict.keys()):
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
-                model = sample.split("_")[0]
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+                model = sample.split("_")[0] 
                 mass = sample.split("_")[1].lstrip("M")
                 if "mmumu" not in plotname and mass in massToExclude:
                     continue
@@ -819,7 +864,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             g_ratio_signal.GetHistogram().GetXaxis().SetTickSize(0.06)
             if logX:
                 if MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
-                  g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+                    g_ratio_signal.GetHistogram().GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
                 g_ratio_signal.GetHistogram().GetXaxis().SetMoreLogLabels()
                 pads[1].SetLogx()
 
@@ -865,7 +910,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     g_unc.Draw("SAME,2")
     histMax = 0.0
     for sample in curPlots.keys():
-        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample:
+        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
             if histMax < curPlots[sample].GetMaximum(): 
                 histMax = curPlots[sample].GetMaximum()
             curPlots[sample].Draw("HIST,SAME")
@@ -908,17 +953,32 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         whichMuDet = ""
         whichsel = ""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
-            whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
-            whichnb  = plotname.split("_")[len(plotname.split("_"))-2]
-            whichmll = plotname.split("_")[len(plotname.split("_"))-3]
-            whichsel = plotname.split("_")[len(plotname.split("_"))-4]
+            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+                whichMuDet = plotname.split("_")[len(plotname.split("_"))-2]
+                whichnb  = plotname.split("_")[len(plotname.split("_"))-3]
+                whichmll = plotname.split("_")[len(plotname.split("_"))-4]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-5]
+            else:
+                whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+                whichnb  = plotname.split("_")[len(plotname.split("_"))-2]
+                whichmll = plotname.split("_")[len(plotname.split("_"))-3]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
-            whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
-            whichmll = plotname.split("_")[len(plotname.split("_"))-2]
-            whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+                whichMuDet = plotname.split("_")[len(plotname.split("_"))-2]
+                whichmll = plotname.split("_")[len(plotname.split("_"))-3]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-4]
+            else:
+                whichMuDet = plotname.split("_")[len(plotname.split("_"))-1]
+                whichmll = plotname.split("_")[len(plotname.split("_"))-2]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-3]
         else:
-            whichmll = plotname.split("_")[len(plotname.split("_"))-1]
-            whichsel = plotname.split("_")[len(plotname.split("_"))-2]
+            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+                whichmll = plotname.split("_")[len(plotname.split("_"))-2]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+            else:
+                whichmll = plotname.split("_")[len(plotname.split("_"))-1]
+                whichsel = plotname.split("_")[len(plotname.split("_"))-2]
         ts = 0
         for s in range(0,nsel[whichsel]+1):
             if 'inclusive' not in whichmll and s==8:
@@ -1007,5 +1067,5 @@ for year in args.years:
         draw_plot(sampleDict, plot, False, False, args.data, False, lumi, year)
         draw_plot(sampleDict, plot, True , False, args.data, False, lumi, year)
         if ("pt" in plot) or ("mmumu" in plot) or ("mlb" in plot) or ("mbb" in plot) or ("RelIso" in plot) or ("dxy" in plot) or ("dz" in plot):
-          draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
-          draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
+            draw_plot(sampleDict, plot, False, True, args.data, False, lumi, year)
+            draw_plot(sampleDict, plot, True , True, args.data, False, lumi, year)
