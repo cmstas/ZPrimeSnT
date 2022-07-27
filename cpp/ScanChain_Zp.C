@@ -264,7 +264,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   }
   if ( writeOutYields_AfterSel ) {
     yieldFile_AfterSel.open("yieldFile_AfterSel.txt",ios::app); // Append in existing file or create the file, if it is missing
-    if (!ifile_AfterSel) yieldFile_AfterSel<<"year,model,g/M,t23,M,N_w,f_w,N1_w,N2_w,N1bb_w,N2bb_w,N1bs_w,N2bs_w,N1ss_w,N2ss_w,N_r,f_r,N1_r,N2_r,N1bb_r,N2bb_r,N1bs_r,N2bs_r,N1ss_r,N2ss_r" << endl;
+    if (!ifile_AfterSel) yieldFile_AfterSel<<"year,model,x,t23,M,N_w,f_w,N1_w,N2_w,N1bb_w,N2bb_w,N1bs_w,N2bs_w,N1ss_w,N2ss_w,N_r,f_r,N1_r,N2_r,N1bb_r,N2bb_r,N1bs_r,N2bs_r,N1ss_r,N2ss_r" << endl;
   }
 
   float NbbZ=0, NbsZ=0, NssZ=0, NbbZbb=0, NbsZbs=0, NssZss=0;

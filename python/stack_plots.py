@@ -24,6 +24,7 @@ parser.add_argument("--extendedLegend", default=False, action="store_true", help
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
 parser.add_argument("--years", default=[], nargs="+", help="List of years to be plotted. Default: all years")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
+parser.add_argument("--mllBinningForBFF", default=False, action="store_true", help="Plot in slices of mll for BFF analysis comparison. Default: False")
 parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
 parser.add_argument("--plotProdModes", default=False, action="store_true", help="Plot signal samples split in production modes (ss, sb, bb). Bkgs cannot be splt in a simlar way and are plotted inclusively. Default: False")
 args = parser.parse_args()
@@ -100,12 +101,17 @@ nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
 
 mllbin=dict()
-mllbin["mll175to300"]="175 < m_{#mu#mu} < 300 GeV"
-mllbin["mll300to500"]="300 < m_{#mu#mu} < 500 GeV"
-mllbin["mll500to900"]="500 < m_{#mu#mu} < 900 GeV"
-mllbin["mll750to1250"]="750 <m_{#mu#mu} < 1250 GeV"
-mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
-mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
+if args.mllBinningForBFF:
+  mllbin["mll225to275"]="225 < m_{#mu#mu} < 275 GeV"
+  mllbin["mll315to385"]="315 < m_{#mu#mu} < 385 GeV"
+  mllbin["mll450to550"]="450 < m_{#mu#mu} < 550 GeV"
+else:
+  mllbin["mll175to300"]="175 < m_{#mu#mu} < 300 GeV"
+  mllbin["mll300to500"]="300 < m_{#mu#mu} < 500 GeV"
+  mllbin["mll500to900"]="500 < m_{#mu#mu} < 900 GeV"
+  mllbin["mll750to1250"]="750 <m_{#mu#mu} < 1250 GeV"
+  mllbin["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV"
+  mllbin["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV"
 
 MuDetbin=dict()
 MuDetbin["BB"]="2 muons in Barrel"
@@ -276,7 +282,7 @@ def get_files(samples,year):
         years=["2016nonAPV","2016APV","2017","2018"]
     for tyear in years:
         for i,sample in enumerate(samples):
-            if sample=="Y3" or sample=="DY3" or sample=="DYp3" or sample=="B3mL2" or sample=="BFF" or sample=="BFFdbs1p0":
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF"in sample:
                 for mass in args.signalMass:
                     if (sample+"_M"+str(mass)) not in sampleDict.keys():
                         sampleDict[sample+"_M"+str(mass)]=[]
@@ -529,7 +535,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     lowToHighBinsCumulative = True
     for i,sample in enumerate(plotDict.keys()):
         # Signal
-        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
             model = sample.split("_")[0]
             mass = sample.split("_")[1].lstrip("M")
             if "mmumu" not in plotname and mass in massToExclude:
@@ -579,7 +585,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     stack = ROOT.THStack("stack","")
     for i,sample in enumerate(reversed(plotDict.keys())):
         # Bkg
-        if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample or sample=="data"):
+        if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or sample=="data"):
             if args.shape and totalScale>0.0:
                 curPlots[sample].Scale(1.0/totalScale)
             if args.cumulative:
@@ -591,7 +597,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     signalXSecScale = { }
     if (not logY) and args.signalScale and not args.shape:
         for sample in curPlots.keys():
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
                 model = sample.split("_")[0]
                 if model not in signalXSecScale.keys():
                     signalXSecScale[model] = { }
@@ -631,7 +637,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if args.extendedLegend:
         for sample in curPlots.keys():
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
@@ -661,7 +667,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         entryExists = OrderedDict()
         for sample in curPlots.keys():
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
                 model = sample.split("_")[0]
                 mass = sample.split("_")[1].lstrip("M")
                 if (not logY) and args.signalScale and not args.shape and signalXSecScale[model][str(mass)]>1.0+epsilon:
@@ -734,7 +740,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
         for i,sample in enumerate(plotDict.keys()):
             # Signal
-            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+            if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
                 model = sample.split("_")[0] 
                 mass = sample.split("_")[1].lstrip("M")
                 if "mmumu" not in plotname and mass in massToExclude:
@@ -910,7 +916,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     g_unc.Draw("SAME,2")
     histMax = 0.0
     for sample in curPlots.keys():
-        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "BFFdbs1p0" in sample:
+        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
             if histMax < curPlots[sample].GetMaximum(): 
                 histMax = curPlots[sample].GetMaximum()
             curPlots[sample].Draw("HIST,SAME")
