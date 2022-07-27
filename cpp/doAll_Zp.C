@@ -10,11 +10,14 @@
   int prefireWeight=1; // +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
   int topPtWeight=1; // bool variable, only have or not have
   int PUWeight=1;
-  int muonSF=1;
+  int muonRecoSF=1;
+  int muonIdSF=1;
+  int muonIsoSF=1;
   int triggerSF=1;
   int bTagSF=1;
   int JECUnc=0; // No central value, set to +/-2 to get variations
   int JERUnc=0; // Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
+  const char* outdir = "temp_data"; // Name of output directory
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -210,8 +213,8 @@
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonSF,triggerSF,bTagSF,JECUnc,JERUnc);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,outdir);
     }
     cout<<endl;
   }

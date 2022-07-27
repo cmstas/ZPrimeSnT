@@ -1,13 +1,25 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
-void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TString, float> &high, map<TString, TString> &title) {
+void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TString, float> &high, map<TString, vector<float>> &binsx, map<TString, TString> &title) {
+
+  float tbsize = 0.10;
+  float tbsizemass = 0.025;
+  float tbedge = 0.0;
 
   // MET Variables
-  nbins.insert({"pfmet_pt", 120});
-  low.insert({"pfmet_pt", 5});
-  high.insert({"pfmet_pt", 605});
+  low.insert({"pfmet_pt", 25.0});
+  high.insert({"pfmet_pt", 600.0});
+  tbedge = low["pfmet_pt"];
+  binsx["pfmet_pt"].push_back(tbedge);
+  while ( tbedge < high["pfmet_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["pfmet_pt"].push_back(tbedge);
+  }
+  nbins.insert({"pfmet_pt", binsx["pfmet_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"pfmet_pt", "PF MET [GeV]"});
 
   nbins.insert({"pfmet_phi", 65});
@@ -15,9 +27,16 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"pfmet_phi", 3.25});
   title.insert({"pfmet_phi", "PF MET #phi [GeV]"});
 
-  nbins.insert({"puppimet_pt", 120});
-  low.insert({"puppimet_pt", 5});
-  high.insert({"puppimet_pt", 605});
+  low.insert({"puppimet_pt", 25.0});
+  high.insert({"puppimet_pt", 600.0});
+  tbedge = low["puppimet_pt"];
+  binsx["puppimet_pt"].push_back(tbedge);
+  while ( tbedge < high["puppimet_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["puppimet_pt"].push_back(tbedge);
+  }
+  nbins.insert({"puppimet_pt", binsx["puppimet_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"puppimet_pt", "PUPPI MET [GeV]"});
 
   nbins.insert({"puppimet_phi", 65});
@@ -26,19 +45,55 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   title.insert({"puppimet_phi", "PUPPI MET #phi [GeV]"});
 
   // Basic muon properties and masses
-  nbins.insert({"mmumu", 480});
-  low.insert({"mmumu", 100});
-  high.insert({"mmumu", 2500});
+  //nbins.insert({"mmumu", 580}); // for fix 5 GeV binning
+  low.insert({"mmumu", 100.0});
+  high.insert({"mmumu", 3000.0});
+  tbedge = low["mmumu"];
+  binsx["mmumu"].push_back(tbedge);
+  while ( tbedge < 175.0 ){
+    tbedge += 2.5;
+    binsx["mmumu"].push_back(tbedge);
+  }
+  while ( tbedge < high["mmumu"] ) {
+    tbedge += tbedge*tbsizemass;
+    binsx["mmumu"].push_back(tbedge);
+  }
+  nbins.insert({"mmumu", binsx["mmumu"].size()-1});
+  tbedge = 0.0;
   title.insert({"mmumu", "m_{#mu#mu} [GeV]"});
 
-  nbins.insert({"mu1_pt", 200});
+  //nbins.insert({"mu1_pt", 200}); // for fix 5 GeV binning
   low.insert({"mu1_pt", 10});
   high.insert({"mu1_pt", 1010});
+  tbedge = low["mu1_pt"];
+  binsx["mu1_pt"].push_back(tbedge);
+  while ( tbedge < 100.0 ){
+    tbedge += 10.0;
+    binsx["mu1_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["mu1_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["mu1_pt"].push_back(tbedge);
+  }
+  nbins.insert({"mu1_pt", binsx["mu1_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"mu1_pt", "p_{T} (leading #mu) [GeV]"});
 
-  nbins.insert({"mu2_pt", 200});
+  //nbins.insert({"mu2_pt", 200}); // for fix 5 GeV binning
   low.insert({"mu2_pt", 10});
   high.insert({"mu2_pt", 1010});
+  tbedge = low["mu2_pt"];
+  binsx["mu2_pt"].push_back(tbedge);
+  while ( tbedge < 100.0 ){
+    tbedge += 10.0;
+    binsx["mu2_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["mu2_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["mu2_pt"].push_back(tbedge);
+  }
+  nbins.insert({"mu2_pt", binsx["mu2_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"mu2_pt", "p_{T} (subleading #mu) [GeV]"});
 
   nbins.insert({"mu1_eta", 60});
@@ -112,9 +167,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"nExtra_muons", 6});
   title.insert({"nExtra_muons", "Number of additional #mu's"});
 
-  nbins.insert({"mu3_pt", 200});
+  //nbins.insert({"mu3_pt", 200}); // for fix 5 GeV binning
   low.insert({"mu3_pt", 5});
   high.insert({"mu3_pt", 1005});
+  tbedge = low["mu3_pt"];
+  binsx["mu3_pt"].push_back(tbedge);
+  while ( tbedge < 100.0 ){
+    tbedge += 10.0;
+    binsx["mu3_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["mu3_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["mu3_pt"].push_back(tbedge);
+  }
+  nbins.insert({"mu3_pt", binsx["mu3_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"mu3_pt", "p_{T} (third #mu) [GeV]"});
 
   nbins.insert({"mu3_eta", 60});
@@ -138,9 +205,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"nExtra_electrons", 6});
   title.insert({"nExtra_electrons", "Number of electrons"});
 
-  nbins.insert({"ele_extra_pt", 200});
+  //nbins.insert({"ele_extra_pt", 200}); // for fix 5 GeV binning
   low.insert({"ele_extra_pt", 5});
   high.insert({"ele_extra_pt", 1005});
+  tbedge = low["ele_extra_pt"];
+  binsx["ele_extra_pt"].push_back(tbedge);
+  while ( tbedge < 50.0 ){
+    tbedge += 5.0;
+    binsx["ele_extra_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["ele_extra_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["ele_extra_pt"].push_back(tbedge);
+  }
+  nbins.insert({"ele_extra_pt", binsx["ele_extra_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"ele_extra_pt", "p_{T} (extra electron) [GeV]"});
 
   nbins.insert({"ele_extra_eta", 60});
@@ -159,9 +238,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"nExtra_lepIsoTracks", 6});
   title.insert({"nExtra_lepIsoTracks", "Number of (additional) lepton (e/#mu) PF candidates"});
 
-  nbins.insert({"lepIsoTrack_extra_pt", 200});
+  //nbins.insert({"lepIsoTrack_extra_pt", 200}); // for fix 5 GeV binning
   low.insert({"lepIsoTrack_extra_pt", 5});
   high.insert({"lepIsoTrack_extra_pt", 1005});
+  tbedge = low["lepIsoTrack_extra_pt"];
+  binsx["lepIsoTrack_extra_pt"].push_back(tbedge);
+  while ( tbedge < 50.0 ){
+    tbedge += 5.0;
+    binsx["lepIsoTrack_extra_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["lepIsoTrack_extra_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["lepIsoTrack_extra_pt"].push_back(tbedge);
+  }
+  nbins.insert({"lepIsoTrack_extra_pt", binsx["lepIsoTrack_extra_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"lepIsoTrack_extra_pt", "p_{T} (extra lepton isoTrack) [GeV]"});
 
   nbins.insert({"lepIsoTrack_extra_eta", 60});
@@ -179,9 +270,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"nExtra_chhIsoTracks", 6});
   title.insert({"nExtra_chhIsoTracks", "Number of (additional) charged hadron PF candidates"});
 
-  nbins.insert({"chhIsoTrack_extra_pt", 200});
+  //nbins.insert({"chhIsoTrack_extra_pt", 200}); // for fix 5 GeV binning
   low.insert({"chhIsoTrack_extra_pt", 5});
   high.insert({"chhIsoTrack_extra_pt", 1005});
+  tbedge = low["chhIsoTrack_extra_pt"];
+  binsx["chhIsoTrack_extra_pt"].push_back(tbedge);
+  while ( tbedge < 50.0 ){
+    tbedge += 5.0;
+    binsx["chhIsoTrack_extra_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["chhIsoTrack_extra_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["chhIsoTrack_extra_pt"].push_back(tbedge);
+  }
+  nbins.insert({"chhIsoTrack_extra_pt", binsx["chhIsoTrack_extra_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"chhIsoTrack_extra_pt", "p_{T} (extra ch. hadron isoTrack) [GeV]"});
 
   nbins.insert({"chhIsoTrack_extra_eta", 60});
@@ -200,9 +303,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"nbtagDeepFlavB", 5});
   title.insert({"nbtagDeepFlavB", "Number of b-tags (medium WP)"});
 
-  nbins.insert({"bjet1_pt", 300});
+  //nbins.insert({"bjet1_pt", 300}); // for fix 5 GeV binning
   low.insert({"bjet1_pt", 20});
   high.insert({"bjet1_pt", 1520});
+  tbedge = low["bjet1_pt"];
+  binsx["bjet1_pt"].push_back(tbedge);
+  while ( tbedge < 100.0 ){
+    tbedge += 10.0;
+    binsx["bjet1_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["bjet1_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["bjet1_pt"].push_back(tbedge);
+  }
+  nbins.insert({"bjet1_pt", binsx["bjet1_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"bjet1_pt", "p_{T} (leading b-tagged jet) [GeV]"});
 
   nbins.insert({"bjet1_eta", 60});
@@ -210,9 +325,21 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"bjet1_eta", 3});
   title.insert({"bjet1_eta", "#eta (leading b-tagged jet) [GeV]"});
 
-  nbins.insert({"bjet2_pt", 300});
+  //nbins.insert({"bjet2_pt", 300}); // for fix 5 GeV binning
   low.insert({"bjet2_pt", 20});
   high.insert({"bjet2_pt", 1520});
+  tbedge = low["bjet2_pt"];
+  binsx["bjet2_pt"].push_back(tbedge);
+  while ( tbedge < 100.0 ){
+    tbedge += 10.0;
+    binsx["bjet2_pt"].push_back(tbedge);
+  }
+  while ( tbedge < high["bjet2_pt"] ) {
+    tbedge += tbedge*tbsize;
+    binsx["bjet2_pt"].push_back(tbedge);
+  }
+  nbins.insert({"bjet2_pt", binsx["bjet2_pt"].size()-1});
+  tbedge = 0.0;
   title.insert({"bjet2_pt", "p_{T} (subleading b-tagged jet) [GeV]"});
 
   nbins.insert({"bjet2_eta", 60});
@@ -220,19 +347,55 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"bjet2_eta", 3});
   title.insert({"bjet2_eta", "#eta (subleading b-tagged jet) [GeV]"});
 
-  nbins.insert({"min_mlb", 300});
-  low.insert({"min_mlb", 0.1});
-  high.insert({"min_mlb", 1500.1});
+  //nbins.insert({"min_mlb", 300}); // for fix 5 GeV binning
+  low.insert({"min_mlb", 5.0});
+  high.insert({"min_mlb", 1505.0});
+  tbedge = low["min_mlb"];
+  binsx["min_mlb"].push_back(tbedge);
+  while ( tbedge < 200.0 ){
+    tbedge += 5.0;
+    binsx["min_mlb"].push_back(tbedge);
+  }
+  while ( tbedge < high["min_mlb"] ) {
+    tbedge += tbedge*tbsizemass;
+    binsx["min_mlb"].push_back(tbedge);
+  }
+  nbins.insert({"min_mlb", binsx["min_mlb"].size()-1});
+  tbedge = 0.0;
   title.insert({"min_mlb", "min m_{#mu b} [GeV]"});
 
-  nbins.insert({"min_mbb", 300});
-  low.insert({"min_mbb", 0.1});
-  high.insert({"min_mbb", 1500.1});
+  //nbins.insert({"min_mbb", 300}); // for fix 5 GeV binnng
+  low.insert({"min_mbb", 5.0});
+  high.insert({"min_mbb", 1505.0});
+  tbedge = low["min_mbb"];
+  binsx["min_mbb"].push_back(tbedge);
+  while ( tbedge < 200.0 ){
+    tbedge += 5.0;
+    binsx["min_mbb"].push_back(tbedge);
+  }
+  while ( tbedge < high["min_mbb"] ) {
+    tbedge += tbedge*tbsizemass;
+    binsx["min_mbb"].push_back(tbedge);
+  }
+  nbins.insert({"min_mbb", binsx["min_mbb"].size()-1});
+  tbedge = 0.0;
   title.insert({"min_mbb", "min m_{bb} [GeV]"});
 
-  nbins.insert({"max_mbb", 300});
-  low.insert({"max_mbb", 0.1});
-  high.insert({"max_mbb", 1500.1});
+  //nbins.insert({"max_mbb", 300}); // for fix 5 GeV binning
+  low.insert({"max_mbb", 1.0});
+  high.insert({"max_mbb", 1501.0});
+  tbedge = low["max_mbb"];
+  binsx["max_mbb"].push_back(tbedge);
+  while ( tbedge < 200.0 ){
+    tbedge += 5.0;
+    binsx["max_mbb"].push_back(tbedge);
+  }
+  while ( tbedge < high["max_mbb"] ) {
+    tbedge += tbedge*tbsizemass;
+    binsx["max_mbb"].push_back(tbedge);
+  }
+  nbins.insert({"max_mbb", binsx["max_mbb"].size()-1});
+  tbedge = 0.0;
   title.insert({"max_mbb", "max m_{bb} [GeV]"});
 
   // Angular variables
@@ -295,19 +458,19 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
 void mllbinDefinition(vector<TString> &mllbin, bool doMllBins, map<TString, TString> &mllbinlabel) {
   mllbin.push_back("mllinclusive");
   if ( doMllBins ) {
-    mllbin.push_back("mll150to250");
-    mllbin.push_back("mll200to600");
+    mllbin.push_back("mll175to300");
+    mllbin.push_back("mll300to500");
     mllbin.push_back("mll500to900");
-    mllbin.push_back("mll700to1300");
+    mllbin.push_back("mll750to1250");
     mllbin.push_back("mll1100to1900");
     mllbin.push_back("mll1500to2500");
   }
 
   mllbinlabel["mllinclusive"]="m_{#mu#mu} > 0 GeV";
-  mllbinlabel["mll150to250"]="150 < m_{#mu#mu} < 250 GeV";
-  mllbinlabel["mll200to600"]="200 < m_{#mu#mu} < 600 GeV";
+  mllbinlabel["mll175to300"]="175 < m_{#mu#mu} < 300 GeV";
+  mllbinlabel["mll300to500"]="300 < m_{#mu#mu} < 500 GeV";
   mllbinlabel["mll500to900"]="500 < m_{#mu#mu} < 900 GeV";
-  mllbinlabel["mll700to1300"]="700 <m_{#mu#mu} < 1300 GeV";
+  mllbinlabel["mll750to1250"]="750 <m_{#mu#mu} < 1250 GeV";
   mllbinlabel["mll1100to1900"]="1.1 < m_{#mu#mu} < 1.9 TeV";
   mllbinlabel["mll1500to2500"]="1.5 < m_{#mu#mu} < 2.5 TeV";
 }
