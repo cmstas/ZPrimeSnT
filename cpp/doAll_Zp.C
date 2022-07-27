@@ -32,9 +32,12 @@
   map<TString,TString> sample_names = { };
   map<TString,map<TString,vector<TString>>> sample_prod = { };
 
+  bool runOnSignalBeforeSkim = false; // To get yields before any selection, to be combined with writeOutYields_BeforeSel in ScanChain_Zp
+
   bool run_data = 1;
   bool run_MCbkg = 1;
   bool run_signal = 1;
+  bool run_BFF = 0; // Should be enabled separately
 
   if(run_data){
     // SingleMuon data
@@ -171,7 +174,7 @@
   // Signals
   if(run_signal){
     vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-    vector<TString> sigMass = { /*"100",*/ "200", "400", "700", "1000", "1500", "2000" };
+    vector<TString> sigMass = { /*"100",*/ "200", "250", "400", "550", "700", "850", "1000", "1250", "1500", "2000" };
     for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
       for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
@@ -186,8 +189,58 @@
     }
   }
 
+  // BFF
+  if(run_BFF){
+    // Do not apply any corrections
+    prefireWeight=0;
+    topPtWeight=0;
+    PUWeight=0;
+    muonRecoSF=0;
+    muonIdSF=0;
+    muonIsoSF=0;
+    triggerSF=0;
+    bTagSF=0;
+    JECUnc=0;
+    JERUnc=0;
+
+    // ttbarv7
+    samples.push_back("TTv7");
+    sample_names.insert({"TTv7","TTTo2L2Nu_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8"});
+    sample_prod.insert({"TTv7", { { "2018",       { "" } },
+                                  { "2017",       { "" } },
+				                          { "2016APV",    { "" } },
+				                          { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+
+    // DYv7
+    samples.push_back("DYv7");
+    sample_names.insert({"DYv7","DYBBJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8"});
+    sample_prod.insert({"DYv7", { { "2018",       { "" } },
+                                  { "2017",       { "" } },
+				                          { "2016APV",    { "" } },
+				                          { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1" } } } });
+
+    vector<TString> sigMass = { "250", "350", "500" };
+    for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
+    {
+      samples.push_back("BFF_M"+sigMass[imass]);
+      sample_names.insert({"BFF_M"+sigMass[imass],"BFFZprimeToMuMu_M_"+sigMass[imass]+"_TuneCUETP8M1_13TeV-madgraph-pythia8"});
+      sample_prod.insert({"BFF_M"+sigMass[imass], { { "2018",       { "" } },
+                                                    { "2017",       { "" } },
+                                                    { "2016APV",    { "" } },
+                                                    { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+    }
+    samples.push_back("BFFdbs1p0_M350");
+    sample_names.insert({"BFFdbs1p0_M350","BFFZprimeToMuMu_M_350_dbs1p0_TuneCUETP8M1_13TeV-madgraph-pythia8"});
+    sample_prod.insert({"BFFdbs1p0_M350", { { "2018",       { "" } },
+                                            { "2017",       { "" } },
+                                            { "2016APV",    { "" } },
+                                            { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+  }
+
   TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches_allFiles";
   TString baseDir = "/ceph/cms/store/user/evourlio/skimOutput/"+skimPackage;
+  if (runOnSignalBeforeSkim)
+    baseDir = "/ceph/cms/store/user/usarica/Offshell_2L2Nu/PrivateMC/220404";
   for ( int iyear=0; iyear<years.size(); iyear++ )
   {
     TString year = years[iyear];
@@ -208,6 +261,8 @@
 	if (year.Contains("2016") && sample=="DYbb")
 	  sample_names[sample] = "DYBBJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8";
         TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
+        if (runOnSignalBeforeSkim)
+          dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";
         ch_temp->Add(dir);
         chaux_temp->Add(dir);
       }
