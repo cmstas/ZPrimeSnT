@@ -491,6 +491,7 @@ if __name__ == "__main__":
    parser.add_argument("--MZp", type=float, help="Pole mass of ZPrime", required=True)
    parser.add_argument("--gzpfit", type=float, help="g_Zp x 1 TeV/m_Zp", required=True)
    parser.add_argument("--t23", type=float, help="theta_sb", required=True)
+   parser.add_argument("--useBaselineModelParams", action='store_true', help="Ignore gzpfit and t23 values and use the model parameters hardcoded in this script. Default: False")
    parser.add_argument("--model", type=str, help="Possible options are Y3, DY3, DYp3, or B3-L2", required=True)
    parser.add_argument("--zeromf", action='store_true', help="Set light fermion (any fermion except the top) masses to zero. Default: False")
    parser.add_argument("--channel", type=str, help="Possible options are Zp for the total width, or other decay modes for their partial widths (e.g. mu-mu+, bs~, sb~, bb~ etc.). Ignored if xsec_mode is used. Default: Zp", required=False, default='Zp')
@@ -498,7 +499,12 @@ if __name__ == "__main__":
    parser.add_argument("--invM", type=float, help="Invariant mass of ZPrime when xsec_mode is enabled. If you do not specify this option, the BW scale is averaged as 1/Gamma, which is a valid approximation for narrow resonances that could be used in a Combine physics model.", required=False)
 
    args = parser.parse_args()
+   if args.model == "B3mL2":
+      args.model="B3-L2"
    if args.model=="Y3" or args.model=="DY3" or args.model=="DYp3" or args.model=="B3-L2":
+      if args.useBaselineModelParams:
+         args.gzpfit, args.t23 = get_model_reference_pars(args.model)
+
       if args.xsec_mode == 0:
          print("{}".format(calculate_width(args.MZp, args.gzpfit, args.t23, args.model, args.channel, args.zeromf)))
       else:
