@@ -183,7 +183,7 @@ yields['mmwidth'] = mmwidth
 # add a column "imodel" to be a numerical match to "model"
 imodel = []
 for mdl in model:
-    if mdl == "B3-L2":
+    if mdl == "B3mL2":
         imodel.append(1)
     elif mdl == "DY3":
         imodel.append(2)
