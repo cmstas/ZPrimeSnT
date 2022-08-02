@@ -20,16 +20,25 @@
 # ./Aggregate.py --help
 #
 # Claudio 28-Jul-2022
+# Protect against missing uproot 1-Aug-2022
 #---------------------------------------------------
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-#import uproot
 from compute_width import calculate_width
 from matplotlib.backends.backend_pdf import PdfPages
 import argparse
 
+uprootLoaded = True
+try:
+    import uproot
+except:
+    uprootLoaded = False
+    print(" ")
+    print("Cannot import uproot")
+    print("The root file will not be made")
+    print(" ")
 
 ######################## Various initializations ##############
 
@@ -98,7 +107,7 @@ outROOT   = args['rootFile']
 outPLOT   = args['pdfFile']
 
 # Some debug output
-debug=True
+debug=False
 if (debug):
     print(' ')
     print('lumi      = ', lumi)
@@ -119,7 +128,7 @@ yields = pd.read_csv(yieldFile)
 # The cross sections in fb from Ulascan
 xsec   = pd.read_csv(xsecFile)
 
-# Manos did not run on the Mass=100 and 1250 GeV samples,
+# Manos did not run on the Mass=100 GeV samples,
 # but Ulascan provided the cross-sections for M=100 also.
 # So remove the 100 GeV xsec information
 xsec  = xsec.loc[xsec['mass'] != 100]
@@ -147,6 +156,15 @@ if not yields['model'].equals(xsec['model']):
 if not yields['M'].equals(xsec['M']):
     print("yields and xsec masses not lined up")
     exit()
+
+# if the fracXX columns do no exist, add them
+if not 'fracss' in xsec.columns:
+    xsec['fracss'] = xsec['sigma_ss']/xsec['sigma']
+if not 'fracsb' in xsec.columns:
+    xsec['fracsb'] = xsec['sigma_sb']/xsec['sigma']
+if not 'fracbb' in xsec.columns:
+    xsec['fracbb'] = xsec['sigma_bb']/xsec['sigma']
+
 
 # add xsec-related columns to yields dataframe
 c_to_add = ['sigma', 'sigma_ss', 'sigma_sb', 'sigma_bb', 'fracss', 'fracsb', 'fracbb']
@@ -339,13 +357,7 @@ if makeCSV:
 
 # make root
 # remove the model column in string format before shipping it to root
-#if makeROOT:
-#    new_df = df.drop("model", axis=1)
-#    with uproot.recreate(outROOT) as rootfile:
-#        rootfile["tree"] = new_df
-
-
-
-
-
-
+if makeROOT and uprootLoaded:
+    new_df = df.drop("model", axis=1)
+    with uproot.recreate(outROOT) as rootfile:
+        rootfile["tree"] = new_df
