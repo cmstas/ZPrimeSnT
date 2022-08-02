@@ -9,6 +9,16 @@ from compute_width import calculate_Zpmumu_weight
 
 
 class SignalXSContainer:
+   """
+   Construct as
+   obj = SignalXSContainer([optional: ROOT file name for cross sections])
+   and evaluate as
+   obj.eval(model,state,mass)
+   where
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
+   - state = "ss", "sb", "bb"
+   - mass = Mass of Zprime
+   """
    def __init__(self,fname=None):
       if fname is None:
          fname="${CMSSW_BASE}/src/ZPrimeSnT/data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root"
@@ -38,6 +48,17 @@ class SignalXSContainer:
 
 
 class SignalAccEffContainer:
+   """
+   Construct as
+   obj = SignalAccEffContainer([optional: ROOT file name for acceptance*eficiency interpolation])
+   and evaluate as
+   obj.eval(model,state,cat,mass)
+   where
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
+   - state = "ss", "sb", "bb"
+   - cat = "Nb_eq_1", "Nb_geq_2"
+   - mass = Mass of Zprime
+   """
    def __init__(self,fname=None):
       if fname is None:
          fname="${CMSSW_BASE}/src/ZPrimeSnT/data/acceff_interpolation_Run2.root"
@@ -81,6 +102,19 @@ class SignalAccEffContainer:
 
 
 class SignalYieldCalculator:
+   """
+   Construct as
+   obj = SignalYieldCalculator([optional: luminosity factor (default=1), and ROOT file names for xsec, and acceptance*eficiency interpolation])
+   and evaluate as
+   obj.eval(model,state,cat,gzpfit,tsb,mass)
+   where
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
+   - state = "ss", "sb", "bb"
+   - cat = "Nb_eq_1", "Nb_geq_2"
+   - gzpfit = gX/mZp*1 TeV
+   - tsb = theta_sb
+   - mass = Mass of Zprime
+   """
    def __init__(self,lumi=1.,fname_xs=None,fname_acceff=None):
       self.xs = SignalXSContainer(fname_xs)
       self.acceff = SignalAccEffContainer(fname_acceff)
