@@ -420,7 +420,7 @@ void replaceXS(TString const& csvname, TString const& csvref){
   IVYout.close();
 }
 
-void parametrize_xsec(TString const& cinput, bool useModelAveraged=true){
+void parametrize_xsec(TString const& cinput, bool useModelAveraged){
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_ss_pairs_map;
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_sb_pairs_map;
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_bb_pairs_map;
@@ -502,8 +502,6 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
   typedef std::unordered_map<std::string, std::vector<std::pair<double, double>> > hmycp_map_t;
   std::vector<std::vector<hmycp_map_t>> hypo_mass_yield_pairs_map(nstates, std::vector<hmycp_map_t>(ncats, hmycp_map_t()));
   std::vector<std::vector<hmycp_map_t>> hypo_mass_count_pairs_map(nstates, std::vector<hmycp_map_t>(ncats, hmycp_map_t()));
-
-  std::unordered_map<std::string, std::vector<std::string>> csventries;
 
   IvyCSVReader csv_yields(cinput_yields.Data());
   auto const& labels_yields = csv_yields.getLabels();
