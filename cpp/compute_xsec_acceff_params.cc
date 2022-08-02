@@ -438,9 +438,9 @@ void parametrize_xsec(TString const& cinput, bool useModelAveraged=true){
     for (auto const& cl:labels){
       if (cl=="model") strhypo = csvreader[cl].at(irow);
       else if (cl=="mass") mass = std::stod(csvreader[cl].at(irow));
-      else if (cl==Form("xsec_ss%s", (useFinalXS ? "_ModelAveraged" : ""))) xsec_ss = std::stod(csvreader[cl].at(irow));
-      else if (cl==Form("xsec_sb%s", (useFinalXS ? "_ModelAveraged" : ""))) xsec_sb = std::stod(csvreader[cl].at(irow));
-      else if (cl==Form("xsec_bb%s", (useFinalXS ? "_ModelAveraged" : ""))) xsec_bb = std::stod(csvreader[cl].at(irow));
+      else if (cl==Form("xsec_ss%s", (useModelAveraged ? "_final" : ""))) xsec_ss = std::stod(csvreader[cl].at(irow));
+      else if (cl==Form("xsec_sb%s", (useModelAveraged ? "_final" : ""))) xsec_sb = std::stod(csvreader[cl].at(irow));
+      else if (cl==Form("xsec_bb%s", (useModelAveraged ? "_final" : ""))) xsec_bb = std::stod(csvreader[cl].at(irow));
     }
 
     if (!HelperFunctions::checkListVariable(hypos, strhypo)) hypos.push_back(strhypo);
@@ -453,7 +453,7 @@ void parametrize_xsec(TString const& cinput, bool useModelAveraged=true){
     HelperFunctions::addByLowest(hypo_mass_xsec_bb_pairs_map[strhypo], mass, std::log(xsec_bb));
   }
 
-  TFile* foutput = TFile::Open(Form("xsec_interpolation%s.root", (useFinalXS ? "_final" : "")), "recreate");
+  TFile* foutput = TFile::Open(Form("xsec_interpolation%s.root", (useModelAveraged ? "_ModelAveraged" : "")), "recreate");
   for (auto const& strhypo:hypos){
     TGraph* gr_tmp = nullptr;
     TSpline3* sp_tmp = nullptr;
@@ -485,9 +485,11 @@ void parametrize_xsec(TString const& cinput, bool useModelAveraged=true){
 void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields){
   TDirectory* curdir = gDirectory;
 
-  std::string cinput_xsec = "${CMSSW_BASE}/src/ZPrimeSnT/data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root";
-  HostHelpers::ExpandEnvironmentVariables(cinput_xsec);
   std::vector<std::string> const states{ "ss", "sb", "bb" };
+  unsigned int const nstates = states.size();
+
+  std::vector<std::string> const cats{ "N1", "N2" };
+  unsigned int const ncats = cats.size();
 
   double lumi=-1;
   if (period=="2016_APV") lumi=19.5;
@@ -497,8 +499,9 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
   else if (period=="Run2") lumi=19.5+16.8+41.48+59.83;
   else assert(0);
 
-  std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_yield_pairs_map[3][2];
-  std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_count_pairs_map[3][2];
+  typedef std::unordered_map<std::string, std::vector<std::pair<double, double>> > hmycp_map_t;
+  std::vector<std::vector<hmycp_map_t>> hypo_mass_yield_pairs_map(nstates, std::vector<hmycp_map_t>(ncats, hmycp_map_t()));
+  std::vector<std::vector<hmycp_map_t>> hypo_mass_count_pairs_map(nstates, std::vector<hmycp_map_t>(ncats, hmycp_map_t()));
 
   std::unordered_map<std::string, std::vector<std::string>> csventries;
 
@@ -524,21 +527,20 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
       HelperFunctions::getUnorderedMapIterator(model, it_mass_model_xsec_map->second, it_model_xsec_map);
     }
     auto& input_xseclist = it_model_xsec_map->second;
-    // Input xsecs should ALWAYS be what is in the looper, not what is 'model-averaged'.
-    input_xseclist.push_back(std::stod(csv_xs["xsec_ss"].at(irow)));
-    input_xseclist.push_back(std::stod(csv_xs["xsec_sb"].at(irow)));
-    input_xseclist.push_back(std::stod(csv_xs["xsec_bb"].at(irow)));
+    // Input xsecs should ALWAYS be what is in the looper, not what is 'model-averaged' (i.e., not 'xsec_X_final').
+    for (auto const& state:states) input_xseclist.push_back(std::stod(csv_xs[Form("xsec_%s", state.data())].at(irow)));
   }
 
   std::vector<std::string> hypos;
   for (unsigned int irow=0; irow<nrows_yields; irow++){
     std::string strhypo;
     int mass=0;
-    double yield[3][2]={ { 0 } };
-    double count[3][2]={ { 0 } };
+    std::vector<std::vector<double>> yield(nstates, std::vector<double>(ncats, 0));
+    std::vector<std::vector<double>> count(nstates, std::vector<double>(ncats, 0));
     for (auto const& lb:labels_yields){
       if (lb=="model") strhypo = csv_yields[lb].at(irow);
       else if (lb=="M") mass = std::stoi(csv_yields[lb].at(irow));
+      // THE ENTIRE REASON FOR A ZILLION IF-STATEMENTS IS BS VS SB!!!
       else if (lb=="N1ss_w") yield[0][0] = std::stod(csv_yields[lb].at(irow));
       else if (lb=="N1bs_w") yield[1][0] = std::stod(csv_yields[lb].at(irow));
       else if (lb=="N1bb_w") yield[2][0] = std::stod(csv_yields[lb].at(irow));
@@ -554,8 +556,8 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
     }
 
     if (!HelperFunctions::checkListVariable(hypos, strhypo)) hypos.push_back(strhypo);
-    for (unsigned int is=0; is<3; is++){ // ss, sb, bb
-      for (unsigned char ic=0; ic<2; ic++){ // Category
+    for (unsigned int is=0; is<nstates; is++){ // ss, sb, bb
+      for (unsigned char ic=0; ic<ncats; ic++){ // Category
         if (hypo_mass_yield_pairs_map[is][ic].find(strhypo)==hypo_mass_yield_pairs_map[is][ic].end()) hypo_mass_yield_pairs_map[is][ic][strhypo] = std::vector<std::pair<double, double>>();
         if (hypo_mass_count_pairs_map[is][ic].find(strhypo)==hypo_mass_count_pairs_map[is][ic].end()) hypo_mass_count_pairs_map[is][ic][strhypo] = std::vector<std::pair<double, double>>();
 
@@ -568,9 +570,9 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
   }
 
   TFile* foutput = TFile::Open(Form("acceff_interpolation_%s.root", period.Data()), "recreate");
-  for (unsigned char is=0; is<states.size(); is++){
+  for (unsigned char is=0; is<nstates; is++){
     auto const& state = states.at(is);
-    for (unsigned char ic=0; ic<2; ic++){
+    for (unsigned char ic=0; ic<ncats; ic++){
       TGraph* gr_tmp = nullptr;
       TSpline3* sp_tmp = nullptr;
 
