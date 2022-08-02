@@ -372,6 +372,22 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #    else:
     #        plot.Rebin(2)
 
+    maxx = 1000.0
+    if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()):
+        if "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName():
+            maxx = 500.0
+        tb = plot.GetXaxis().FindBin(maxx)
+        sumc  = 0.0
+        sume2 = 0.0
+        for b in range(tb, plot.GetNbinsX()+1):
+            sumc = sumc + plot.GetBinContent(b)
+            sume2 = sume2 + (plot.GetBinError(b))*(plot.GetBinError(b))
+            if b>tb:
+                plot.SetBinContent(b,0.0)
+                plot.SetBinError(b,0.0)
+        plot.SetBinContent(tb,sumc)
+        plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
+
     ### Remove spikes
     if sample!="data" and not "met_pt" in plot.GetName():
         for b in range(1, plot.GetNbinsX()+1):
@@ -665,6 +681,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if "cutflow" in plotname:
         h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
         h_axis_ratio.GetYaxis().SetNdivisions(505)
+    if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname):
+        maxx = 500.0
+        if "mmumu" in plotname:
+            maxx=1000.0
+        h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
+        h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
     if plotData:
         doRatio=True
@@ -778,7 +800,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis_ratio.GetXaxis().SetTitle("")
         h_axis_ratio.GetXaxis().SetTickSize(0.06)
 
-        line = ROOT.TLine(h_axis.GetXaxis().GetBinLowEdge(1), 1.0, h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()), 1.0)
+        maxxl = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX())
+        maxx = maxxl
+        if "antisel10" in plotname:
+            if "mmumu" in plotname:
+                maxx = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetXaxis().FindBin(1000.0))
+            if "mu1_pt" in plotname or "mu2_pt" in plotname:
+                maxx = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetXaxis().FindBin(500.0))
+        maxxl = maxx
+
+        #line = ROOT.TLine(h_axis.GetXaxis().GetBinLowEdge(1), 1.0, h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()), 1.0)
+        line = ROOT.TLine(h_axis.GetXaxis().GetBinLowEdge(1), 1.0, maxxl, 1.0)
 
         pads.append(ROOT.TPad("1","1",0.0,0.18,1.0,1.0))
         pads.append(ROOT.TPad("2","2",0.0,0.0,1.0,0.19))
@@ -957,9 +989,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     # Print and save
     extension = "_"+year
     if plotData:
-        extension = extension+"_mc+data"
+        extension = extension+"_mcdata"
     else:
-        extension = extension+"_s+b"
+        extension = extension+"_sb"
     if logX:
         extension = extension+"_logX"
     if logY:
