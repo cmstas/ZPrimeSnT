@@ -11,9 +11,16 @@ def im(z):
   return z.imag
 
 
+def get_model_name(model):
+   if model == "B3mL2":
+      return "B3-L2"
+   else:
+      return model
+
 # These are values used in best-fit MC generation
 # Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
 def get_model_reference_pars(model):
+   model = get_model_name(model)
    if model == "B3-L2":
       return 0.05, 0.1
    elif model == "Y3":
@@ -36,6 +43,8 @@ def get_model_reference_pars(model):
 # - Normally, the width computation takes into account the beta factors. This option allows one to disregard them.
 # - ...Comes in handy if you actually want cross section ratios.
 def calculate_width(MZp, gzpfit, tsb, model, channel, zeromf):
+   model = get_model_name(model)
+
    ZERO = 0
    aEWM1 = 127.9
    Gf = 0.0000116637
@@ -499,9 +508,8 @@ if __name__ == "__main__":
    parser.add_argument("--invM", type=float, help="Invariant mass of ZPrime when xsec_mode is enabled. If you do not specify this option, the BW scale is averaged as 1/Gamma, which is a valid approximation for narrow resonances that could be used in a Combine physics model.", required=False)
 
    args = parser.parse_args()
-   if args.model == "B3mL2":
-      args.model="B3-L2"
-   if args.model=="Y3" or args.model=="DY3" or args.model=="DYp3" or args.model=="B3-L2":
+   args.model = get_model_name(args.model)
+   if args.model in ["Y3","DY3","DYp3","B3-L2"]:
       if args.useBaselineModelParams:
          args.gzpfit, args.t23 = get_model_reference_pars(args.model)
 
