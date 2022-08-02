@@ -11,6 +11,7 @@
 #include "TVector2.h"
 #include "TVector3.h"
 #include "TRandom3.h"
+#include "TString.h"
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -36,6 +37,7 @@
 #include "configuration_Zp.h"
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <sys/stat.h>
 
@@ -56,20 +58,26 @@ bool useOnlyRun2018B = false;
 bool doPartialUnblinding = true;
 
 // Looper setup flags
+int doHistos = 1; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
 bool muonDebug = false;
 bool doMllBins = false;
+bool doMllBinsForBFF = false;
 bool doNbTagBins = true;
 bool doTTEnriched = false;
 bool doDYEnriched = false;
-bool doOnlyDYEnriched = false;
+bool doOnlyDYEnriched = false; // Turns doDYEnriched on
 bool doMuDetRegionBins = false;
+bool doProdModeBins = false;
 
 // General flags
 bool removeSpikes = true;
 bool removeDataDuplicates = true;
+bool removeCorrections = false;
 bool useTuneP = true;
 bool usePuppiMET = true;
 bool fillRooDataSet = true;
+bool writeOutYields_BeforeSel = false; // Turns doProdModeBins on and DOES NOT RUN THE LOOPER
+bool writeOutYields_AfterSel = false; // Turns doProdModeBins on
 
 // HEM15/16 veto
 bool doHEMveto = true;
@@ -105,6 +113,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 //  1: Apply central value
 // +2: Apply positive variation
 // -2: Apply negative variation
+  
+  if ( removeCorrections ) {
+    prefireWeight = 0;
+    topPtWeight = 0;
+    PUWeight = 0;
+    muonRecoSF = 0;
+    muonIdSF = 0;
+    muonIsoSF = 0;
+    triggerSF = 0;
+    bTagSF = 0;
+    JECUnc = 0;
+    JERUnc = 0;
+  }
 
   int mdir = mkdir(outdir,0755);
   TString oDir(outdir);
@@ -118,6 +139,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     isMC = false;
   }
   // SM processes and cross-sections:
+  else if ( process == "ttbar_v7" )          xsec = 76700.0; // fb
+  else if ( process == "DY_v7" )             xsec = 5929000.0; // fb
   else if ( process == "ttbar" )             xsec = 87310.0; // fb
   else if ( process == "DY" )                xsec = 5765400.0; // fb
   else if ( process == "DYbb" )              xsec = 14670.0; // fb
@@ -142,37 +165,58 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "TTHToNonbb" )        xsec = 507.5*(1-0.575); // fb
   else if ( process == "TTHTobb" )           xsec = 507.5*0.575; // fb
   // Signal processes and cross-sections:
-  else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000;
-  else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000;
-  else if ( process == "Y3_M400"  )    xsec = 0.0029093405*1000;
-  else if ( process == "Y3_M700"  )    xsec = 0.0006143530*1000;
-  else if ( process == "Y3_M1000" )    xsec = 0.0001919544*1000;
-  else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000;
-  else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000;
+  else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000; // fb
+  else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000; // fb
+  else if ( process == "Y3_M250"  )    xsec = 0.010116452*1000; // fb
+  else if ( process == "Y3_M400"  )    xsec = 0.0029093405*1000; // fb
+  else if ( process == "Y3_M550"  )    xsec = 0.00122483125*1000; // fb
+  else if ( process == "Y3_M700"  )    xsec = 0.0006143530*1000; // fb
+  else if ( process == "Y3_M850"  )    xsec = 0.0003349177*1000; // fb
+  else if ( process == "Y3_M1000" )    xsec = 0.0001919544*1000; // fb
+  else if ( process == "Y3_M1250" )    xsec = 0.00008172256*1000; // fb
+  else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000; // fb
+  else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000; // fb
 
-  else if ( process == "DY3_M100"  )   xsec = 0.0337049425*1000;
-  else if ( process == "DY3_M200"  )   xsec = 0.0127905600*1000;
-  else if ( process == "DY3_M400"  )   xsec = 0.0038605973*1000;
-  else if ( process == "DY3_M700"  )   xsec = 0.0009411330*1000;
-  else if ( process == "DY3_M1000" )   xsec = 0.0003003987*1000;
-  else if ( process == "DY3_M1500" )   xsec = 0.0000595791*1000;
-  else if ( process == "DY3_M2000" )   xsec = 0.0000154994*1000;
+  else if ( process == "DY3_M100"  )   xsec = 0.0337049425*1000; // fb
+  else if ( process == "DY3_M200"  )   xsec = 0.0127905600*1000; // fb
+  else if ( process == "DY3_M250"  )   xsec = 0.00953640075*1000; // fb
+  else if ( process == "DY3_M400"  )   xsec = 0.0038605973*1000; // fb
+  else if ( process == "DY3_M550"  )   xsec = 0.00180864725*1000; // fb
+  else if ( process == "DY3_M700"  )   xsec = 0.0009411330*1000; // fb
+  else if ( process == "DY3_M850"  )   xsec = 0.0005227909*1000; // fb
+  else if ( process == "DY3_M1000" )   xsec = 0.0003003987*1000; // fb
+  else if ( process == "DY3_M1250" )   xsec = 0.00013043808*1000; // fb
+  else if ( process == "DY3_M1500" )   xsec = 0.0000595791*1000; // fb
+  else if ( process == "DY3_M2000" )   xsec = 0.0000154994*1000; // fb
 
-  else if ( process == "DYp3_M100"  )  xsec = 0.0313425200*1000;
-  else if ( process == "DYp3_M200"  )  xsec = 0.0091705403*1000;
-  else if ( process == "DYp3_M400"  )  xsec = 0.0025317413*1000;
-  else if ( process == "DYp3_M700"  )  xsec = 0.0006051238*1000;
-  else if ( process == "DYp3_M1000" )  xsec = 0.0001939990*1000;
-  else if ( process == "DYp3_M1500" )  xsec = 0.0000367774*1000;
-  else if ( process == "DYp3_M2000" )  xsec = 0.0000082788*1000;
+  else if ( process == "DYp3_M100"  )  xsec = 0.0313425200*1000; // fb
+  else if ( process == "DYp3_M200"  )  xsec = 0.0091705403*1000; // fb
+  else if ( process == "DYp3_M250"  )  xsec = 0.00657672*1000; // fb
+  else if ( process == "DYp3_M400"  )  xsec = 0.0025317413*1000; // fb
+  else if ( process == "DYp3_M550"  )  xsec = 0.001172149*1000; // fb
+  else if ( process == "DYp3_M700"  )  xsec = 0.0006051238*1000; // fb
+  else if ( process == "DYp3_M850"  )  xsec = 0.0003346604*1000; // fb
+  else if ( process == "DYp3_M1000" )  xsec = 0.0001939990*1000; // fb
+  else if ( process == "DYp3_M1250" )  xsec = 0.00008302484*1000; // fb
+  else if ( process == "DYp3_M1500" )  xsec = 0.0000367774*1000; // fb
+  else if ( process == "DYp3_M2000" )  xsec = 0.0000082788*1000; // fb
 
-  else if ( process == "B3mL2_M100"  ) xsec = 0.2895163696*1000;
-  else if ( process == "B3mL2_M200"  ) xsec = 0.1236243250*1000;
-  else if ( process == "B3mL2_M400"  ) xsec = 0.0307822425*1000;
-  else if ( process == "B3mL2_M700"  ) xsec = 0.0071884160*1000;
-  else if ( process == "B3mL2_M1000" ) xsec = 0.0022984062*1000;
-  else if ( process == "B3mL2_M1500" ) xsec = 0.0004383351*1000;
-  else if ( process == "B3mL2_M2000" ) xsec = 0.0001029249*1000;
+  else if ( process == "B3mL2_M100"  ) xsec = 0.2895163696*1000; // fb
+  else if ( process == "B3mL2_M200"  ) xsec = 0.1236243250*1000; // fb
+  else if ( process == "B3mL2_M250"  ) xsec = 0.08624186*1000; // fb
+  else if ( process == "B3mL2_M400"  ) xsec = 0.0307822425*1000; // fb
+  else if ( process == "B3mL2_M550"  ) xsec = 0.01395786*1000; // fb
+  else if ( process == "B3mL2_M700"  ) xsec = 0.0071884160*1000; // fb
+  else if ( process == "B3mL2_M850"  ) xsec = 0.0039685095*1000; // fb
+  else if ( process == "B3mL2_M1000" ) xsec = 0.0022984062*1000; // fb
+  else if ( process == "B3mL2_M1250" ) xsec = 0.000981572*1000; // fb
+  else if ( process == "B3mL2_M1500" ) xsec = 0.0004383351*1000; // fb
+  else if ( process == "B3mL2_M2000" ) xsec = 0.0001029249*1000; // fb
+
+  else if ( process == "BFF_M250" )        xsec = 0.1*1000; // fb
+  else if ( process == "BFF_M350" )        xsec = 0.1*1000; // fb
+  else if ( process == "BFFdbs1p0_M350" )  xsec = 0.1*1000; // fb
+  else if ( process == "BFF_M500" )        xsec = 0.1*1000; // fb
   else
     {
       cout<<"Non-valid process: Exiting!"<<endl;
@@ -197,9 +241,37 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   }
 
   if (doOnlyDYEnriched) doDYEnriched = true;
+  if ( writeOutYields_BeforeSel || writeOutYields_AfterSel ) doProdModeBins = true;
 
   if ( isMC )
     factor = xsec*lumi/genEventSumw;
+
+
+  // Output yield file and relevant variables
+  if ( ( writeOutYields_BeforeSel || writeOutYields_AfterSel ) && ( !process.Contains("Y3") && !process.Contains("DY3") && !process.Contains("DYp3") && !process.Contains("B3mL2") ) ) {
+    writeOutYields_BeforeSel = false; // Write yields out only for signal
+    writeOutYields_AfterSel = false; // Write yields out only for signal
+  }
+
+  ifstream ifile_BeforeSel, ifile_AfterSel;
+  if ( writeOutYields_BeforeSel ) ifile_BeforeSel.open("yieldFile_BeforeSel.txt"); // Check file existence
+  if ( writeOutYields_AfterSel ) ifile_AfterSel.open("yieldFile_AfterSel.txt"); // Check file existence
+
+  ofstream yieldFile_BeforeSel, yieldFile_AfterSel;
+  if ( writeOutYields_BeforeSel ) {
+    yieldFile_BeforeSel.open("yieldFile_BeforeSel.txt",ios::app); // Append in existing file or create the file, if it is missing
+    if (!ifile_BeforeSel) yieldFile_BeforeSel<<"year,model,M,NbbZ_w,NbsZ_w,NssZ_w,NbbZbb_w NbsZbs_w NssZss_w,NbbZ_r,NbsZ_r,NssZ_r,NbbZbb_r NbsZbs_r NssZss_r" << endl;
+  }
+  if ( writeOutYields_AfterSel ) {
+    yieldFile_AfterSel.open("yieldFile_AfterSel.txt",ios::app); // Append in existing file or create the file, if it is missing
+    if (!ifile_AfterSel) yieldFile_AfterSel<<"year,model,x,t23,M,N_w,f_w,N1_w,N2_w,N1bb_w,N2bb_w,N1bs_w,N2bs_w,N1ss_w,N2ss_w,N_r,f_r,N1_r,N2_r,N1bb_r,N2bb_r,N1bs_r,N2bs_r,N1ss_r,N2ss_r" << endl;
+  }
+
+  float NbbZ=0, NbsZ=0, NssZ=0, NbbZbb=0, NbsZbs=0, NssZss=0;
+  int yNbbZ=0, yNbsZ=0, yNssZ=0, yNbbZbb=0, yNbsZbs=0, yNssZss=0;
+  float N1=0, N2=0, N1bb=0, N2bb=0, N1bs=0, N2bs=0, N1ss=0, N2ss=0;
+  int yN1=0, yN2=0, yN1bb=0, yN2bb=0, yN1bs=0, yN2bs=0, yN1ss=0, yN2ss=0;
+
 
   // Modify the name of the output file to include arguments of ScanChain function (i.e. process, year, etc.)
   TFile* fout = new TFile(oDir+"/output_"+process+"_"+year+".root", "RECREATE");
@@ -213,12 +285,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
   // Define histos
   H1(cutflow,20,0,20,"");
-  histoDefinition(nbins, low, high, binsx, title);
+  if (doHistos)
+    histoDefinition(nbins, low, high, binsx, title);
 
   // Define (overlapping) mll bins
   vector<TString> mllbin = { };
   map<TString, TString> mllbinlabel;
-  mllbinDefinition(mllbin, doMllBins, mllbinlabel);
+  if (doMllBinsForBFF)
+    mllbinDefinitionForBFF(mllbin, mllbinlabel);
+  else 
+    mllbinDefinition(mllbin, doMllBins, mllbinlabel);
   const int nMllBins = mllbin.size();
   bool mllbinsel[nMllBins];
 
@@ -236,17 +312,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   const int MuDetRegionBins = MuDetRegion.size();
   bool MuDetRegionSel[MuDetRegionBins];
 
+  // Define production mode
+  vector<TString> prodMode = { };
+  map<TString, TString> prodModelabel;
+  prodModeDefinition(prodMode, doProdModeBins, prodModelabel);
+  const int nProdModeBins = prodMode.size();
+  bool prodModesel[nProdModeBins];
+
   // Define RooDataSet's for fit
   RooRealVar mfit("mfit", "mfit", 175.0, 6500.0);
   RooRealVar roow("roow", "roow", 0.0, 100.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-      for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++){
-        TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-	TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-	if ( fillRooDataSet )
-	  roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar("roow"))});
+      for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+        for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+          TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+          TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+          if ( fillRooDataSet )
+            roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar("roow"))});
+        }
       }
     }
   }
@@ -256,59 +341,47 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
       for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++){
-        TString plot_name = TString("cutflow_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-        TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-        HTemp(plot_name,20,0,20,"");
-        slicedcutflows[slice] = h_temp;
+        for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+          TString plot_name = TString("cutflow_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+          TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+          HTemp(plot_name,20,0,20,"");
+          slicedcutflows[slice] = h_temp;
+        }
       }
     }
   }
 
   // Define selection
   vector<TString> selection = { };
-  selection.push_back("sel0"); // Skimming + HLT + Good PV
-  selection.push_back("sel1"); // 2 high-pT ID muons with |dxy|<0.02 cm && |dz|<0.1 cm
-  selection.push_back("sel2"); // pT > 53 GeV && |eta| < 2.4 muons
-  selection.push_back("sel3"); // Relative track isolation < 0.05 && absolute track isolation < 5 GeV
-  selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
-  selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
-  selection.push_back("sel6"); // Mmumu > 175 GeV
-  selection.push_back("sel7"); // No extra lepton / isoTrack
-  selection.push_back("sel8"); // NbTag >= 1 (medium WP)
-  selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
-  selection.push_back("sel10"); // minMlb > 175 GeV
-  if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
+  if (doHistos) {
+    if (doHistos==2) {
+      selection.push_back("sel0"); // Skimming + HLT + Good PV
+      selection.push_back("sel1"); // 2 high-pT ID muons with |dxy|<0.02 cm && |dz|<0.1 cm
+      selection.push_back("sel2"); // pT > 53 GeV && |eta| < 2.4 muons
+      selection.push_back("sel3"); // Relative track isolation < 0.05 && absolute track isolation < 5 GeV
+      selection.push_back("sel4"); // Selected muon matched to HLT > 1 (DeltaR < 0.02)
+      selection.push_back("sel5"); // At least one OS dimuon pair, not from Z
+      selection.push_back("sel6"); // Mmumu > 175 GeV
+      selection.push_back("sel7"); // No extra lepton / isoTrack
+      selection.push_back("sel8"); // NbTag >= 1 (medium WP)
+      selection.push_back("sel9"); // MET<250 GeV, if (anti-)aligned to muons and/or b-tags
+    }
+    selection.push_back("sel10"); // minMlb > 175 GeV
+    if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
+  }
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
   vector<TString> plot_names_2b = { };
-  plot_names.push_back("pfmet_pt");
-  plot_names.push_back("pfmet_phi");
-  plot_names.push_back("puppimet_pt");
-  plot_names.push_back("puppimet_phi");
-  if ( muonDebug ) {
-    plot_names.push_back("mu1_pt");
-    plot_names.push_back("mu2_pt");
-    plot_names.push_back("mu1_eta");
-    plot_names.push_back("mu2_eta");
-    plot_names.push_back("mu1_phi");
-    plot_names.push_back("mu2_phi");
-    plot_names.push_back("mu1_dxy");
-    plot_names.push_back("mu2_dxy");
-    plot_names.push_back("mu1_dz");
-    plot_names.push_back("mu2_dz");
-    plot_names.push_back("mu1_trkRelIso");
-    plot_names.push_back("mu1_trkAbsIso");
-    plot_names.push_back("mu2_trkRelIso");
-    plot_names.push_back("mu2_trkAbsIso");
-    plot_names.push_back("nCand_Muons");
-  }
   map<TString, TH1F*> histos;
   int nExtraHistos = 0;
-  for ( unsigned int isel=0; isel < selection.size(); isel++ ) {
-    if (isel==5) {
-      plot_names.push_back("mmumu");
-      if ( !muonDebug ) {
+  if (doHistos) {
+    if (doHistos==2) {
+      plot_names.push_back("pfmet_pt");
+      plot_names.push_back("pfmet_phi");
+      plot_names.push_back("puppimet_pt");
+      plot_names.push_back("puppimet_phi");
+      if ( muonDebug ) {
         plot_names.push_back("mu1_pt");
         plot_names.push_back("mu2_pt");
         plot_names.push_back("mu1_eta");
@@ -320,46 +393,181 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         plot_names.push_back("mu1_dz");
         plot_names.push_back("mu2_dz");
         plot_names.push_back("mu1_trkRelIso");
-        plot_names.push_back("mu1_trkAbsIso");       
-        plot_names.push_back("mu2_trkRelIso");       
+        plot_names.push_back("mu1_trkAbsIso");
+        plot_names.push_back("mu2_trkRelIso");
         plot_names.push_back("mu2_trkAbsIso");
         plot_names.push_back("nCand_Muons");
       }
+      for ( unsigned int isel=0; isel < selection.size(); isel++ ) {
+        if (isel==5) {
+          plot_names.push_back("mmumu");
+          if ( !muonDebug ) {
+            plot_names.push_back("mu1_pt");
+            plot_names.push_back("mu2_pt");
+            plot_names.push_back("mu1_eta");
+            plot_names.push_back("mu2_eta");
+            plot_names.push_back("mu1_phi");
+            plot_names.push_back("mu2_phi");
+            plot_names.push_back("mu1_dxy");
+            plot_names.push_back("mu2_dxy");
+            plot_names.push_back("mu1_dz");
+            plot_names.push_back("mu2_dz");
+            plot_names.push_back("mu1_trkRelIso");
+            plot_names.push_back("mu1_trkAbsIso");       
+            plot_names.push_back("mu2_trkRelIso");       
+            plot_names.push_back("mu2_trkAbsIso");
+            plot_names.push_back("nCand_Muons");
+          }
+          plot_names.push_back("dPhi_ll");
+          plot_names.push_back("dEta_ll");
+          plot_names.push_back("dEta_dPhi_ratio_ll");
+          plot_names.push_back("dPhi_ll_MET");
+          plot_names.push_back("minDPhi_l_MET");
+          plot_names.push_back("maxDPhi_l_MET");
+        }
+        // Add also extra plots before third lepton/isotrack veto
+        if (isel==6) {
+          plot_names.push_back("nExtra_muons"); ++nExtraHistos;
+          plot_names.push_back("nExtra_electrons"); ++nExtraHistos;
+          plot_names.push_back("nExtra_lepIsoTracks"); ++nExtraHistos;
+          plot_names.push_back("nExtra_chhIsoTracks"); ++nExtraHistos;
+          plot_names.push_back("mu3_pt"); ++nExtraHistos;
+          plot_names.push_back("mu3_eta"); ++nExtraHistos;
+          plot_names.push_back("mu3_trkRelIso"); ++nExtraHistos;
+          plot_names.push_back("mu3_trkAbsIso"); ++nExtraHistos;
+          plot_names.push_back("ele_extra_pt"); ++nExtraHistos;
+          plot_names.push_back("ele_extra_eta"); ++nExtraHistos;
+          plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
+          plot_names.push_back("lepIsoTrack_extra_pt"); ++nExtraHistos;
+          plot_names.push_back("lepIsoTrack_extra_eta"); ++nExtraHistos;
+          plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
+          plot_names.push_back("chhIsoTrack_extra_pt"); ++nExtraHistos;
+          plot_names.push_back("chhIsoTrack_extra_eta"); ++nExtraHistos;
+          plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
+        }
+
+        // Third lepton/isotrack veto
+        if (isel==7) {
+          // Remove plots added for thid lepton/isotrack veto
+          for (int e=0; e<nExtraHistos; ++e)
+      plot_names.pop_back();
+        }
+        if (isel==8) {
+          plot_names.push_back("nbtagDeepFlavB");
+          plot_names.push_back("bjet1_pt");
+          plot_names.push_back("bjet1_eta");
+          plot_names.push_back("bjet2_pt");
+          plot_names.push_back("bjet2_eta");
+          plot_names.push_back("min_mlb");
+          plot_names.push_back("min_mbb");
+          plot_names.push_back("max_mbb");
+          plot_names.push_back("minDPhi_b_MET");
+          plot_names.push_back("maxDPhi_b_MET");
+          plot_names.push_back("minDPhi_lb_MET");
+          plot_names.push_back("minDPhi_llb_MET");
+          plot_names.push_back("minDPhi_l_b");
+          //
+          plot_names_b.push_back("bjet1_pt");
+          plot_names_b.push_back("bjet1_eta");
+          plot_names_b.push_back("min_mlb");
+          plot_names_b.push_back("minDPhi_b_MET");
+          plot_names_b.push_back("maxDPhi_b_MET");
+          plot_names_b.push_back("minDPhi_lb_MET");
+          plot_names_b.push_back("minDPhi_llb_MET");
+          plot_names_b.push_back("minDPhi_l_b");
+          //
+          plot_names_2b.push_back("bjet2_pt");
+          plot_names_2b.push_back("bjet2_eta");
+          plot_names_2b.push_back("min_mbb");
+          plot_names_2b.push_back("max_mbb");
+        }
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          if(isel<5) {
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString plot_name = plot_names[iplot];
+              TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0] + prodMode[iprodMode];
+              if ( binsx[plot_name].size()==0 ) {
+                HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+                histos[name] = h_temp;
+              }
+              else {
+                HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+                histos[name] = h_varyingBinSize;
+              }
+            }
+          }
+          else if(isel>=5 && isel<8) {
+            for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+              for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                  TString plot_name = plot_names[iplot];
+                  TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                  if ( binsx[plot_name].size()==0 ) {
+                    HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+                    histos[name] = h_temp;
+                  }
+                  else {
+                    HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+                    histos[name] = h_varyingBinSize;
+                  }
+                }
+              }
+            }
+          }
+          else if(isel>=8) {
+            for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+              for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+                for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                  for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                    TString plot_name = plot_names[iplot];
+                    if ( std::find(plot_names_b.begin(), plot_names_b.end(), plot_name) != plot_names_b.end() && nbtag[inb]=="nBTag0" )
+                      continue;
+                    if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
+                      continue;
+                    TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                    if ( binsx[plot_name].size()==0 ) {
+                      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+                      histos[name] = h_temp;
+                    }
+                    else {
+                      HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+                      histos[name] = h_varyingBinSize;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else {
+      plot_names.push_back("pfmet_pt");
+      plot_names.push_back("pfmet_phi");
+      plot_names.push_back("puppimet_pt");
+      plot_names.push_back("puppimet_phi");
+      plot_names.push_back("mmumu");
+      plot_names.push_back("mu1_pt");
+      plot_names.push_back("mu2_pt");
+      plot_names.push_back("mu1_eta");
+      plot_names.push_back("mu2_eta");
+      plot_names.push_back("mu1_phi");
+      plot_names.push_back("mu2_phi");
+      plot_names.push_back("mu1_dxy");
+      plot_names.push_back("mu2_dxy");
+      plot_names.push_back("mu1_dz");
+      plot_names.push_back("mu2_dz");
+      plot_names.push_back("mu1_trkRelIso");
+      plot_names.push_back("mu1_trkAbsIso");       
+      plot_names.push_back("mu2_trkRelIso");       
+      plot_names.push_back("mu2_trkAbsIso");
+      plot_names.push_back("nCand_Muons");
       plot_names.push_back("dPhi_ll");
       plot_names.push_back("dEta_ll");
       plot_names.push_back("dEta_dPhi_ratio_ll");
       plot_names.push_back("dPhi_ll_MET");
       plot_names.push_back("minDPhi_l_MET");
       plot_names.push_back("maxDPhi_l_MET");
-    }
-    // Add also extra plots before third lepton/isotrack veto
-    if (isel==6) {
-      plot_names.push_back("nExtra_muons"); ++nExtraHistos;
-      plot_names.push_back("nExtra_electrons"); ++nExtraHistos;
-      plot_names.push_back("nExtra_lepIsoTracks"); ++nExtraHistos;
-      plot_names.push_back("nExtra_chhIsoTracks"); ++nExtraHistos;
-      plot_names.push_back("mu3_pt"); ++nExtraHistos;
-      plot_names.push_back("mu3_eta"); ++nExtraHistos;
-      plot_names.push_back("mu3_trkRelIso"); ++nExtraHistos;
-      plot_names.push_back("mu3_trkAbsIso"); ++nExtraHistos;
-      plot_names.push_back("ele_extra_pt"); ++nExtraHistos;
-      plot_names.push_back("ele_extra_eta"); ++nExtraHistos;
-      plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
-      plot_names.push_back("lepIsoTrack_extra_pt"); ++nExtraHistos;
-      plot_names.push_back("lepIsoTrack_extra_eta"); ++nExtraHistos;
-      plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
-      plot_names.push_back("chhIsoTrack_extra_pt"); ++nExtraHistos;
-      plot_names.push_back("chhIsoTrack_extra_eta"); ++nExtraHistos;
-      plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
-    }
-
-    // Third lepton/isotrack veto
-    if (isel==7) {
-      // Remove plots added for thid lepton/isotrack veto
-      for (int e=0; e<nExtraHistos; ++e)
-	plot_names.pop_back();
-    }
-    if (isel==8) {
       plot_names.push_back("nbtagDeepFlavB");
       plot_names.push_back("bjet1_pt");
       plot_names.push_back("bjet1_eta");
@@ -387,54 +595,28 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       plot_names_2b.push_back("bjet2_eta");
       plot_names_2b.push_back("min_mbb");
       plot_names_2b.push_back("max_mbb");
-    }
-    for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-      if(isel<5) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+selection[isel]+"_"+mllbin[0];
-	if ( binsx[plot_name].size()==0 ) {
-	  HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-	  histos[name] = h_temp;
-	}
-	else {
-	  HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
-	  histos[name] = h_varyingBinSize;
-	}
-      }
-      else if(isel>=5 && isel<8) {
-        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString plot_name = plot_names[iplot];
-            TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-	    if ( binsx[plot_name].size()==0 ) {
-	      HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-	      histos[name] = h_temp;
-	    }
-	    else {
-	      HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
-	      histos[name] = h_varyingBinSize;
-	    }
-          }
-        }
-      }
-      else if(isel>=8) {
-        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-          for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-              TString plot_name = plot_names[iplot];
-              if ( std::find(plot_names_b.begin(), plot_names_b.end(), plot_name) != plot_names_b.end() && nbtag[inb]=="nBTag0" )
-                continue;
-              if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
-                continue;
-              TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-	      if ( binsx[plot_name].size()==0 ) {
-		HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
-		histos[name] = h_temp;
-	      }
-	      else {
-		HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
-		histos[name] = h_varyingBinSize;
-	      }
+      for ( unsigned int isel=0; isel < selection.size(); isel++ ) {
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+            for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+              for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                  TString plot_name = plot_names[iplot];
+                  if ( std::find(plot_names_b.begin(), plot_names_b.end(), plot_name) != plot_names_b.end() && nbtag[inb]=="nBTag0" )
+                    continue;
+                  if ( std::find(plot_names_2b.begin(), plot_names_2b.end(), plot_name) != plot_names_2b.end() && ( nbtag[inb]=="nBTag1" || nbtag[inb]=="nBTag0" ) )
+                    continue;
+                  TString name = plot_name + "_" + selection[isel] + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                  if ( binsx[plot_name].size()==0 ) {
+                    HTemp(name,nbins[plot_name],low[plot_name],high[plot_name],title[plot_name]);
+                    histos[name] = h_temp;
+                  }
+                  else {
+                    HVaryingBinSize(name,nbins[plot_name],binsx[plot_name],title[plot_name]);
+                    histos[name] = h_varyingBinSize;
+                  }
+                }
+              }
             }
           }
         }
@@ -459,7 +641,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   BTagCalibrationReader_v2* btagReaderTight = new BTagCalibrationReader_v2(BTagEntry_v2::OP_TIGHT, "central", {"up", "down"});
   BTagCalibrationReader_v2* btagReaderMedium = new BTagCalibrationReader_v2(BTagEntry_v2::OP_MEDIUM, "central", {"up", "down"});
   BTagCalibrationReader_v2* btagReaderLoose = new BTagCalibrationReader_v2(BTagEntry_v2::OP_LOOSE, "central", {"up", "down"});
-  if ( isMC ) {
+  if ( isMC && bTagSF!=0 ) {
     if (year == "2016APV") {
       btagCalib = new BTagCalibration_v2("DeepJet", "../data/wp_deepJet_106XUL16preVFP_v2.csv");
     }
@@ -531,20 +713,22 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     TString slicedlabel = label;
     if ( isMC ) {
       if ( process!="DYbb") {
-	h_cutflow->Fill(icutflow,xsec*lumi);
+        h_cutflow->Fill(icutflow,xsec*lumi);
       }
       else {
-	h_cutflow->Fill(icutflow,2./3.*xsec*lumi);
+        h_cutflow->Fill(icutflow,2./3.*xsec*lumi);
       }
     }
     h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
     for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
       for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
         for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-          TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-          if ( isMC )
-            slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
-          slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+            if ( isMC )
+              slicedcutflows[slice]->Fill(icutflow,xsec*lumi);
+            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+          }
         }
       }
     }
@@ -558,8 +742,75 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       bar.progress(nEventsTotal, nEventsChain);
 
       float weight = 1.0;
+      if ( isMC ) 
+        weight = nt.genWeight();
+
+      bool Z2q = false; // Two quarks in final state?
+      prodModesel[0] = true;
+      if ( doProdModeBins ) {
+        if ( process.Contains("Y3") || process.Contains("DY3") || process.Contains("DYp3") || process.Contains("B3mL2") ) {
+          int s = 0; // How many s quarks?
+          if (nt.nLHEPart()==6) Z2q=true;
+          for ( unsigned int LHEPart = 0; LHEPart < nt.nLHEPart(); LHEPart++) {
+            if (abs(nt.LHEPart_pdgId().at(LHEPart)) == 3) s++;
+          }
+          if (s==2) {
+            prodModesel[1] = true;
+            prodModesel[2] = false;
+            prodModesel[3] = false;
+          }
+          else if (s==1) {
+            prodModesel[1] = false;
+            prodModesel[2] = true;
+            prodModesel[3] = false;
+          }
+          else {
+            prodModesel[1] = false;
+            prodModesel[2] = false;
+            prodModesel[3] = true;
+          }
+        }
+        else {
+          prodModesel[1] = true;
+          prodModesel[2] = true;
+          prodModesel[3] = true;
+        }
+      }
+
+      if ( writeOutYields_BeforeSel ) {
+        if ( Z2q ) {
+          if ( prodModesel[1] ) {
+            NssZss += weight * factor;
+            yNssZss++;
+          }
+          else if ( prodModesel[2] ) {
+            NbsZbs += weight * factor;
+            yNbsZbs++;
+          }
+          else {
+            NbbZbb += weight * factor;
+            yNbbZbb++;
+          }
+        }
+        else {
+          if ( prodModesel[1] ) {
+            NssZ += weight * factor;
+            yNssZ++;
+          }
+          else if ( prodModesel[2] ) {
+            NbsZ += weight * factor;
+            yNbsZ++;
+          }
+          else {
+            NbbZ += weight * factor;
+            yNbbZ++;
+          }
+        }
+        continue;
+      }
+
+
       if ( isMC ) {
-	weight = nt.genWeight();
 	if(removeSpikes && weight*factor>1e2) continue;
 	if (process=="DYbb") {
 	  int nGluons = 0;
@@ -572,7 +823,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
-        if ( prefireWeight!=0 && process!="DYbb") {
+        if ( prefireWeight!=0 && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
           if ( prefireWeight==1 ) weight *= nt.L1PreFiringWeight_Muon_Nom();
           if ( prefireWeight==2 ) weight *= nt.L1PreFiringWeight_Muon_SystUp(); // Syst unc. up --> Possibly merge with Stat up?
           if ( prefireWeight==3 ) weight *= nt.L1PreFiringWeight_Muon_StatUp(); // Stat unc. up --> Possibly merge with Syst up?
@@ -656,7 +907,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  continue;
 	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
-	if ( isMC && process!="DYbb" ) {
+	if ( isMC && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
 	  // JES up
 	  if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
 	    continue;
@@ -680,35 +931,39 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	}
       }
 
-      std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(nt.MET_pt(), nt.MET_phi(), runnb, year, isMC, npv, true, false);
-      double pfmet_pt  = pfmet.first;
-      double pfmet_phi = pfmet.second;
-
-      double puppimet_variation_pt = nt.PuppiMET_pt();
-      double puppimet_variation_phi = nt.PuppiMET_phi();
-      if ( isMC && process!="DYbb" ) {
+      double pfmet_pt  = nt.MET_pt();
+      double pfmet_phi = nt.MET_phi();
+      double puppimet_pt = nt.PuppiMET_pt();
+      double puppimet_phi = nt.PuppiMET_phi();
+      if ( isMC && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
         // JEC uncertainties on PUPPI MET
         if ( JECUnc==2 ) {
-          puppimet_variation_pt = nt.PuppiMET_ptJESUp();
-          puppimet_variation_phi = nt.PuppiMET_phiJESUp();
+          puppimet_pt = nt.PuppiMET_ptJESUp();
+          puppimet_phi = nt.PuppiMET_phiJESUp();
         }
         if ( JECUnc==-2 ) {
-          puppimet_variation_pt = nt.PuppiMET_ptJESDown();
-          puppimet_variation_phi = nt.PuppiMET_phiJESDown();
+          puppimet_pt = nt.PuppiMET_ptJESDown();
+          puppimet_phi = nt.PuppiMET_phiJESDown();
         }
         // JER uncertainties on PUPPI MET
         if ( JERUnc==2 ) {
-          puppimet_variation_pt = nt.PuppiMET_ptJERUp();
-          puppimet_variation_phi = nt.PuppiMET_phiJERUp();
+          puppimet_pt = nt.PuppiMET_ptJERUp();
+          puppimet_phi = nt.PuppiMET_phiJERUp();
         }
         if ( JERUnc==-2 ) {
-          puppimet_variation_pt = nt.PuppiMET_ptJERDown();
-          puppimet_variation_phi = nt.PuppiMET_phiJERDown();
+          puppimet_pt = nt.PuppiMET_ptJERDown();
+          puppimet_phi = nt.PuppiMET_phiJERDown();
         }
       }
-      std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(puppimet_variation_pt, puppimet_variation_phi, runnb, year, isMC, npv, true, true);
-      double puppimet_pt  = puppimet.first;
-      double puppimet_phi = puppimet.second;
+
+      if ( !removeCorrections ) {
+        std::pair<double,double> pfmet = METXYCorr_Met_MetPhi(pfmet_pt, pfmet_phi, runnb, year, isMC, npv, true, false);
+        pfmet_pt  = pfmet.first;
+        pfmet_phi = pfmet.second;
+        std::pair<double,double> puppimet = METXYCorr_Met_MetPhi(puppimet_pt, puppimet_phi, runnb, year, isMC, npv, true, true);
+        puppimet_pt  = puppimet.first;
+        puppimet_phi = puppimet.second;
+      }
 
       // Account for tunepRelPt if useTuneP
       vector<LorentzVector> Muon_p4 = {};
@@ -823,8 +1078,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
           for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
             for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-              slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (prodModesel[iprodMode])
+                  slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              }
             }
           }
         }
@@ -840,63 +1098,65 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       map<TString, float> extra_variable { };
 
       // Book histo names and variables
-      plot_names.push_back("pfmet_pt");
-      variable.insert({"pfmet_pt", pfmet_pt});
+      if (doHistos) {
+        plot_names.push_back("pfmet_pt");
+        variable.insert({"pfmet_pt", pfmet_pt});
 
-      plot_names.push_back("pfmet_phi");
-      variable.insert({"pfmet_phi", pfmet_phi});
+        plot_names.push_back("pfmet_phi");
+        variable.insert({"pfmet_phi", pfmet_phi});
 
-      plot_names.push_back("puppimet_pt");
-      variable.insert({"puppimet_pt", puppimet_pt});
+        plot_names.push_back("puppimet_pt");
+        variable.insert({"puppimet_pt", puppimet_pt});
 
-      plot_names.push_back("puppimet_phi");
-      variable.insert({"puppimet_phi", puppimet_phi});
+        plot_names.push_back("puppimet_phi");
+        variable.insert({"puppimet_phi", puppimet_phi});
 
-      if ( muonDebug ) {
-        plot_names.push_back("mu1_pt");
-        variable.insert({"mu1_pt", Muon_pt.at(0)});
+        if ( muonDebug ) {
+          plot_names.push_back("mu1_pt");
+          variable.insert({"mu1_pt", Muon_pt.at(0)});
 
-        plot_names.push_back("mu2_pt");
-        variable.insert({"mu2_pt", Muon_pt.at(1)});
+          plot_names.push_back("mu2_pt");
+          variable.insert({"mu2_pt", Muon_pt.at(1)});
 
-        plot_names.push_back("mu1_eta");
-        variable.insert({"mu1_eta", nt.Muon_eta().at(0)});
+          plot_names.push_back("mu1_eta");
+          variable.insert({"mu1_eta", nt.Muon_eta().at(0)});
 
-        plot_names.push_back("mu2_eta");
-        variable.insert({"mu2_eta", nt.Muon_eta().at(1)});
+          plot_names.push_back("mu2_eta");
+          variable.insert({"mu2_eta", nt.Muon_eta().at(1)});
 
-        plot_names.push_back("mu1_phi");
-        variable.insert({"mu1_phi", nt.Muon_phi().at(0)});
+          plot_names.push_back("mu1_phi");
+          variable.insert({"mu1_phi", nt.Muon_phi().at(0)});
 
-        plot_names.push_back("mu2_phi");
-        variable.insert({"mu2_phi", nt.Muon_phi().at(1)});
+          plot_names.push_back("mu2_phi");
+          variable.insert({"mu2_phi", nt.Muon_phi().at(1)});
 
-        plot_names.push_back("mu1_dxy");
-	variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(0))});
+          plot_names.push_back("mu1_dxy");
+          variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(0))});
 
-        plot_names.push_back("mu2_dxy");
-        variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(1))});
+          plot_names.push_back("mu2_dxy");
+          variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(1))});
 
-        plot_names.push_back("mu1_dz");
-        variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(0))});
+          plot_names.push_back("mu1_dz");
+          variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(0))});
 
-        plot_names.push_back("mu2_dz");
-        variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
+          plot_names.push_back("mu2_dz");
+          variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
 
-        plot_names.push_back("mu1_trkRelIso");
-        variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(0)});
+          plot_names.push_back("mu1_trkRelIso");
+          variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(0)});
 
-        plot_names.push_back("mu1_trkAbsIso");
-        variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(0) *  Muon_pt.at(0)});
+          plot_names.push_back("mu1_trkAbsIso");
+          variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(0) *  Muon_pt.at(0)});
 
-        plot_names.push_back("mu2_trkRelIso");
-        variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(1)});
+          plot_names.push_back("mu2_trkRelIso");
+          variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(1)});
 
-        plot_names.push_back("mu2_trkAbsIso");
-        variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(1) *  Muon_pt.at(1)});
+          plot_names.push_back("mu2_trkAbsIso");
+          variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(1) *  Muon_pt.at(1)});
 
-        plot_names.push_back("nCand_Muons");
-        variable.insert({"nCand_Muons", nt.nMuon()});
+          plot_names.push_back("nCand_Muons");
+          variable.insert({"nCand_Muons", nt.nMuon()});
+        }
       }
 
 
@@ -908,9 +1168,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
@@ -940,9 +1203,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
@@ -951,7 +1217,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // MET filters: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#UL_data
-      if ( process != "DYbb" ) { //v9
+      if ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) { //v9
 	if ( // process.Contains("data") &&
 	    !( nt.Flag_goodVertices()>=1 &&
 	       nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
@@ -1022,7 +1288,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
       // HEM15/16 veto
       if ( doHEMveto && year == "2018" ) {
-	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC ) ) { //&& evtnb % HEM_fracDen < HEM_fracNum ) ) {
+	if ( ( !isMC && runnb >= HEM_startRun ) || ( isMC /*&& ( evtnb % HEM_fracDen < HEM_fracNum )*/ ) ) {
 	  // Jets
 	  bool hasHEMjet = false;
 	  if ( useHEMjets )
@@ -1105,18 +1371,27 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
       icutflow++;
-      TString sel = "sel0";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0];
-	histos[name]->Fill(variable[plot_name],weight*factor);
+      TString sel;
+      if (doHistos==2) {
+        sel = "sel0";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString name = plot_name+"_"+sel+"_"+mllbin[0] + prodMode[iprodMode];
+            if (prodModesel[iprodMode])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+          }
+        }
       }
 
       // Defining booleans for cutflow
@@ -1133,35 +1408,43 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
       icutflow++;
-      sel = "sel1";
-      if ( muonDebug ) {
-        variable["mu1_pt"] = Muon_pt.at(cand_muons_id[0]);
-        variable["mu2_pt"] = Muon_pt.at(cand_muons_id[1]);
-        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id[0]);
-        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id[1]);
-        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id[0]);
-        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id[1]);
-        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[0]));
-        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[1]));
-        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[0]));
-        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[1]));
-        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[0]);
-        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[0]) * Muon_pt.at(cand_muons_id[0]);
-        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[1]);
-        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[1]) * Muon_pt.at(cand_muons_id[1]);
-        variable["nCand_Muons"] = cand_muons.size();
-      }
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0];
-	histos[name]->Fill(variable[plot_name],weight*factor);
+      if (doHistos==2) {
+        sel = "sel1";
+        if ( muonDebug ) {
+          variable["mu1_pt"] = Muon_pt.at(cand_muons_id[0]);
+          variable["mu2_pt"] = Muon_pt.at(cand_muons_id[1]);
+          variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id[0]);
+          variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id[1]);
+          variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id[0]);
+          variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id[1]);
+          variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[0]));
+          variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[1]));
+          variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[0]));
+          variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[1]));
+          variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[0]);
+          variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[0]) * Muon_pt.at(cand_muons_id[0]);
+          variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[1]);
+          variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[1]) * Muon_pt.at(cand_muons_id[1]);
+          variable["nCand_Muons"] = cand_muons.size();
+        }
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString name = plot_name+"_"+sel+"_"+mllbin[0] + prodMode[iprodMode];
+            if (prodModesel[iprodMode])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+          }
+        }
       }
 
       if ( !pt_req ) continue;
@@ -1173,35 +1456,43 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
       icutflow++;
-      sel = "sel2";
-      if ( muonDebug ) {
-        variable["mu1_pt"] = Muon_pt.at(cand_muons_id_pteta[0]);
-        variable["mu2_pt"] = Muon_pt.at(cand_muons_id_pteta[1]);
-        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[0]);
-        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[1]);
-        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[0]);
-        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[1]);
-        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[0]));
-        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[1]));
-        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[0]));
-        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[1]));
-        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]);
-        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]) * Muon_pt.at(cand_muons_id_pteta[0]);
-        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]);
-        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]) * Muon_pt.at(cand_muons_id_pteta[1]);
-        variable["nCand_Muons"] = cand_muons.size();
-      }
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0];
-	histos[name]->Fill(variable[plot_name],weight*factor);
+      if (doHistos==2) {
+        sel = "sel2";
+        if ( muonDebug ) {
+          variable["mu1_pt"] = Muon_pt.at(cand_muons_id_pteta[0]);
+          variable["mu2_pt"] = Muon_pt.at(cand_muons_id_pteta[1]);
+          variable["mu1_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[0]);
+          variable["mu2_eta"] = nt.Muon_eta().at(cand_muons_id_pteta[1]);
+          variable["mu1_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[0]);
+          variable["mu2_phi"] = nt.Muon_phi().at(cand_muons_id_pteta[1]);
+          variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[0]));
+          variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[1]));
+          variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[0]));
+          variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[1]));
+          variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]);
+          variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]) * Muon_pt.at(cand_muons_id_pteta[0]);
+          variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]);
+          variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]) * Muon_pt.at(cand_muons_id_pteta[1]);
+          variable["nCand_Muons"] = cand_muons.size();
+        }
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString name = plot_name+"_"+sel+"_"+mllbin[0] + prodMode[iprodMode];
+            if (prodModesel[iprodMode])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+          }
+        }
       }
 
       if ( !iso_req ) continue;
@@ -1213,36 +1504,44 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
 
       icutflow++;
-      sel = "sel3";
-      if ( muonDebug ) {
-        variable["mu1_pt"] = Muon_pt.at(cand_muons[0]);
-        variable["mu2_pt"] = Muon_pt.at(cand_muons[1]);
-        variable["mu1_eta"] = nt.Muon_eta().at(cand_muons[0]);
-        variable["mu2_eta"] = nt.Muon_eta().at(cand_muons[1]);
-        variable["mu1_phi"] = nt.Muon_phi().at(cand_muons[0]);
-        variable["mu2_phi"] = nt.Muon_phi().at(cand_muons[1]);
-        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[0]));
-        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[1]));
-        variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons[0]));
-        variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons[1]));
-        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons[0]);
-        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[0]) * Muon_pt.at(cand_muons[0]);
-        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons[1]);
-        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[1]) * Muon_pt.at(cand_muons[1]);
-        variable["nCand_Muons"] = cand_muons.size();
-      }
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0];
-	histos[name]->Fill(variable[plot_name],weight*factor);
+      if (doHistos==2) {
+        sel = "sel3";
+        if ( muonDebug ) {
+          variable["mu1_pt"] = Muon_pt.at(cand_muons[0]);
+          variable["mu2_pt"] = Muon_pt.at(cand_muons[1]);
+          variable["mu1_eta"] = nt.Muon_eta().at(cand_muons[0]);
+          variable["mu2_eta"] = nt.Muon_eta().at(cand_muons[1]);
+          variable["mu1_phi"] = nt.Muon_phi().at(cand_muons[0]);
+          variable["mu2_phi"] = nt.Muon_phi().at(cand_muons[1]);
+          variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[0]));
+          variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[1]));
+          variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons[0]));
+          variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons[1]));
+          variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons[0]);
+          variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[0]) * Muon_pt.at(cand_muons[0]);
+          variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons[1]);
+          variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[1]) * Muon_pt.at(cand_muons[1]);
+          variable["nCand_Muons"] = cand_muons.size();
+        }
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString name = plot_name+"_"+sel+"_"+mllbin[0] + prodMode[iprodMode];
+            if (prodModesel[iprodMode])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+          }
+        }
       }
 
       // Trigger object finding (match: dR<0.02)
@@ -1268,18 +1567,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            slicedcutflows[slice]->Fill(icutflow,weight*factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow,weight*factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow+1,slicedlabel);
+            }
           }
         }
       }
       icutflow++;
-      sel = "sel4";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	TString plot_name = plot_names[iplot];
-	TString name = plot_name+"_"+sel+"_"+mllbin[0];
-	histos[name]->Fill(variable[plot_name],weight*factor);
+      if (doHistos==2) {
+        sel = "sel4";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+            TString name = plot_name+"_"+sel+"_"+mllbin[0] + prodMode[iprodMode];
+            if (prodModesel[iprodMode])
+              histos[name]->Fill(variable[plot_name], weight * factor);
+          }
+        }
       }
 
       int leadingMu_idx = -1, subleadingMu_idx = -1;
@@ -1366,90 +1673,92 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
       
       // Add histos: sel5
-      plot_names.push_back("mmumu");
-      variable.insert({"mmumu", selectedPair_M});
+      if (doHistos) {
+        plot_names.push_back("mmumu");
+        variable.insert({"mmumu", selectedPair_M});
 
-      if ( muonDebug ) {
-        variable["mu1_pt"] = Muon_pt.at(leadingMu_idx);
-        variable["mu2_pt"] = Muon_pt.at(subleadingMu_idx);
-        variable["mu1_eta"] = nt.Muon_eta().at(leadingMu_idx);
-        variable["mu2_eta"] = nt.Muon_eta().at(subleadingMu_idx);
-        variable["mu1_phi"] = nt.Muon_phi().at(leadingMu_idx);
-        variable["mu2_phi"] = nt.Muon_phi().at(subleadingMu_idx);
-        variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(leadingMu_idx));
-        variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(subleadingMu_idx));
-        variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
-        variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
-        variable["mu1_trkRelIso"] = Muon_tkRelIso.at(leadingMu_idx);
-        variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx);
-        variable["mu2_trkRelIso"] = Muon_tkRelIso.at(subleadingMu_idx);
-        variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx);
-        variable["nCand_Muons"] = cand_muons.size();
+        if ( muonDebug ) {
+          variable["mu1_pt"] = Muon_pt.at(leadingMu_idx);
+          variable["mu2_pt"] = Muon_pt.at(subleadingMu_idx);
+          variable["mu1_eta"] = nt.Muon_eta().at(leadingMu_idx);
+          variable["mu2_eta"] = nt.Muon_eta().at(subleadingMu_idx);
+          variable["mu1_phi"] = nt.Muon_phi().at(leadingMu_idx);
+          variable["mu2_phi"] = nt.Muon_phi().at(subleadingMu_idx);
+          variable["mu1_dxy"] = fabs(nt.Muon_dxy().at(leadingMu_idx));
+          variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(subleadingMu_idx));
+          variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
+          variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
+          variable["mu1_trkRelIso"] = Muon_tkRelIso.at(leadingMu_idx);
+          variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx);
+          variable["mu2_trkRelIso"] = Muon_tkRelIso.at(subleadingMu_idx);
+          variable["mu2_trkAbsIso"] = Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx);
+          variable["nCand_Muons"] = cand_muons.size();
+        }
+        else {
+          plot_names.push_back("mu1_pt");
+          variable.insert({"mu1_pt", Muon_pt.at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_pt");
+          variable.insert({"mu2_pt", Muon_pt.at(subleadingMu_idx)});
+
+          plot_names.push_back("mu1_eta");
+          variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_eta");
+          variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
+
+          plot_names.push_back("mu1_phi");
+          variable.insert({"mu1_phi", nt.Muon_phi().at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_phi");
+          variable.insert({"mu2_phi", nt.Muon_phi().at(subleadingMu_idx)});
+
+          plot_names.push_back("mu1_dxy");
+          variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(leadingMu_idx))});
+
+          plot_names.push_back("mu2_dxy");
+          variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(subleadingMu_idx))});
+
+          plot_names.push_back("mu1_dz");
+          variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(leadingMu_idx))});
+
+          plot_names.push_back("mu2_dz");
+          variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
+
+          plot_names.push_back("mu1_trkRelIso");
+          variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(leadingMu_idx)});
+
+          plot_names.push_back("mu1_trkAbsIso");
+          variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_trkRelIso");
+          variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(subleadingMu_idx)});
+
+          plot_names.push_back("mu2_trkAbsIso");
+          variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx)});
+
+          plot_names.push_back("nCand_Muons");
+          variable.insert({"nCand_Muons", cand_muons.size()});
+        }
+
+        plot_names.push_back("dPhi_ll");
+        variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
+
+        plot_names.push_back("dEta_ll");
+        variable.insert({"dEta_ll", fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) )});
+
+        plot_names.push_back("dEta_dPhi_ratio_ll");
+        variable.insert({"dEta_dPhi_ratio_ll", TMath::Log10( fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) ) / fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) ) )});
+
+        plot_names.push_back("dPhi_ll_MET");
+        variable.insert({"dPhi_ll_MET", dPhi_ll_MET});
+
+        plot_names.push_back("minDPhi_l_MET");
+        variable.insert({"minDPhi_l_MET", minDPhi_l_MET});
+
+        plot_names.push_back("maxDPhi_l_MET");
+        variable.insert({"maxDPhi_l_MET", maxDPhi_l_MET});
       }
-      else {
-        plot_names.push_back("mu1_pt");
-        variable.insert({"mu1_pt", Muon_pt.at(leadingMu_idx)});
-
-        plot_names.push_back("mu2_pt");
-        variable.insert({"mu2_pt", Muon_pt.at(subleadingMu_idx)});
-
-        plot_names.push_back("mu1_eta");
-        variable.insert({"mu1_eta", nt.Muon_eta().at(leadingMu_idx)});
-
-        plot_names.push_back("mu2_eta");
-        variable.insert({"mu2_eta", nt.Muon_eta().at(subleadingMu_idx)});
-
-        plot_names.push_back("mu1_phi");
-        variable.insert({"mu1_phi", nt.Muon_phi().at(leadingMu_idx)});
-
-        plot_names.push_back("mu2_phi");
-        variable.insert({"mu2_phi", nt.Muon_phi().at(subleadingMu_idx)});
-
-        plot_names.push_back("mu1_dxy");
-        variable.insert({"mu1_dxy", fabs(nt.Muon_dxy().at(leadingMu_idx))});
-
-        plot_names.push_back("mu2_dxy");
-        variable.insert({"mu2_dxy", fabs(nt.Muon_dxy().at(subleadingMu_idx))});
-
-        plot_names.push_back("mu1_dz");
-        variable.insert({"mu1_dz", fabs(nt.Muon_dz().at(leadingMu_idx))});
-
-        plot_names.push_back("mu2_dz");
-        variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
-
-        plot_names.push_back("mu1_trkRelIso");
-        variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(leadingMu_idx)});
-
-        plot_names.push_back("mu1_trkAbsIso");
-        variable.insert({"mu1_trkAbsIso", Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx)});
-
-        plot_names.push_back("mu2_trkRelIso");
-        variable.insert({"mu2_trkRelIso", Muon_tkRelIso.at(subleadingMu_idx)});
-
-        plot_names.push_back("mu2_trkAbsIso");
-        variable.insert({"mu2_trkAbsIso", Muon_tkRelIso.at(subleadingMu_idx) * Muon_pt.at(subleadingMu_idx)});
-
-        plot_names.push_back("nCand_Muons");
-        variable.insert({"nCand_Muons", cand_muons.size()});
-      }
-
-      plot_names.push_back("dPhi_ll");
-      variable.insert({"dPhi_ll", fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) )});
-
-      plot_names.push_back("dEta_ll");
-      variable.insert({"dEta_ll", fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) )});
-
-      plot_names.push_back("dEta_dPhi_ratio_ll");
-      variable.insert({"dEta_dPhi_ratio_ll", TMath::Log10( fabs( nt.Muon_eta().at(leadingMu_idx) - nt.Muon_eta().at(subleadingMu_idx) ) / fabs( TVector2::Phi_mpi_pi( nt.Muon_phi().at(leadingMu_idx) - nt.Muon_phi().at(subleadingMu_idx) ) ) )});
-
-      plot_names.push_back("dPhi_ll_MET");
-      variable.insert({"dPhi_ll_MET", dPhi_ll_MET});
-
-      plot_names.push_back("minDPhi_l_MET");
-      variable.insert({"minDPhi_l_MET", minDPhi_l_MET});
-
-      plot_names.push_back("maxDPhi_l_MET");
-      variable.insert({"maxDPhi_l_MET", maxDPhi_l_MET});
 
       // Fill histos: sel5
       label = "Muon pair (OS, !Z)";
@@ -1459,26 +1768,32 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            TString tlabel = slicedlabel + mllbinlabel[mllbin[imll]] + MuDetRegionbinlabel[MuDetRegion[iMuDet]];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, tlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              TString tlabel = slicedlabel + mllbinlabel[mllbin[imll]] + MuDetRegionbinlabel[MuDetRegion[iMuDet]] + prodModelabel[iprodMode];
+              if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, tlabel);
+            }
           }
         }
       }
 
       icutflow++;
-      sel = "sel5";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-        TString plot_name = plot_names[iplot];
-        for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
-          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              histos[name]->Fill(variable[plot_name], weight * factor);
-	  }
-	}
+      if (doHistos==2) {
+        sel = "sel5";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                  histos[name]->Fill(variable[plot_name], weight * factor);
+              }
+            }
+          }
+        }
       }
 
       if ( selectedPair_M < 175 ) continue;
@@ -1490,10 +1805,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
         for (unsigned int inb = 0; inb < nbtag.size(); inb++) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            }
           }
         }
       }
@@ -1579,83 +1896,91 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
 
       // Add extra histos: before sel6 (third lepton/isotrack veto)
-      extra_plot_names.push_back("nExtra_muons");
-      extra_variable.insert({"nExtra_muons", extra_muons.size()});
+      if (doHistos==2) {
+        extra_plot_names.push_back("nExtra_muons");
+        extra_variable.insert({"nExtra_muons", extra_muons.size()});
 
-      extra_plot_names.push_back("nExtra_electrons");
-      extra_variable.insert({"nExtra_electrons",extra_electrons.size()});
+        extra_plot_names.push_back("nExtra_electrons");
+        extra_variable.insert({"nExtra_electrons",extra_electrons.size()});
 
-      extra_plot_names.push_back("nExtra_lepIsoTracks");
-      extra_variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()});
+        extra_plot_names.push_back("nExtra_lepIsoTracks");
+        extra_variable.insert({"nExtra_lepIsoTracks",extra_isotracks_lep.size()});
 
-      extra_plot_names.push_back("nExtra_chhIsoTracks");
-      extra_variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
+        extra_plot_names.push_back("nExtra_chhIsoTracks");
+        extra_variable.insert({"nExtra_chhIsoTracks",extra_isotracks_chh.size()});
 
-      if ( extra_muons.size() > 0 ) {
-        extra_plot_names.push_back("mu3_pt");
-        extra_variable.insert({"mu3_pt", Muon_pt.at(extra_muons[0])});
-        extra_plot_names.push_back("mu3_eta");
-        extra_variable.insert({"mu3_eta", nt.Muon_eta().at(extra_muons[0])});
-        
-        extra_plot_names.push_back("mu3_trkRelIso");
-        extra_variable.insert({"mu3_trkRelIso", Muon_tkRelIso.at(extra_muons[0])});
-        extra_plot_names.push_back("mu3_trkAbsIso");
-        extra_variable.insert({"mu3_trkAbsIso", Muon_tkRelIso.at(extra_muons[0]) * Muon_pt.at(extra_muons[0])});
-      }
+        if ( extra_muons.size() > 0 ) {
+          extra_plot_names.push_back("mu3_pt");
+          extra_variable.insert({"mu3_pt", Muon_pt.at(extra_muons[0])});
+          extra_plot_names.push_back("mu3_eta");
+          extra_variable.insert({"mu3_eta", nt.Muon_eta().at(extra_muons[0])});
+          
+          extra_plot_names.push_back("mu3_trkRelIso");
+          extra_variable.insert({"mu3_trkRelIso", Muon_tkRelIso.at(extra_muons[0])});
+          extra_plot_names.push_back("mu3_trkAbsIso");
+          extra_variable.insert({"mu3_trkAbsIso", Muon_tkRelIso.at(extra_muons[0]) * Muon_pt.at(extra_muons[0])});
+        }
 
-      if ( extra_electrons.size() > 0 ) {
-	extra_plot_names.push_back("ele_extra_pt");
-	extra_variable.insert({"ele_extra_pt", nt.Electron_pt().at(extra_electrons[0])});
+        if ( extra_electrons.size() > 0 ) {
+          extra_plot_names.push_back("ele_extra_pt");
+          extra_variable.insert({"ele_extra_pt", nt.Electron_pt().at(extra_electrons[0])});
 
-	extra_plot_names.push_back("ele_extra_eta");
-	extra_variable.insert({"ele_extra_eta", nt.Electron_eta().at(extra_electrons[0])});
+          extra_plot_names.push_back("ele_extra_eta");
+          extra_variable.insert({"ele_extra_eta", nt.Electron_eta().at(extra_electrons[0])});
 
-	extra_plot_names.push_back("ele_extra_miniPFRelIso");
-	extra_variable.insert({"ele_extra_miniPFRelIso", nt.Electron_miniPFRelIso_all().at(extra_electrons[0])});
-      }
+          extra_plot_names.push_back("ele_extra_miniPFRelIso");
+          extra_variable.insert({"ele_extra_miniPFRelIso", nt.Electron_miniPFRelIso_all().at(extra_electrons[0])});
+        }
 
-      if ( extra_isotracks_lep.size() > 0 ) {
-	extra_plot_names.push_back("lepIsoTrack_extra_pt");
-	extra_variable.insert({"lepIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_lep[0])});
+        if ( extra_isotracks_lep.size() > 0 ) {
+          extra_plot_names.push_back("lepIsoTrack_extra_pt");
+          extra_variable.insert({"lepIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_lep[0])});
 
-	extra_plot_names.push_back("lepIsoTrack_extra_eta");
-	extra_variable.insert({"lepIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_lep[0])});
+          extra_plot_names.push_back("lepIsoTrack_extra_eta");
+          extra_variable.insert({"lepIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_lep[0])});
 
-	extra_plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg");
-	extra_variable.insert({"lepIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_lep[0])});
-      }
+          extra_plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg");
+          extra_variable.insert({"lepIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_lep[0])});
+        }
 
-      if ( extra_isotracks_chh.size() > 0 ) {
-	extra_plot_names.push_back("chhIsoTrack_extra_pt");
-	extra_variable.insert({"chhIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_chh[0])});
+        if ( extra_isotracks_chh.size() > 0 ) {
+          extra_plot_names.push_back("chhIsoTrack_extra_pt");
+          extra_variable.insert({"chhIsoTrack_extra_pt", nt.IsoTrack_pt().at(extra_isotracks_chh[0])});
 
-	extra_plot_names.push_back("chhIsoTrack_extra_eta");
-	extra_variable.insert({"chhIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_chh[0])});
+          extra_plot_names.push_back("chhIsoTrack_extra_eta");
+          extra_variable.insert({"chhIsoTrack_extra_eta", nt.IsoTrack_eta().at(extra_isotracks_chh[0])});
 
-	extra_plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg");
-	extra_variable.insert({"chhIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_chh[0])});
+          extra_plot_names.push_back("chhIsoTrack_extra_PFRelIsoChg");
+          extra_variable.insert({"chhIsoTrack_extra_PFRelIsoChg", nt.IsoTrack_pfRelIso03_chg().at(extra_isotracks_chh[0])});
+        }
       }
 
       // Fill standard histos for sel6
-      sel = "sel6";
-      for (unsigned int iplot = 0; iplot < plot_names.size(); iplot++) {
-        TString plot_name = plot_names[iplot];
-        for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
-          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              histos[name]->Fill(variable[plot_name], weight * factor);
+      if (doHistos==2) {
+        sel = "sel6";
+        for (unsigned int iplot = 0; iplot < plot_names.size(); iplot++) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                  histos[name]->Fill(variable[plot_name], weight * factor);
+              }
+            }
           }
         }
-      }
-      // Now fill extra histos for sel6 (before third lepton/isotrack veto)
-      for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ ) {
-        TString plot_name = extra_plot_names[iplot];
-        for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
-          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              histos[name]->Fill(variable[plot_name], weight * factor);
+        // Now fill extra histos for sel6 (before third lepton/isotrack veto)
+        for ( unsigned int iplot=0; iplot < extra_plot_names.size(); iplot++ ) {
+          TString plot_name = extra_plot_names[iplot];
+          for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                  histos[name]->Fill(variable[plot_name], weight * factor);
+              }
+            }
           }
         }
       }
@@ -1668,10 +1993,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
         for (unsigned int inb = 0; inb < nbtag.size(); inb++) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            }
           }
         }
       }
@@ -1685,24 +2012,30 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
         for (unsigned int inb = 0; inb < nbtag.size(); inb++) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            }
           }
         }
       }
       icutflow++;
 
       // Fill histos: sel7
-      sel = "sel7";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-        TString plot_name = plot_names[iplot];
-        for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
-          for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-              histos[name]->Fill(variable[plot_name], weight * factor);
+      if (doHistos==2) {
+        sel = "sel7";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for (unsigned int imll = 0; imll < mllbin.size(); imll++) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                  histos[name]->Fill(variable[plot_name], weight * factor);
+              }
+            }
           }
         }
       }
@@ -1810,16 +2143,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( doDYEnriched && cand_bJets.size()==0 )  {
-        sel = "sel8";
-        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-          TString plot_name = plot_names[iplot];
-          for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-            unsigned int inb=1;
-            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-              TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-              if (mllbinsel[imll] && MuDetRegionSel[iMuDet])
-		histos[name]->Fill(variable[plot_name], weight * factor);
+      if ( doDYEnriched && cand_bJets.size()==0 ) {
+          if (doHistos==2) {
+          sel = "sel8";
+          for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+            TString plot_name = plot_names[iplot];
+            for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+              unsigned int inb=1;
+              for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                  TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                  if (mllbinsel[imll] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                    histos[name]->Fill(variable[plot_name], weight * factor);
+                }
+              }
             }
           }
         }
@@ -1896,48 +2233,50 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       }
 
       // Add histos: sel8
-      plot_names.push_back("nbtagDeepFlavB");
-      variable.insert({"nbtagDeepFlavB", cand_bJets.size()});
+      if (doHistos) {
+        plot_names.push_back("nbtagDeepFlavB");
+        variable.insert({"nbtagDeepFlavB", cand_bJets.size()});
 
-      if ( cand_bJets_tight.size() >= 1 ) {
+        if ( cand_bJets_tight.size() >= 1 ) {
 
-        plot_names.push_back("bjet1_pt");
-        variable.insert({"bjet1_pt", bjet1_pt});
+          plot_names.push_back("bjet1_pt");
+          variable.insert({"bjet1_pt", bjet1_pt});
 
-        plot_names.push_back("bjet1_eta");
-        variable.insert({"bjet1_eta", bjet1_eta});
+          plot_names.push_back("bjet1_eta");
+          variable.insert({"bjet1_eta", bjet1_eta});
 
-        plot_names.push_back("min_mlb");
-        variable.insert({"min_mlb", min_mlb});
+          plot_names.push_back("min_mlb");
+          variable.insert({"min_mlb", min_mlb});
 
-        plot_names.push_back("minDPhi_b_MET");
-        variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
+          plot_names.push_back("minDPhi_b_MET");
+          variable.insert({"minDPhi_b_MET", minDPhi_b_MET});
 
-        plot_names.push_back("maxDPhi_b_MET");
-        variable.insert({"maxDPhi_b_MET", maxDPhi_b_MET});
+          plot_names.push_back("maxDPhi_b_MET");
+          variable.insert({"maxDPhi_b_MET", maxDPhi_b_MET});
 
-        plot_names.push_back("minDPhi_lb_MET");
-        variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
+          plot_names.push_back("minDPhi_lb_MET");
+          variable.insert({"minDPhi_lb_MET", minDPhi_lb_MET});
 
-        plot_names.push_back("minDPhi_llb_MET");
-        variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
+          plot_names.push_back("minDPhi_llb_MET");
+          variable.insert({"minDPhi_llb_MET", minDPhi_llb_MET});
 
-        plot_names.push_back("minDPhi_l_b");
-        variable.insert({"minDPhi_l_b", minDPhi_l_b});
+          plot_names.push_back("minDPhi_l_b");
+          variable.insert({"minDPhi_l_b", minDPhi_l_b});
 
-        if ( cand_bJets.size() > 1 ) {
+          if ( cand_bJets.size() > 1 ) {
 
-          plot_names.push_back("bjet2_pt");
-          variable.insert({"bjet2_pt", bjet2_pt});
+            plot_names.push_back("bjet2_pt");
+            variable.insert({"bjet2_pt", bjet2_pt});
 
-          plot_names.push_back("bjet2_eta");
-          variable.insert({"bjet2_eta", bjet2_eta});
+            plot_names.push_back("bjet2_eta");
+            variable.insert({"bjet2_eta", bjet2_eta});
 
-          plot_names.push_back("min_mbb");
-          variable.insert({"min_mbb", min_mbb});
+            plot_names.push_back("min_mbb");
+            variable.insert({"min_mbb", min_mbb});
 
-          plot_names.push_back("max_mbb");
-          variable.insert({"max_mbb", max_mbb});
+            plot_names.push_back("max_mbb");
+            variable.insert({"max_mbb", max_mbb});
+          }
         }
       }
 
@@ -1945,30 +2284,36 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       label = ">0 b-tag (Tight+Mediums WP)";
       slicedlabel = "";
       if ( cand_bJets_tight.size() >= 1 )
-	h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            TString tlabel = slicedlabel + nbtagbinlabel[nbtag[inb]];
-            if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, tlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              TString tlabel = slicedlabel + nbtagbinlabel[nbtag[inb]] + prodModelabel[iprodMode];
+              if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, tlabel);
+            }
           }
         }
       }
       icutflow++;
 
-      sel = "sel8";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-        TString plot_name = plot_names[iplot];
-        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-          for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-              TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-              if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-		histos[name]->Fill(variable[plot_name], weight * factor);
+      if (doHistos==2) {
+        sel = "sel8";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+            for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+              for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                  TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                  if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                    histos[name]->Fill(variable[plot_name], weight * factor);
+                }
+              }
             }
           }
         }
@@ -1986,91 +2331,160 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       label = "E_{T}^{miss}<250 GeV (if aligned)";
       slicedlabel = label;
       if ( cand_bJets_tight.size() >= 1 )
-	h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
       for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
         for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
           for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-            TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-            if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-              slicedcutflows[slice]->Fill(icutflow, weight * factor);
-            slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+              TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+              if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                slicedcutflows[slice]->Fill(icutflow, weight * factor);
+              slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+            }
           }
         }
       }
       icutflow++;
       
-      sel = "sel9";
-      for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-        TString plot_name = plot_names[iplot];
-        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-          for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-              TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-              if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-      		histos[name]->Fill(variable[plot_name], weight * factor);
+      if (doHistos==2) {
+        sel = "sel9";
+        for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+          TString plot_name = plot_names[iplot];
+          for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+            for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+              for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                  TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                  if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                    histos[name]->Fill(variable[plot_name], weight * factor);
+                }
+              }
             }
           }
         }
       }
 
-      if (min_mlb > 175.0){
-	// Fill histos: sel10
-	label = "min m_{#mu b}>175 GeV";
-	slicedlabel = label;
-	if ( cand_bJets_tight.size() >= 1 )
-	  h_cutflow->Fill(icutflow,weight*factor);
-	h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
-	for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	  for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	    for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-	      TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet];
-	      if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet]) {
-		slicedcutflows[slice]->Fill(icutflow, weight * factor);
-		if ( fillRooDataSet ) {
-		  mfit.setVal(selectedPair_M);
-		  roow.setVal(weight*factor);
-		  roods[slice].add(RooArgSet(mfit,roow),roow.getVal());
-		}
-	      }
-	      slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
-	    }
-	  }
-	}
-	icutflow++;
+      if (min_mlb > 175.0) {
+        // Fill histos: sel10
+        label = "min m_{#mu b}>175 GeV";
+        slicedlabel = label;
+        if ( cand_bJets_tight.size() >= 1 )
+          h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+          for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode]) {
+                  slicedcutflows[slice]->Fill(icutflow, weight * factor);
+                  if ( fillRooDataSet ) {
+                    mfit.setVal(selectedPair_M);
+                    roow.setVal(weight*factor);
+                    roods[slice].add(RooArgSet(mfit,roow),roow.getVal());
+                  }
+                }
+                slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+              }
+            }
+          }
+        }
+        icutflow++;
 
-	sel = "sel10";
-	for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	  TString plot_name = plot_names[iplot];
-	  for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	    for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	      for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-		TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-		if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-		  histos[name]->Fill(variable[plot_name], weight * factor);
+        if (doHistos) {
+          sel = "sel10";
+          for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+            TString plot_name = plot_names[iplot];
+            for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+              for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+                for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                  for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                    TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                    if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                      histos[name]->Fill(variable[plot_name], weight * factor);
+                  }
+                }
               }
             }
           }
         }
       }
       if (min_mlb < 175.0 && doTTEnriched) {
-	// Fill histos: antisel10
-	label = "min m_{#mu b}<175 GeV";
-	slicedlabel = label;
-	sel = "antisel10";
-	for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
-	  TString plot_name = plot_names[iplot];
-	  for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
-	    for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
-	      for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
-		TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet];
-		if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet])
-		  histos[name]->Fill(variable[plot_name], weight * factor);
-	      }
-	    }
-	  }
-	}
+        // Fill histos: antisel10
+        label = "min m_{#mu b}<175 GeV";
+        slicedlabel = label;
+        if ( cand_bJets_tight.size() >= 1 )
+          h_cutflow->Fill(icutflow,weight*factor);
+        h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
+        for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+          for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+            for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+              for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                  slicedcutflows[slice]->Fill(icutflow, weight * factor);
+                slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);
+              }
+            }
+          }
+        }
+        icutflow++;
+
+        if (doHistos) {
+          sel = "antisel10";
+          for ( unsigned int iplot=0; iplot < plot_names.size(); iplot++ ) {
+            TString plot_name = plot_names[iplot];
+            for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
+              for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
+                for (unsigned int iMuDet = 0; iMuDet < MuDetRegion.size(); iMuDet++) {
+                  for (unsigned int iprodMode = 0; iprodMode < prodMode.size(); iprodMode++) {
+                    TString name = plot_name + "_" + sel + "_" + mllbin[imll] + "_" + nbtag[inb] + "_" + MuDetRegion[iMuDet] + prodMode[iprodMode];
+                    if (mllbinsel[imll] && nbtagsel[inb] && MuDetRegionSel[iMuDet] && prodModesel[iprodMode])
+                      histos[name]->Fill(variable[plot_name], weight * factor);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
+
+      if ( writeOutYields_AfterSel ) {
+        if ( nbtagsel[1] ) {
+          N1 += weight * factor;
+          yN1++;
+          if ( prodModesel[1] ) {
+            N1ss += weight * factor;
+            yN1ss++;
+          }
+          else if ( prodModesel[2] ) {
+            N1bs += weight * factor;
+            yN1bs++;
+          }
+          else {
+            N1bb += weight * factor;
+            yN1bb++;
+          }
+        }
+        if ( nbtagsel[2] ) {
+          N2 += weight * factor;
+          yN2++;
+          if ( prodModesel[1] ) {
+            N2ss += weight * factor;
+            yN2ss++;
+          }
+          else if ( prodModesel[2] ) {
+            N2bs += weight * factor;
+            yN2bs++;
+          }
+          else {
+            N2bb += weight * factor;
+            yN2bb++;
+          }
+        }
+      }
+
     } // Event loop
 
     delete file;
@@ -2096,6 +2510,60 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	(it->second)->SetBinError(b,0.0);
       }
     }
+  }
+
+  if ( writeOutYields_BeforeSel ) {
+    TString model = ((TObjString *)process.Tokenize("_")->At(0))->String();
+    yieldFile_BeforeSel << year;
+    yieldFile_BeforeSel << "," << model;
+    yieldFile_BeforeSel << "," << ((TObjString *)process.Tokenize("_")->At(1))->String().Strip(TString::kLeading,'M'); // M
+    // Weighted yields
+    yieldFile_BeforeSel << "," << to_string(NbbZ);
+    yieldFile_BeforeSel << "," << to_string(NbsZ);
+    yieldFile_BeforeSel << "," << to_string(NssZ);
+    yieldFile_BeforeSel << "," << to_string(NbbZbb);
+    yieldFile_BeforeSel << "," << to_string(NbsZbs);
+    yieldFile_BeforeSel << "," << to_string(NssZss);
+    // Raw yields
+    yieldFile_BeforeSel << "," << to_string(yNbbZ);
+    yieldFile_BeforeSel << "," << to_string(yNbsZ);
+    yieldFile_BeforeSel << "," << to_string(yNssZ);
+    yieldFile_BeforeSel << "," << to_string(yNbbZbb);
+    yieldFile_BeforeSel << "," << to_string(yNbsZbs);
+    yieldFile_BeforeSel << "," << to_string(yNssZss)<<endl;
+    yieldFile_BeforeSel.close();
+  }
+
+  if ( writeOutYields_AfterSel ) {
+    TString model = ((TObjString *)process.Tokenize("_")->At(0))->String();
+    yieldFile_AfterSel << year;
+    yieldFile_AfterSel << "," << model;
+    yieldFile_AfterSel << "," << ( (model=="Y3" || model=="DY3") ? "0.14" : ( model=="DYp3" ? "0.08" : /*B3mL2*/ "0.05" ) ); // x = g/M
+    yieldFile_AfterSel << "," << ( model=="Y3" ? "-0.15" : ( model=="DY3" ? "0.13" : ( model=="DYp3" ? "-0.18" : /*B3mL2*/ "0.1" ) ) ); // theta23
+    yieldFile_AfterSel << "," << ((TObjString *)process.Tokenize("_")->At(1))->String().Strip(TString::kLeading,'M'); // M
+    // Weighted yields
+    yieldFile_AfterSel << "," << to_string(N1+N2); // N
+    yieldFile_AfterSel << "," << to_string(N2/(N1+N2)); // f
+    yieldFile_AfterSel << "," << to_string(N1);
+    yieldFile_AfterSel << "," << to_string(N2);
+    yieldFile_AfterSel << "," << to_string(N1bb);
+    yieldFile_AfterSel << "," << to_string(N2bb);
+    yieldFile_AfterSel << "," << to_string(N1bs);
+    yieldFile_AfterSel << "," << to_string(N2bs);
+    yieldFile_AfterSel << "," << to_string(N1ss);
+    yieldFile_AfterSel << "," << to_string(N2ss);
+    // Raw yields
+    yieldFile_AfterSel << "," << to_string(yN1+yN2); // N
+    yieldFile_AfterSel << "," << to_string(float(yN2)/(float(yN1)+float(yN2))); // f
+    yieldFile_AfterSel << "," << to_string(yN1);
+    yieldFile_AfterSel << "," << to_string(yN2);
+    yieldFile_AfterSel << "," << to_string(yN1bb);
+    yieldFile_AfterSel << "," << to_string(yN2bb);
+    yieldFile_AfterSel << "," << to_string(yN1bs);
+    yieldFile_AfterSel << "," << to_string(yN2bs);
+    yieldFile_AfterSel << "," << to_string(yN1ss);
+    yieldFile_AfterSel << "," << to_string(yN2ss)<<endl;
+    yieldFile_AfterSel.close();
   }
 
   fout->Write();

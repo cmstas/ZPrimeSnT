@@ -455,6 +455,18 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   title.insert({"dPhi_ll_MET", "|#Delta#phi(#mu#mu,MET)|"});
 }
 
+void mllbinDefinitionForBFF(vector<TString> &mllbin, map<TString, TString> &mllbinlabel) {
+  mllbin.push_back("mllinclusive");
+  mllbin.push_back("mll225to275");
+  mllbin.push_back("mll315to385");
+  mllbin.push_back("mll450to550");
+
+  mllbinlabel["mllinclusive"]="m_{#mu#mu} > 0 GeV";
+  mllbinlabel["mll225to275"]="225 < m_{#mu#mu} < 275 GeV";
+  mllbinlabel["mll315to385"]="315 < m_{#mu#mu} < 385 GeV";
+  mllbinlabel["mll450to550"]="450 < m_{#mu#mu} < 550 GeV";
+}
+
 void mllbinDefinition(vector<TString> &mllbin, bool doMllBins, map<TString, TString> &mllbinlabel) {
   mllbin.push_back("mllinclusive");
   if ( doMllBins ) {
@@ -501,4 +513,18 @@ void muonregionbinDefinition(vector<TString> &MuDetRegion, bool doMuDetRegionBin
   MuDetRegionbinlabel["BB"] = "2 muons in Barrel";
   MuDetRegionbinlabel["BE"] = "1 muon in Barrel, 1 muon in Endcap)";
   MuDetRegionbinlabel["EE"] = "2 muons in Endcap";
+}
+
+void prodModeDefinition(vector<TString> &prodMode, bool doProdModeBins, map<TString, TString> &prodModelabel) {
+  prodMode.push_back("");
+  if ( doProdModeBins ) {
+    prodMode.push_back("_ssProdModes");
+    prodMode.push_back("_bsProdModes");
+    prodMode.push_back("_bbProdModes");
+  }
+
+  prodModelabel["all"]="All production modes";
+  prodModelabel["ss"]="bs production mode";
+  prodModelabel["bs"]="bs production mode";
+  prodModelabel["bb"]="bb production mode";
 }
