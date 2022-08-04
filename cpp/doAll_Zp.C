@@ -1,6 +1,7 @@
 {
   gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
   gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
+  //gROOT->ProcessLine(".L ScanChain_Zp_C.so");  // Macro that performs the selection, in case already compiled
 
   // Event weights / scale factors:
   //  0: Do not apply
@@ -17,7 +18,7 @@
   int bTagSF=1;
   int JECUnc=0; // No central value, set to +/-2 to get variations
   int JERUnc=0; // Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
-  const char* outdir = "temp_data_Y3_2018"; // Name of output directory
+  const char* outdir = "temp_data"; // Name of output directory
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
