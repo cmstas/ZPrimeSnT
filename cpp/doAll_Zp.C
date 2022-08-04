@@ -17,7 +17,7 @@
   int bTagSF=1;
   int JECUnc=0; // No central value, set to +/-2 to get variations
   int JERUnc=0; // Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
-  const char* outdir = "temp_data"; // Name of output directory
+  const char* outdir = "temp_data_Y3_2018"; // Name of output directory
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -34,10 +34,10 @@
 
   bool runOnSignalBeforeSkim = false; // To get yields before any selection, to be combined with writeOutYields_BeforeSel in ScanChain_Zp
 
-  bool run_data = 1;
-  bool run_MCbkg = 1;
-  bool run_signal = 1;
-  bool run_BFF = 0; // Should be enabled separately
+  int run_data = 1;
+  int run_MCbkg = 1;
+  int run_signal = 1;
+  int run_BFF = 0; // Should be enabled separately
 
   if(run_data){
     // SingleMuon data
@@ -208,16 +208,16 @@
     sample_names.insert({"TTv7","TTTo2L2Nu_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8"});
     sample_prod.insert({"TTv7", { { "2018",       { "" } },
                                   { "2017",       { "" } },
-				                          { "2016APV",    { "" } },
-				                          { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+				   { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
+				   { "2016nonAPV", { "" } } } });
 
     // DYv7
     samples.push_back("DYv7");
-    sample_names.insert({"DYv7","DYBBJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8"});
+    sample_names.insert({"DYv7","DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8"});
     sample_prod.insert({"DYv7", { { "2018",       { "" } },
                                   { "2017",       { "" } },
-				                          { "2016APV",    { "" } },
-				                          { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1" } } } });
+				   { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1" } },
+				   { "2016nonAPV", { "" } } } });
 
     vector<TString> sigMass = { "250", "350", "500" };
     for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
@@ -226,15 +226,27 @@
       sample_names.insert({"BFF_M"+sigMass[imass],"BFFZprimeToMuMu_M_"+sigMass[imass]+"_TuneCUETP8M1_13TeV-madgraph-pythia8"});
       sample_prod.insert({"BFF_M"+sigMass[imass], { { "2018",       { "" } },
                                                     { "2017",       { "" } },
-                                                    { "2016APV",    { "" } },
-                                                    { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+                                                    { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
+                                                    { "2016nonAPV", { "" } } } });
     }
     samples.push_back("BFFdbs1p0_M350");
     sample_names.insert({"BFFdbs1p0_M350","BFFZprimeToMuMu_M_350_dbs1p0_TuneCUETP8M1_13TeV-madgraph-pythia8"});
     sample_prod.insert({"BFFdbs1p0_M350", { { "2018",       { "" } },
                                             { "2017",       { "" } },
-                                            { "2016APV",    { "" } },
-                                            { "2016nonAPV", { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
+                                            { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
+                                            { "2016nonAPV", { "" } } } });
+
+    sigMass.clear();
+    sigMass = { "250", "400", "700", "1000" };
+    for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
+    {
+      samples.push_back("Y3_M"+sigMass[imass]);
+      sample_names.insert({"Y3_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts"});
+      sample_prod.insert({"Y3_M"+sigMass[imass], { { "2018",       { "" } },
+	                                            { "2017",       { "" } },
+						    { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
+						    { "2016nonAPV", { "" } } } });
+    }
   }
 
   TString skimPackage = "skim2mu_1muPt50_1Mll100_allBranches_allFiles";
@@ -261,15 +273,17 @@
 	if (year.Contains("2016") && sample=="DYbb")
 	  sample_names[sample] = "DYBBJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8";
         TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
-        if (runOnSignalBeforeSkim)
+        if ( sample.Contains("BFF") && !(sample.Contains("BFF_M250")) )
+          dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/merged/merged.root";
+        if ( runOnSignalBeforeSkim )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";
         ch_temp->Add(dir);
         chaux_temp->Add(dir);
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,outdir);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,outdir);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
     }
     cout<<endl;
   }

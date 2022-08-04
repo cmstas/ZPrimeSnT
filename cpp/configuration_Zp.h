@@ -459,12 +459,18 @@ void mllbinDefinitionForBFF(vector<TString> &mllbin, map<TString, TString> &mllb
   mllbin.push_back("mllinclusive");
   mllbin.push_back("mll225to275");
   mllbin.push_back("mll315to385");
+  mllbin.push_back("mll360to440");
   mllbin.push_back("mll450to550");
+  mllbin.push_back("mll630to770");
+  mllbin.push_back("mll900to1100");
 
   mllbinlabel["mllinclusive"]="m_{#mu#mu} > 0 GeV";
   mllbinlabel["mll225to275"]="225 < m_{#mu#mu} < 275 GeV";
   mllbinlabel["mll315to385"]="315 < m_{#mu#mu} < 385 GeV";
+  mllbinlabel["mll360to440"]="360 < m_{#mu#mu} < 440 GeV";
   mllbinlabel["mll450to550"]="450 < m_{#mu#mu} < 550 GeV";
+  mllbinlabel["mll630to770"]="630 < m_{#mu#mu} < 770 GeV";
+  mllbinlabel["mll900to1100"]="900 < m_{#mu#mu} < 1100 GeV";
 }
 
 void mllbinDefinition(vector<TString> &mllbin, bool doMllBins, map<TString, TString> &mllbinlabel) {
