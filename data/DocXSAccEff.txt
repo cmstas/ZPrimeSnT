@@ -23,3 +23,12 @@ The meaning of the xsec_collected.csv entries are as follows:
  - xsec_ss_unc: Relative stat. uncertainty on xsec_ss_final, necessarily the same across different models.
  - xsec_sb_unc: Relative stat. uncertainty on xsec_sb_final, necessarily the same across different models.
  - xsec_bb_unc: Relative stat. uncertainty on xsec_bb_final, necessarily the same across different models.
+
+In the final cross section parametrization file 'xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root',
+TSpline3 objects named 'spline_[model]_xsec_[ss,sb, or bb]' are provided for the different models and couplings.
+TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
+
+In the final acc.*eff. parametrization file 'acceff_interpolation_Run2.root',
+TSpline3 objects named 'spline_[model or avg]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]' are provided for the different models, couplings, and categories.
+TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
+Splines with name 'spline_avg_errsq_[dn or up]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]' correspond to squared uncertainties of the averaged acc.*eff. splines.
