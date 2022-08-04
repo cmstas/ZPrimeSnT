@@ -1,6 +1,76 @@
+/*
+The following functions are implemented in this file:
+
+=> std::vector<std::string> get_states():
+- Returns a list of ff states for the possible Z'ff couplings (i.e., ['ss', 'sb', 'bb']).
+
+=> std::vector<std::pair<std::string, std::string>> get_categories():
+- Returns a list of category name-title pairs. Currently, the pairs are [ 'N1':'Nb_eq_1', 'N2':'Nb_geq_2' ].
+
+=> void compute_initial_xsec(TString const& sample, TString coutput_main, TString production_dir):
+- IMPORTANT NOTE: Please run this function through the script xsec_parallel.sh in the cpp/ directory.
+- Makes an initial cross sections csv file by looping over the XSEC text files in a sample, and then looping over the sample ROOT files to divide them into Z'- ss, sb, and bb couplings.
+- 'sample' is the main tag of the sample as it would exist on DAS/DIS (e.g., 'ZPrimeToMuMuSB_M1000_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts').
+  > This string should be such that when split by the character '_', the second position refers to the mass, and the seventh position refers to the model name.
+  > It should also contain 'MuMuSB' since the samples with Z'->mumu are grouped together.
+- 'coutput_main' is the output directory, the current directory by default.
+- 'production_dir' is the directory in which the MC samples are kept. Currently, the variable defaults to '/ceph/cms/store/user/usarica/Offshell_2L2Nu/PrivateMC/220404'.
+- The product of this function is 'xsec_collected_initial.csv'.
+The script is designed to run in parallel over multiple independent processes over bash but in a screen environment.
+For that reason, the output file is produced by appending to it, so if you want to remake a file from scratch, you should delete this output first.
+- If the output directory also contains a file called 'xsec_collected_origin.csv' (any csv you pick that contains all six of the model, mass, xsec_total, xsec_ss, xsec_sb, xsec_bb columns),
+the script will open this file and read the ratios [xsec_ss, xsec_sb, xsec_bb]/xsec_total instead of looping over the ROOT files, which takes more time.
+Looping over XSEC files takes very little time, so no functionality is implemented for that purpose.
+
+=> void calculate_final_xsec(TString coutput_main):
+- Makes the final xsec_collected.csv file by analyzing xsec_collected_initial.csv.
+- The reason why this is done in a second stage is to put columns that also compare across the different models.
+- In principle, xsec(model_1, xy->Z'->mumu)/xsec(model_2, xy->Z'->mumu) = [Gamma(Z'->xy*Gamma(Z'->mumu)/Gamma(Z')] (model_1) / [Gamma(Z'->xy*Gamma(Z'->mumu)/Gamma(Z')] (model_2).
+That is because when you look at the individual Z'xy coupling states, their initial state and PDF composition should be the same,
+and phase space factor in the computation of xsec or total/partial widths should drop out in ratios.
+One can use this fact to reweight all models by 1/[Gamma(Z'->xy*Gamma(Z'->mumu)/Gamma(Z')], take an average, and then reweight the average back to compare.
+We do not use these model-averaged cross sections, but it is good to see the level of agreement.
+- The single argument is 'coutput_main' for the output directory.
+
+=> void replaceXS(TString const& csvname, TString const& csvref):
+- This is just a function that receives a csv file (path='csvname') and a reference csv (path='csvref') to replace the xsec_* entries so that xsec_total is the same as what is in the reference.
+
+=> void parametrize_xsec(TString const& cinput, bool useModelAveraged):
+- This is the main function that parametrizes the cross section for each model based on the csv file.
+- 'cinput' is the path to the csv file for cross sections (e.g., '../data/xsec_collected.csv').
+- 'useModelAveraged' is the flag that controls whether you want to parametrize xsec_[coupling state] entries as read directly from XSEC text files (useModelAveraged=false),
+or xsec_[coupling state]_final entries from the model-averaged computations. The default is 'false'.
+- The output is 'xsec_interpolation["" or "_ModelAveraged"].root', with TSpline3 objects named as 'spline_[model]_xsec_[ss,sb, or bb]'.
+TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
+
+=> void parametrize_acceff(TString const& period, TString const& cinput_xs, TString const& cinput_yields):
+- This is the main function that parametrizes the acceptance*efficiency over all models.
+- 'period' is the data period, which can be '2016_APV', '2016_NonAPV', '2017', '2018', 'Run2' (=2016-2018). It is needed to divide out the luminosity from the yields.
+- 'cinput_xs' is the path to the csv file for cross sections.
+- 'cinput_yields' is the path to the csv file for yields.
+This input external to these functions and must contain the following columns: model, M, N1ss_w, N1bs_w, N1bb_w, N2ss_w, N2bs_w, N2bb_w, N1ss_r, N1bs_r, N1bb_r, N2ss_r, N2bs_r, N2bb_r.
+- The output is 'acceff_interpolation_[period].root', with TSpline3 objects named as 'spline_[model or avg]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]'.
+TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
+- In addition, for spline_avg* cases, the splines of squared uncertainties are also provided as 'spline_avg_errsq_[dn or up]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]'.
+- The category titles in the spline names may change if the function get_categories() does.
+
+=> template<typename T> std::string get_plottable_label/get_plottable_hexcolor(T* obj) and void set_plottable_attributes(T* obj):
+- These are functions to determine the plotting properties of TSpline3 and TGraph objects in one fell swoop.
+- The first one determines the process label string as it would be written in LaTeX (e.g., "Y_{3}").
+- The second one determines the color of the lines or markers.
+- The last sets the line and marker attributes.
+- One can change the behavior of these functions to influence how plots look.
+
+=> void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_params):
+- This is the function to plot cross sections and acceptance*efficiency parametrizations.
+- 'cinput_xs_params' is the cross section parametrization file path.
+- 'cinput_acceff_params' is the acceptance*efficiency parametrization file path.
+- PDF and PNG files are placed into the current directory.
+- Please note the horizontal dimension of the canvas for acceptance*efficiency plots is wider
+in order to fit the y-axis labels for small acceptance values.
+*/
+
 #include <cassert>
-#include <thread>
-#include <functional>
 
 #include "HostHelpersCore.h"
 #include "SampleHelpersCore.h"
@@ -14,13 +84,19 @@
 #include "TString.h"
 #include "TDirectory.h"
 #include "TFile.h"
-#include "TH1D.h"
-#include "TH2D.h"
 
 
 using namespace std;
 using namespace IvyStreamHelpers;
 
+
+void run_dummy(TString const& sample, TString coutput_main=".", TString production_dir="/ceph/cms/store/user/usarica/Offshell_2L2Nu/PrivateMC/220404"){
+  IVYout << "HELLO" << endl;
+}
+
+std::vector<std::string> get_states(){ return std::vector<std::string>{ "ss", "sb", "bb" }; }
+
+std::vector<std::pair<std::string, std::string>> get_categories(){ return std::vector<std::pair<std::string, std::string>>{ { "N1", "Nb_eq_1" }, { "N2", "Nb_geq_2" } }; }
 
 void compute_initial_xsec(TString const& sample, TString coutput_main=".", TString production_dir="/ceph/cms/store/user/usarica/Offshell_2L2Nu/PrivateMC/220404"){
   if (!sample.Contains("MuMuSB")) return;
@@ -183,61 +259,6 @@ void compute_initial_xsec(TString const& sample, TString coutput_main=".", TStri
     << endl;
   IVYout.close();
 }
-/*
-
-void parallel_for(std::vector<TString> const& samples, TString const& period, TString const& production_dir,
-                  std::function<void(int, int, std::vector<TString> const&, TString const&, TString const&)> functor,
-                  bool use_threads)
-{
-  unsigned nb_elements = samples.size();
-  // -------
-  unsigned nb_threads_hint = std::thread::hardware_concurrency();
-  unsigned nb_threads = nb_threads_hint == 0 ? 8 : (nb_threads_hint);
-
-  unsigned batch_size = nb_elements / nb_threads;
-  unsigned batch_remainder = nb_elements % nb_threads;
-
-  std::vector< std::thread > my_threads(nb_threads);
-
-  if (use_threads){
-    // Multithread execution
-    for (unsigned i = 0; i < nb_threads; ++i){
-      int start = i * batch_size;
-      my_threads[i] = std::thread(functor, start, start+batch_size, samples, period, production_dir);
-    }
-  }
-  else{
-    // Single thread execution (for easy debugging)
-    for (unsigned i = 0; i < nb_threads; ++i){
-      int start = i * batch_size;
-      functor(start, start+batch_size, samples, period, production_dir);
-    }
-  }
-
-  // Deform the elements left
-  int start = nb_threads * batch_size;
-  functor(start, start+batch_remainder, samples, period, production_dir);
-
-  // Wait for the other thread to finish their task
-  if (use_threads) std::for_each(my_threads.begin(), my_threads.end(), std::mem_fn(&std::thread::join));
-}
-
-void compute_perparton_xsec(){
-  BaseTree::setRobustInputCheck(false);
-
-  TString const production_dir = "/ceph/cms/store/user/usarica/Offshell_2L2Nu/PrivateMC/220404";
-  TString const period = "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private";
-  auto const samples = SampleHelpers::lsdir(production_dir.Data());
-  parallel_for(
-    samples,
-    period,
-    production_dir,
-    [&](int start, int end, std::vector<TString> const& ss, TString const& pp, TString const& pd){ for (int i = start; i < end; ++i) compute_single_proc(ss.at(i), pp, pd); },
-    false
-  );
-}
-*/
-
 
 void calculate_final_xsec(TString coutput_main="."){
   std::vector<std::string> models;
@@ -420,7 +441,7 @@ void replaceXS(TString const& csvname, TString const& csvref){
   IVYout.close();
 }
 
-void parametrize_xsec(TString const& cinput, bool useModelAveraged){
+void parametrize_xsec(TString const& cinput, bool useModelAveraged=false){
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_ss_pairs_map;
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_sb_pairs_map;
   std::unordered_map<std::string, std::vector<std::pair<double, double>> > hypo_mass_xsec_bb_pairs_map;
@@ -482,13 +503,13 @@ void parametrize_xsec(TString const& cinput, bool useModelAveraged){
   foutput->Close();
 }
 
-void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields){
+void parametrize_acceff(TString const& period, TString const& cinput_xs, TString const& cinput_yields){
   TDirectory* curdir = gDirectory;
 
-  std::vector<std::string> const states{ "ss", "sb", "bb" };
+  auto const states = get_states();
   unsigned int const nstates = states.size();
 
-  std::vector<std::string> const cats{ "N1", "N2" };
+  auto const cats = get_categories();
   unsigned int const ncats = cats.size();
 
   double lumi=-1;
@@ -579,9 +600,22 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
       for (auto const& strhypo:hypos){
         sp_tmp = HelperFunctions::convertPointsToSpline3(hypo_mass_yield_pairs_map[is][ic][strhypo], false, true);
         if (sp_tmp){
-          sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+          sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), cats.at(ic).second.data(), period.Data()));
           foutput->WriteTObject(sp_tmp); delete sp_tmp;
-          gr_tmp = HelperFunctions::makeGraphFromPair(hypo_mass_yield_pairs_map[is][ic][strhypo], Form("gr_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+
+          std::vector<std::pair<double, double>> errs_dn; errs_dn.reserve(hypo_mass_yield_pairs_map[is][ic][strhypo].size());
+          std::vector<std::pair<double, double>> errs_up; errs_up.reserve(hypo_mass_yield_pairs_map[is][ic][strhypo].size());
+          for (unsigned int ip=0; ip<hypo_mass_yield_pairs_map[is][ic][strhypo].size(); ip++){
+            double val = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip).second;
+            double count = hypo_mass_count_pairs_map[is][ic][strhypo].at(ip).second*0.5; // FIXME: We reduce counts to account for weight distributions, which is typical Neff reduction in standard MC.
+            double val_dn=val, val_up=val;
+            StatisticsHelpers::getPoissonCountingConfidenceInterval_Frequentist(count, 0.684, val_dn, val_up); val_dn *= val/count; val_up *= val/count;
+
+            errs_dn.emplace_back(0., std::abs(val_dn-val));
+            errs_up.emplace_back(0., val_up-val);
+          }
+
+          gr_tmp = HelperFunctions::makeGraphAsymErrFromPair(hypo_mass_yield_pairs_map[is][ic][strhypo], errs_dn, errs_up, Form("gr_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), cats.at(ic).second.data(), period.Data()));
           foutput->WriteTObject(gr_tmp); delete gr_tmp;
 
           for (auto const& pp:hypo_mass_yield_pairs_map[is][ic][strhypo]) HelperFunctions::addByLowest(masses_all, pp.first, true);
@@ -600,10 +634,10 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
           auto const& pp = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip);
           auto const& mass = pp.first;
           auto const& val = pp.second;
-          auto const& count = hypo_mass_count_pairs_map[is][ic][strhypo].at(ip).second;
+          auto const& count = hypo_mass_count_pairs_map[is][ic][strhypo].at(ip).second*0.5; // FIXME: We reduce counts to account for weight distributions, which is typical Neff reduction in standard MC.
 
           double val_dn=val, val_up=val;
-          StatisticsHelpers::getPoissonCountingConfidenceInterval_Frequentist(count, 0.95, val_dn, val_up); val_dn *= val/count; val_up *= val/count;
+          StatisticsHelpers::getPoissonCountingConfidenceInterval_Frequentist(count, 0.684, val_dn, val_up); val_dn *= val/count; val_up *= val/count;
 
           unsigned int jp=0;
           for (auto const& mm:masses_all){
@@ -618,7 +652,7 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
       }
 
       if (masses_all.empty()){
-        IVYerr << "No masses exist in " << state << " " << (ic==0 ? "Nb=1" : "Nb>1") << "." << endl;
+        IVYerr << "No masses exist in " << state << " " << cats.at(ic).second << "." << endl;
       }
 
       std::vector<std::pair<double, double>> mass_acceff_pairs_allhypos_nominal;
@@ -652,11 +686,30 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
         mass_acceff_pairs_allhypos_errup.emplace_back(mass, sumerrsqup_acceff);
       }
 
+      // This is an ad hoc fix, but it works.
+      // Otherwise, the spline goes negative at around 700 GeV.
+      if (state=="ss" && cats.at(ic).second=="Nb_eq_1"){
+        double x1=0, x2=0, y1=0, y2=0;
+        double xx = 705;
+        for (auto const& pp:mass_acceff_pairs_allhypos_nominal){
+          if (pp.first<xx){
+            x1=pp.first;
+            y1=pp.second;
+          }
+          else{
+            x2=pp.first;
+            y2=pp.second;
+            break;
+          }
+        }
+        double yy = y1 + (y2-y1)/(x2-x1)*(650.-x1);
+        HelperFunctions::addByLowest(mass_acceff_pairs_allhypos_nominal, xx, yy);
+      }
       sp_tmp = HelperFunctions::convertPointsToSpline3(mass_acceff_pairs_allhypos_nominal, false, true);
       if (sp_tmp){
-        sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", "avg", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+        sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", "avg", state.data(), cats.at(ic).second.data(), period.Data()));
         foutput->WriteTObject(sp_tmp); delete sp_tmp;
-        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_nominal, Form("gr_%s_acceff_%s_%s_%s", "avg", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_nominal, Form("gr_%s_acceff_%s_%s_%s", "avg", state.data(), cats.at(ic).second.data(), period.Data()));
         foutput->WriteTObject(gr_tmp); delete gr_tmp;
       }
 
@@ -664,7 +717,7 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
       if (sp_tmp){
         sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", "avg_errsq_dn", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
         foutput->WriteTObject(sp_tmp); delete sp_tmp;
-        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_errdn, Form("gr_%s_acceff_%s_%s_%s", "avg_errsq_dn", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_errdn, Form("gr_%s_acceff_%s_%s_%s", "avg_errsq_dn", state.data(), cats.at(ic).second.data(), period.Data()));
         foutput->WriteTObject(gr_tmp); delete gr_tmp;
       }
 
@@ -672,10 +725,463 @@ void parametrize_acceff(TString period, TString cinput_xs, TString cinput_yields
       if (sp_tmp){
         sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", "avg_errsq_up", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
         foutput->WriteTObject(sp_tmp); delete sp_tmp;
-        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_errup, Form("gr_%s_acceff_%s_%s_%s", "avg_errsq_up", state.data(), (ic==0 ? "Nb_eq_1" : "Nb_geq_2"), period.Data()));
+        gr_tmp = HelperFunctions::makeGraphFromPair(mass_acceff_pairs_allhypos_errup, Form("gr_%s_acceff_%s_%s_%s", "avg_errsq_up", state.data(), cats.at(ic).second.data(), period.Data()));
         foutput->WriteTObject(gr_tmp); delete gr_tmp;
       }
     }
   }
   foutput->Close();
+}
+
+
+////////////////////
+// Plotting stuff //
+////////////////////
+#include "TText.h"
+#include "TPaveText.h"
+#include "TLegend.h"
+#include "TCanvas.h"
+#include "TColor.h"
+#include "TStyle.h"
+
+
+template<typename T> std::string get_plottable_label(T* obj){
+  std::string res;
+  TString sname = obj->GetName();
+  // When testing for model names, make sure to put an '_' at the beginning and end.
+  // Otherwise, model==Y3 also tests true for DY3.
+  if (sname.Contains("_Y3_")) res = "Y_{3}";
+  else if (sname.Contains("_DY3_")) res = "DY_{3}";
+  else if (sname.Contains("_DYp3_")) res = "DY'_{3}";
+  else if (sname.Contains("_B3mL2_")) res = "B_{3}-L_{2}";
+  return res;
+}
+
+template<typename T> std::string get_plottable_hexcolor(T* obj){
+  std::string res = "#000000";
+
+  TString sname = obj->GetName();
+  // When testing for model names, make sure to put an '_' at the beginning and end.
+  // Otherwise, model==Y3 also tests true for DY3.
+  if (sname.Contains("_Y3_")) res = "#ff0000";
+  else if (sname.Contains("_DY3_")) res = "#ffcc00";
+  else if (sname.Contains("_DYp3_")) res = "#9900cc";
+  else if (sname.Contains("_B3mL2_")) res = "#3333ff";
+
+  return res;
+}
+
+template<typename T> void set_plottable_attributes(T* obj){
+  std::string hex = get_plottable_hexcolor(obj);
+  TAttLine* line = dynamic_cast<TAttLine*>(obj);
+  if (line){
+    line->SetLineColor(TColor::GetColor(hex.data()));
+    line->SetLineWidth(2);
+  }
+  TAttMarker* marker = dynamic_cast<TAttMarker*>(obj);
+  if (marker){
+    marker->SetMarkerColor(TColor::GetColor(hex.data()));
+    marker->SetMarkerSize(1.2);
+  }
+}
+
+void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_params){
+  gStyle->SetOptStat(0);
+
+  // Magic numbers
+  constexpr double npixels_stdframe_xy = 800;
+  constexpr double relmargin_frame_right = 0.05;
+  constexpr double relmargin_frame_CMS = 0.07;
+  constexpr double relmargin_frame_XTitle = 0.15;
+  constexpr double relsize_CMSlogo = 0.98;
+  constexpr double relsize_CMSlogo_sqrts = 0.8;
+  constexpr double relsize_XYTitle = 0.9;
+  constexpr double relsize_XYLabel = 0.8;
+  constexpr double offset_xlabel = 0.02;
+  constexpr double offset_ylabel = 0.02;
+  constexpr double offset_xtitle = 1.09;
+
+  TDirectory* curdir = gDirectory;
+
+  auto const states = get_states();
+  unsigned int const nstates = states.size();
+
+  auto const cats = get_categories();
+  unsigned int const ncats = cats.size();
+
+  {
+    constexpr double relmargin_frame_left = 0.20;
+    constexpr double offset_ytitle = 1.3;
+    const double npixels_CMSlogo = npixels_stdframe_xy*relmargin_frame_CMS*relsize_CMSlogo;
+    const double npixels_CMSlogo_sqrts = npixels_CMSlogo*relsize_CMSlogo_sqrts;
+    const double npixels_XYTitle = npixels_CMSlogo*relsize_XYTitle;
+    const double npixels_XYLabel = npixels_CMSlogo*relsize_XYLabel;
+    const double npixels_x = int(
+      npixels_stdframe_xy*(
+        1.
+        + relmargin_frame_left
+        + relmargin_frame_right
+        ) + 0.5
+      );
+    const double npixels_y = int(
+      npixels_stdframe_xy*(
+        relmargin_frame_CMS
+        + 1.
+        + relmargin_frame_XTitle
+        ) + 0.5
+      );
+    const double margin_left = double(int(relmargin_frame_left*npixels_stdframe_xy))/npixels_x;
+    const double margin_right = double(int(relmargin_frame_right*npixels_stdframe_xy))/npixels_x;
+    const double margin_top = double(int(relmargin_frame_CMS*npixels_stdframe_xy)-1)/npixels_y;
+    const double margin_bot = double(int(relmargin_frame_XTitle*npixels_stdframe_xy))/npixels_y;
+
+    TFile* fxs = TFile::Open(cinput_xs_params.Data(), "read");
+
+    std::vector<TSpline3*> splines_xs;
+    HelperFunctions::extractObjectsFromDirectory(fxs, splines_xs);
+    std::vector<TGraph*> grs_xs;
+    HelperFunctions::extractObjectsFromDirectory(fxs, grs_xs);
+
+    for (auto const& state:states){
+      double xmin = 9e9;
+      double xmax = -9e9;
+      double ymin = 9e9;
+      double ymax = -9e9;
+
+      std::vector<TSpline3*> splines_plottable; splines_plottable.reserve(splines_xs.size());
+      for (auto const& obj:splines_xs){
+        TString sname = obj->GetName();
+        if (sname.Contains(Form("xsec_%s", state.data()))){
+          set_plottable_attributes(obj);
+          obj->SetLineStyle(7);
+          splines_plottable.push_back(obj);
+          xmin = std::min(xmin, obj->GetXmin());
+          xmax = std::max(xmax, obj->GetXmax());
+        }
+      }
+
+      std::vector<TGraph*> grs_plottable; grs_plottable.reserve(grs_xs.size());
+      for (auto const& obj:grs_xs){
+        TString sname = obj->GetName();
+        if (sname.Contains(Form("xsec_%s", state.data()))){
+          set_plottable_attributes(obj);
+          obj->SetMarkerStyle(29); // Since xsec graphs do not have error bars, make sure to put a visible shape.
+          obj->SetMarkerSize(3.5);
+          grs_plottable.push_back(obj);
+          for (int ip=0; ip<obj->GetN(); ip++){
+            ymin = std::min(ymin, obj->GetY()[ip]);
+            ymax = std::max(ymax, obj->GetY()[ip]);
+          }
+        }
+      }
+      xmin -= 20.;
+      xmax += 20.;
+      ymin -= std::abs(ymax - ymin)*0.1;
+      ymax += std::abs(ymax - ymin)*0.1;
+      unsigned int nleg = grs_plottable.size();
+
+      TCanvas canvas(Form("c_xsec_%s_params", state.data()), "", 8, 30, npixels_x, npixels_y);
+      canvas.cd();
+      canvas.SetFillColor(0);
+      canvas.SetBorderMode(0);
+      canvas.SetBorderSize(2);
+      canvas.SetTickx(1);
+      canvas.SetTicky(1);
+      canvas.SetFrameFillStyle(0);
+      canvas.SetFrameBorderMode(0);
+      canvas.SetFrameFillStyle(0);
+      canvas.SetFrameBorderMode(0);
+      canvas.SetLeftMargin(margin_left);
+      canvas.SetRightMargin(margin_right);
+      canvas.SetTopMargin(margin_top);
+      canvas.SetBottomMargin(margin_bot);
+
+      double leg_xmax = (0.97 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+      double leg_xmin = (0.6 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+      double leg_ymax=(npixels_y - npixels_stdframe_xy*(0.05 + relmargin_frame_CMS))/npixels_y;
+      double leg_ymin=leg_ymax; leg_ymin -= npixels_XYTitle*nleg/npixels_y*1.25;
+      TLegend legend(leg_xmin, leg_ymin, leg_xmax, leg_ymax);
+      legend.SetBorderSize(0);
+      legend.SetTextFont(43);
+      legend.SetTextSize(npixels_XYTitle);
+      legend.SetLineColor(1);
+      legend.SetLineStyle(1);
+      legend.SetLineWidth(1);
+      legend.SetFillColor(0);
+      legend.SetFillStyle(0);
+
+      TH1F htmp("htmp", "", 1, xmin, xmax);
+      htmp.SetBinContent(1, -9999.);
+      htmp.SetLineColor(kBlack);
+
+      htmp.GetXaxis()->SetNdivisions(505);
+      htmp.GetXaxis()->SetLabelFont(43);
+      htmp.GetXaxis()->SetLabelOffset(offset_xlabel);
+      htmp.GetXaxis()->SetLabelSize(npixels_XYLabel);
+      htmp.GetXaxis()->SetTitleFont(42);
+      htmp.GetXaxis()->SetTitleSize(npixels_XYTitle/npixels_y);
+      htmp.GetXaxis()->SetTitleOffset(offset_xtitle);
+      htmp.GetYaxis()->SetLabelFont(43);
+      htmp.GetYaxis()->SetLabelOffset(offset_ylabel);
+      htmp.GetYaxis()->SetLabelSize(npixels_XYLabel);
+      htmp.GetYaxis()->SetTitleFont(42);
+      htmp.GetYaxis()->SetTitleSize(npixels_XYTitle/npixels_y);
+      htmp.GetYaxis()->SetTitleOffset(offset_ytitle);
+
+      htmp.GetXaxis()->SetTitle("m_{Z'} (GeV)");
+      htmp.GetXaxis()->CenterTitle();
+      htmp.GetYaxis()->SetTitle(Form("ln[#sigma_{%s}] (ln[fb])", state.data()));
+      htmp.GetYaxis()->SetRangeUser(ymin, ymax);
+      htmp.GetYaxis()->CenterTitle();
+      htmp.Draw("hist");
+
+      for (auto const& obj:splines_plottable){
+        obj->SetTitle("");
+        obj->Draw("csame");
+      }
+      for (auto const& obj:grs_plottable){
+        obj->SetTitle("");
+        obj->Draw("psame");
+        legend.AddEntry(obj, get_plottable_label(obj).data(), "p");
+      }
+
+      TText* text;
+      TPaveText pt(
+        margin_left,
+        1.-margin_top,
+        1.-margin_right,
+        1.,
+        "brNDC"
+      );
+      pt.SetBorderSize(0);
+      pt.SetFillStyle(0);
+      pt.SetTextAlign(22);
+      pt.SetTextFont(43);
+      text = pt.AddText(0.001, 0.5, "CMS");
+      text->SetTextFont(63);
+      text->SetTextSize(npixels_CMSlogo);
+      text->SetTextAlign(12);
+      text = pt.AddText(npixels_CMSlogo*2.2/npixels_stdframe_xy, 0.45, "Simulation");
+      text->SetTextFont(53);
+      text->SetTextSize(npixels_CMSlogo*relsize_CMSlogo_sqrts);
+      text->SetTextAlign(12);
+      int theSqrts=13;
+      TString cErgTev = Form("%i TeV", theSqrts);
+      text = pt.AddText(0.999, 0.45, cErgTev);
+      text->SetTextFont(43);
+      text->SetTextSize(npixels_CMSlogo*relsize_CMSlogo_sqrts);
+      text->SetTextAlign(32);
+
+      canvas.cd();
+      legend.Draw();
+      pt.Draw();
+      //ptc.Draw();
+
+      canvas.RedrawAxis();
+      canvas.Modified();
+      canvas.Update();
+      canvas.SaveAs(TString(canvas.GetName()) + ".pdf");
+      canvas.SaveAs(TString(canvas.GetName()) + ".png");
+
+      canvas.Close();
+    }
+
+    fxs->Close();
+  }
+
+  curdir->cd();
+  
+  {
+    constexpr double relmargin_frame_left = 0.30;
+    constexpr double offset_ytitle = 2.1;
+    const double npixels_CMSlogo = npixels_stdframe_xy*relmargin_frame_CMS*relsize_CMSlogo;
+    const double npixels_CMSlogo_sqrts = npixels_CMSlogo*relsize_CMSlogo_sqrts;
+    const double npixels_XYTitle = npixels_CMSlogo*relsize_XYTitle;
+    const double npixels_XYLabel = npixels_CMSlogo*relsize_XYLabel;
+    const double npixels_x = int(
+      npixels_stdframe_xy*(
+        1.
+        + relmargin_frame_left
+        + relmargin_frame_right
+        ) + 0.5
+      );
+    const double npixels_y = int(
+      npixels_stdframe_xy*(
+        relmargin_frame_CMS
+        + 1.
+        + relmargin_frame_XTitle
+        ) + 0.5
+      );
+    const double margin_left = double(int(relmargin_frame_left*npixels_stdframe_xy))/npixels_x;
+    const double margin_right = double(int(relmargin_frame_right*npixels_stdframe_xy))/npixels_x;
+    const double margin_top = double(int(relmargin_frame_CMS*npixels_stdframe_xy)-1)/npixels_y;
+    const double margin_bot = double(int(relmargin_frame_XTitle*npixels_stdframe_xy))/npixels_y;
+
+    TFile* facceff = TFile::Open(cinput_acceff_params.Data(), "read");
+    std::vector<TSpline3*> splines;
+    HelperFunctions::extractObjectsFromDirectory(facceff, splines);
+    std::vector<TGraphAsymmErrors*> grs;
+    HelperFunctions::extractObjectsFromDirectory(facceff, grs);
+
+    for (auto const& state:states){
+      for (auto const& cat:cats){
+        double xmin = 9e9;
+        double xmax = -9e9;
+        double ymin = 0;
+        double ymax = -9e9;
+
+        std::vector<TSpline3*> splines_plottable; splines_plottable.reserve(splines.size());
+        for (auto const& obj:splines){
+          TString sname = obj->GetName();
+          if (sname.Contains(Form("avg_acceff_%s_%s", state.data(), cat.second.data())) && sname.Contains("avg") && !sname.Contains("errsq")){
+            set_plottable_attributes(obj);
+            splines_plottable.push_back(obj);
+            xmin = std::min(xmin, obj->GetXmin());
+            xmax = std::max(xmax, obj->GetXmax());
+            obj->SetNpx(10000);
+          }
+        }
+
+        std::vector<TGraph*> grs_plottable; grs_plottable.reserve(grs.size());
+        for (auto const& obj:grs){
+          TString sname = obj->GetName();
+          if (sname.Contains(Form("acceff_%s_%s", state.data(), cat.second.data())) && !sname.Contains("avg") && !sname.Contains("errsq")){
+            set_plottable_attributes(obj);
+            grs_plottable.push_back(obj);
+            for (int ip=0; ip<obj->GetN(); ip++){
+              ymax = std::max(ymax, obj->GetY()[ip]+obj->GetEYhigh()[ip]);
+            }
+          }
+        }
+        xmin -= 20.;
+        xmax += 20.;
+        ymax += std::abs(ymax - ymin)*0.1;
+        ymax = std::min(ymax, 1.);
+        unsigned int nleg = grs_plottable.size()+1;
+
+        TCanvas canvas(Form("c_acceff_%s_%s_params", state.data(), cat.second.data()), "", 8, 30, npixels_x, npixels_y);
+        canvas.cd();
+        canvas.SetFillColor(0);
+        canvas.SetBorderMode(0);
+        canvas.SetBorderSize(2);
+        canvas.SetTickx(1);
+        canvas.SetTicky(1);
+        canvas.SetFrameFillStyle(0);
+        canvas.SetFrameBorderMode(0);
+        canvas.SetFrameFillStyle(0);
+        canvas.SetFrameBorderMode(0);
+        canvas.SetLeftMargin(margin_left);
+        canvas.SetRightMargin(margin_right);
+        canvas.SetTopMargin(margin_top);
+        canvas.SetBottomMargin(margin_bot);
+
+        double leg_xmax = (0.57 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+        double leg_xmin = (0.27 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+        double leg_ymax=(npixels_y - npixels_stdframe_xy*(0.05 + 0.3 + relmargin_frame_CMS))/npixels_y;
+        double leg_ymin=leg_ymax; leg_ymin -= npixels_XYTitle*nleg/npixels_y*1.25;
+        TLegend legend(leg_xmin, leg_ymin, leg_xmax, leg_ymax);
+        legend.SetBorderSize(0);
+        legend.SetTextFont(43);
+        legend.SetTextSize(npixels_XYTitle);
+        legend.SetLineColor(1);
+        legend.SetLineStyle(1);
+        legend.SetLineWidth(1);
+        legend.SetFillColor(0);
+        legend.SetFillStyle(0);
+
+        TPaveText ptc(
+          leg_xmin,
+          leg_ymin - npixels_XYTitle/npixels_y*0.5 - npixels_XYTitle/npixels_y*1.25,
+          leg_xmax,
+          leg_ymin - npixels_XYTitle/npixels_y*0.5,
+          "brNDC"
+        );
+        ptc.SetBorderSize(0);
+        ptc.SetFillStyle(0);
+        ptc.SetTextAlign(12);
+        ptc.SetTextFont(43);
+        ptc.SetTextSize(npixels_XYTitle);
+        ptc.AddText(0.001, 0.5, Form("Z'%s in N_{b}%s", state.data(), (cat.second=="Nb_eq_1" ? "=1" : "#geq2")));
+
+        TH1F htmp("htmp", "", 1, xmin, xmax);
+        htmp.SetBinContent(1, -9999.);
+        htmp.SetLineColor(kBlack);
+
+        htmp.GetXaxis()->SetNdivisions(505);
+        htmp.GetXaxis()->SetLabelFont(43);
+        htmp.GetXaxis()->SetLabelOffset(offset_xlabel);
+        htmp.GetXaxis()->SetLabelSize(npixels_XYLabel);
+        htmp.GetXaxis()->SetTitleFont(42);
+        htmp.GetXaxis()->SetTitleSize(npixels_XYTitle/npixels_y);
+        htmp.GetXaxis()->SetTitleOffset(offset_xtitle);
+        htmp.GetYaxis()->SetNdivisions(505);
+        htmp.GetYaxis()->SetLabelFont(43);
+        htmp.GetYaxis()->SetLabelOffset(offset_ylabel);
+        htmp.GetYaxis()->SetLabelSize(npixels_XYLabel);
+        htmp.GetYaxis()->SetTitleFont(42);
+        htmp.GetYaxis()->SetTitleSize(npixels_XYTitle/npixels_y);
+        htmp.GetYaxis()->SetTitleOffset(offset_ytitle);
+
+        htmp.GetXaxis()->SetTitle("m_{Z'} (GeV)");
+        htmp.GetXaxis()->CenterTitle();
+        htmp.GetYaxis()->SetTitle("acc. #times eff.");
+        htmp.GetYaxis()->SetRangeUser(ymin, ymax);
+        htmp.GetYaxis()->CenterTitle();
+        htmp.Draw("hist");
+
+        for (auto const& obj:splines_plottable){
+          obj->SetTitle("");
+          obj->Draw("csame");
+        }
+        for (auto const& obj:grs_plottable){
+          obj->SetTitle("");
+          obj->Draw("psame");
+          legend.AddEntry(obj, get_plottable_label(obj).data(), "ep");
+        }
+        legend.AddEntry(splines_plottable.front(), "Average", "l");
+
+        TText* text;
+        TPaveText pt(
+          margin_left,
+          1.-margin_top,
+          1.-margin_right,
+          1.,
+          "brNDC"
+        );
+        pt.SetBorderSize(0);
+        pt.SetFillStyle(0);
+        pt.SetTextAlign(22);
+        pt.SetTextFont(43);
+        text = pt.AddText(0.001, 0.5, "CMS");
+        text->SetTextFont(63);
+        text->SetTextSize(npixels_CMSlogo);
+        text->SetTextAlign(12);
+        text = pt.AddText(npixels_CMSlogo*2.2/npixels_stdframe_xy, 0.45, "Simulation");
+        text->SetTextFont(53);
+        text->SetTextSize(npixels_CMSlogo*relsize_CMSlogo_sqrts);
+        text->SetTextAlign(12);
+        int theSqrts=13;
+        TString cErgTev = Form("%i TeV", theSqrts);
+        text = pt.AddText(0.999, 0.45, cErgTev);
+        text->SetTextFont(43);
+        text->SetTextSize(npixels_CMSlogo*relsize_CMSlogo_sqrts);
+        text->SetTextAlign(32);
+
+        canvas.cd();
+        legend.Draw();
+        pt.Draw();
+        ptc.Draw();
+
+        canvas.RedrawAxis();
+        canvas.Modified();
+        canvas.Update();
+        canvas.SaveAs(TString(canvas.GetName()) + ".pdf");
+        canvas.SaveAs(TString(canvas.GetName()) + ".png");
+
+        canvas.Close();
+      }
+    }
+
+    facceff->Close();
+  }
 }

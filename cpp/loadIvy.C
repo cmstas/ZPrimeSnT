@@ -7,5 +7,8 @@
 
   TString inc_this_dir = Form("-I%s", this_dir.Data());
   gSystem->AddIncludePath(inc_this_dir+"/IvyFramework/IvyDataTools/interface/");
+
+  gSystem->Load("libMatrix");
+  gSystem->Load("libRooFit");
   gSystem->Load("libIvyFrameworkIvyDataTools.so");
 }

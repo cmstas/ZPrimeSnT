@@ -18,6 +18,7 @@ class SignalXSContainer:
    - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
    - state = "ss", "sb", "bb"
    - mass = Mass of Zprime
+   Returns the cross section at nominal parameter values.
    """
    def __init__(self,fname=None):
       if fname is None:
@@ -58,6 +59,7 @@ class SignalAccEffContainer:
    - state = "ss", "sb", "bb"
    - cat = "Nb_eq_1", "Nb_geq_2"
    - mass = Mass of Zprime
+   Returns a triplet of nominal acc*eff, lower unc., higher unc.
    """
    def __init__(self,fname=None):
       if fname is None:
@@ -93,7 +95,7 @@ class SignalAccEffContainer:
       xl = sp_nom.GetXmin()
       xh = sp_nom.GetXmax()
       if mass<xl or mass>xh:
-         return 0
+         return 0.,0.,0.
       else:
          vnom = sp_nom.Eval(mass)
          errsqdn = sp_dn.Eval(mass)
@@ -114,6 +116,7 @@ class SignalYieldCalculator:
    - gzpfit = gX/mZp*1 TeV
    - tsb = theta_sb
    - mass = Mass of Zprime
+   Returns a triplet of nominal yield, lower acc*eff. unc., higher acc*eff. unc.
    """
    def __init__(self,lumi=1.,fname_xs=None,fname_acceff=None):
       self.xs = SignalXSContainer(fname_xs)
