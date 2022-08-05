@@ -1,0 +1,51 @@
+Variable	Explanation
+imodel	1=B3ml2    2=DY3     3=DYp3     4=Y3
+model	model name (not in ROOT file)
+x	gX/M
+t23	theta23
+gX	gX 
+sigma	total xsec in fb
+sigma_ss	xsec ss -> Z
+sigma_sb	xsec sb -> Z
+sigma_bb	xsec bb -> Z
+fracss	sigma_ss/sigma
+fracsb	sigma_sb/sigma
+fracbb	sigma_bb/sigma
+width	Total width
+mmwidth	mumu Width
+M	mass in GeV
+N_w	Number of events SR1+SR2
+f_w	N2_w / N_w
+N1_w	Number of events SR1
+N2_w	Number of events SR2
+N1bb_w	Number of events SR1 from bb 
+N2bb_w	Number of events SR2 from bb 
+N1bs_w	Number of events SR1 from bs
+N2bs_w	Number of events SR2 from bs
+N1ss_w	Number of events SR1 from ss
+N2ss_w	Number of events SR2 from ss
+N_r	Raw Number of events SR1+SR2
+f_r	N2_r / N_r
+N1_r	Raw Number of events SR1
+N2_r	Raw Number of events SR2
+N1bb_r	Raw Number of events SR1 from bb 
+N2bb_r	Raw Number of events SR2 from bb 
+N1bs_r	Raw Number of events SR1 from bs
+N2bs_r	Raw Number of events SR2 from bs
+N1ss_r	Raw Number of events SR1 from ss
+N2ss_r	Raw Number of events SR2 from ss
+acc1bb	Acceptance SR 1 from bb
+acc2bb	Acceptance SR 2 from bb
+acc1bs	Acceptance SR 1 from bs
+acc2bs	Acceptance SR 2 from bs
+acc1ss	Acceptance SR 1 from ss
+acc2ss	Acceptance SR 2 from ss
+acc1bb_e	Error Acceptance SR 1 from bb
+acc2bb_e	Error Acceptance SR 2 from bb
+acc1bs_e	Error Acceptance SR 1 from bs
+acc2bs_e	Error Acceptance SR 2 from bs
+acc1ss_e	Error Acceptance SR 1 from ss
+acc2ss_e	Error Acceptance SR 2 from ss
+ssWeight	Reweight factor for ss->Z
+sbWeight	Reweight factor for sb->Z
+bbWeight	Reweight factor for bb->Z
