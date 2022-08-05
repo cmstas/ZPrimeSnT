@@ -687,23 +687,24 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
       }
 
       // This is an ad hoc fix, but it works.
-      // Otherwise, the spline goes negative at around 700 GeV.
+      // Otherwise, the spline goes negative.
       if (state=="ss" && cats.at(ic).second=="Nb_eq_1"){
-        double x1=0, x2=0, y1=0, y2=0;
-        double xx = 705;
-        for (auto const& pp:mass_acceff_pairs_allhypos_nominal){
-          if (pp.first<xx){
-            x1=pp.first;
-            y1=pp.second;
+        for (auto const& xx:std::vector<double>{495., 525., 705.}){
+          double x1=0, x2=0, y1=0, y2=0;
+          for (auto const& pp:mass_acceff_pairs_allhypos_nominal){
+            if (pp.first<xx){
+              x1=pp.first;
+              y1=pp.second;
+            }
+            else{
+              x2=pp.first;
+              y2=pp.second;
+              break;
+            }
           }
-          else{
-            x2=pp.first;
-            y2=pp.second;
-            break;
-          }
+          double yy = y1 + (y2-y1)/(x2-x1)*(xx-x1);
+          HelperFunctions::addByLowest(mass_acceff_pairs_allhypos_nominal, xx, yy);
         }
-        double yy = y1 + (y2-y1)/(x2-x1)*(650.-x1);
-        HelperFunctions::addByLowest(mass_acceff_pairs_allhypos_nominal, xx, yy);
       }
       sp_tmp = HelperFunctions::convertPointsToSpline3(mass_acceff_pairs_allhypos_nominal, false, true);
       if (sp_tmp){
@@ -859,6 +860,7 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
           xmax = std::max(xmax, obj->GetXmax());
         }
       }
+      std::sort(splines_plottable.begin(), splines_plottable.end(), [] (TSpline* a, TSpline* b){ return get_plottable_label(a)<get_plottable_label(b); });
 
       std::vector<TGraph*> grs_plottable; grs_plottable.reserve(grs_xs.size());
       for (auto const& obj:grs_xs){
@@ -874,6 +876,8 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
           }
         }
       }
+      std::sort(grs_plottable.begin(), grs_plottable.end(), [] (TGraph* a, TGraph* b){ return get_plottable_label(a)<get_plottable_label(b); });
+
       xmin -= 20.;
       xmax += 20.;
       ymin -= std::abs(ymax - ymin)*0.1;
@@ -1041,6 +1045,7 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
             obj->SetNpx(10000);
           }
         }
+        std::sort(splines_plottable.begin(), splines_plottable.end(), [] (TSpline3* a, TSpline3* b){ return get_plottable_label(a)<get_plottable_label(b); });
 
         std::vector<TGraph*> grs_plottable; grs_plottable.reserve(grs.size());
         for (auto const& obj:grs){
@@ -1053,9 +1058,11 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
             }
           }
         }
+        std::sort(grs_plottable.begin(), grs_plottable.end(), [] (TGraph* a, TGraph* b){ return get_plottable_label(a)<get_plottable_label(b); });
+
         xmin -= 20.;
         xmax += 20.;
-        ymax += std::abs(ymax - ymin)*0.1;
+        ymax += std::abs(ymax - ymin)*0.5;
         ymax = std::min(ymax, 1.);
         unsigned int nleg = grs_plottable.size()+1;
 
@@ -1075,9 +1082,9 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
         canvas.SetTopMargin(margin_top);
         canvas.SetBottomMargin(margin_bot);
 
-        double leg_xmax = (0.57 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
-        double leg_xmin = (0.27 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
-        double leg_ymax=(npixels_y - npixels_stdframe_xy*(0.05 + 0.3 + relmargin_frame_CMS))/npixels_y;
+        double leg_xmax = (0.35 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+        double leg_xmin = (0.05 + relmargin_frame_left)/(1. + relmargin_frame_left + relmargin_frame_right);
+        double leg_ymax=(npixels_y - npixels_stdframe_xy*(0.05 + relmargin_frame_CMS))/npixels_y;
         double leg_ymin=leg_ymax; leg_ymin -= npixels_XYTitle*nleg/npixels_y*1.25;
         TLegend legend(leg_xmin, leg_ymin, leg_xmax, leg_ymax);
         legend.SetBorderSize(0);
@@ -1090,10 +1097,10 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
         legend.SetFillStyle(0);
 
         TPaveText ptc(
-          leg_xmin,
-          leg_ymin - npixels_XYTitle/npixels_y*0.5 - npixels_XYTitle/npixels_y*1.25,
           leg_xmax,
-          leg_ymin - npixels_XYTitle/npixels_y*0.5,
+          leg_ymax - npixels_XYTitle/npixels_y*(1.25+0.15),
+          leg_xmax + 0.2/(1. + relmargin_frame_left + relmargin_frame_right),
+          leg_ymax,
           "brNDC"
         );
         ptc.SetBorderSize(0);
