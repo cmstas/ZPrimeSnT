@@ -58,12 +58,12 @@ bool useOnlyRun2018B = false;
 bool doPartialUnblinding = true;
 
 // Looper setup flags
-int doHistos = 1; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
+int doHistos = 2; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
 bool muonDebug = false;
 bool doMllBins = false;
 bool doMllBinsForBFF = false;
 bool doNbTagBins = true;
-bool doTTEnriched = false;
+bool doTTEnriched = true;
 bool doDYEnriched = false;
 bool doOnlyDYEnriched = false; // Turns doDYEnriched on
 bool doMuDetRegionBins = false;
@@ -229,11 +229,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
   // Configuration setup: NanoCORE/Config.{h,cc}
   gconf.nanoAOD_ver = 9;
+  gconf.isAPV = (year=="2016APV") ? 1 : 0;
   gconf.GetConfigs(year.Atoi());
   lumi = gconf.lumi;
 
-  if ( runBFFSync )
+  if ( runBFFSync ) {
     lumi = 137.61;
+    if ( process.Contains("BFF") || process=="TTv7" || process=="DYv7" ) {
+      gconf.WP_DeepFlav_tight = 0.7221;
+      gconf.WP_DeepFlav_medium = 0.3093;
+    }
+  }
 
   // Golden JSON files
   if ( !isMC ) {
@@ -1236,8 +1242,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	       nt.Flag_BadPFMuonFilter()>=1 &&
 	       nt.Flag_BadPFMuonDzFilter()>=1 &&
 	       nt.Flag_eeBadScFilter()>=1 &&
-	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
-	       ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
+	       ( year.Contains("2016") ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
+	       ( year.Contains("2016") ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
 	     ) continue;
       }
       else {
@@ -1249,7 +1255,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	       nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
 	       nt.Flag_BadPFMuonFilter()>=1 &&
 	       nt.Flag_eeBadScFilter()>=1 &&
-	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) )
+	       ( year.Contains("2016") ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) )
 	     ) continue;
       }
 

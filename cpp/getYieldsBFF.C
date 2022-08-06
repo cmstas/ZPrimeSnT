@@ -1,5 +1,7 @@
 {
   bool useXSec = true;
+  bool useBFF2016XSec = true;
+  bool writeToyCard = true;
 
   TString inDir = "temp_data_BFF/";
   vector<TString> dNames = { };
@@ -21,9 +23,9 @@
   dNames.push_back("d_mll630to770_nBTag1p_MuDetAll");
   dNames.push_back("d_mll630to770_nBTag1_MuDetAll");
   dNames.push_back("d_mll630to770_nBTag2p_MuDetAll");
-  dNames.push_back("d_mll900to1000_nBTag1p_MuDetAll");
-  dNames.push_back("d_mll900to1000_nBTag1_MuDetAll");
-  dNames.push_back("d_mll900to1000_nBTag2p_MuDetAll");
+  dNames.push_back("d_mll900to1100_nBTag1p_MuDetAll");
+  dNames.push_back("d_mll900to1100_nBTag1_MuDetAll");
+  dNames.push_back("d_mll900to1100_nBTag2p_MuDetAll");
 
   vector<TString> years = { };
   years.push_back("2016APV");
@@ -33,10 +35,18 @@
   vector<TString> sigsamples = { };
   vector<float> sigmasses = { };
   map<TString,float> sigxsections = { };
-  sigxsections.insert({"BFF_M250",0.1296});
-  sigxsections.insert({"BFF_M350",0.0332});
-  sigxsections.insert({"BFF_M500",0.0069});
-  sigxsections.insert({"BFFdbs1p0_M350",0.1780});
+  if ( useBFF2016XSec ) {
+    sigxsections.insert({"BFF_M250",0.1225});
+    sigxsections.insert({"BFF_M350",0.03104});
+    sigxsections.insert({"BFF_M500",0.00642});
+    sigxsections.insert({"BFFdbs1p0_M350",0.1658});
+  }
+  else {
+    sigxsections.insert({"BFF_M250",0.1296});
+    sigxsections.insert({"BFF_M350",0.0332});
+    sigxsections.insert({"BFF_M500",0.0069});
+    sigxsections.insert({"BFFdbs1p0_M350",0.1780});
+  }
   sigxsections.insert({"Y3_M250",0.010116452});
   sigxsections.insert({"Y3_M400",0.0029093405});
   sigxsections.insert({"Y3_M700",0.0006143530});
@@ -54,45 +64,39 @@
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
-  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
-    {
-      for ( unsigned int imass=0; imass<sigMassString.size(); imass++ )
-	{
-	  sigmodels.push_back(sigModel[imodel]);
-	  sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
-	  sigmasses.push_back(sigMass[imass]);
-	}
+  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ ) {
+    for ( unsigned int imass=0; imass<sigMassString.size(); imass++ ) {
+      sigmodels.push_back(sigModel[imodel]);
+      sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
+      sigmasses.push_back(sigMass[imass]);
     }
+  }
 
   sigModel = { "BFF" };
   sigMass = { 250.0 , 350.0, 500.0 };
   sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
-  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
-    {
-      for ( unsigned int imass=0; imass<sigMassString.size(); imass++ )
-	{
-	  sigmodels.push_back(sigModel[imodel]);
-	  sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
-	  sigmasses.push_back(sigMass[imass]);
-	}
+  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ ) {
+    for ( unsigned int imass=0; imass<sigMassString.size(); imass++ ) {
+      sigmodels.push_back(sigModel[imodel]);
+      sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
+      sigmasses.push_back(sigMass[imass]);
     }
+  }
 
   sigModel = { "BFFdbs1p0" };
   sigMass = { 350.0 };
   sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
-  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
-    {
-      for ( unsigned int imass=0; imass<sigMassString.size(); imass++ )
-	{
-	  sigmodels.push_back(sigModel[imodel]);
-	  sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
-	  sigmasses.push_back(sigMass[imass]);
-	}
+  for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ ) {
+    for ( unsigned int imass=0; imass<sigMassString.size(); imass++ ) {
+      sigmodels.push_back(sigModel[imodel]);
+      sigsamples.push_back(sigModel[imodel]+"_M"+sigMassString[imass]);
+      sigmasses.push_back(sigMass[imass]);
     }
+  }
 
   for ( int iyear=0; iyear<years.size(); iyear++ ) {
     TString year = years[iyear];
@@ -162,6 +166,30 @@
 	cout << "S/sqrt(B): " << sob << endl;
 	cout << "S/sqrt(S+B): " << sosb << endl;
 	cout<<endl;
+
+	if ( writeToyCard ) {
+	  ofstream fout;
+	  TString bname = "";
+	  if ( dNames[d].Contains("nBTag1p") ) bname="chsum";
+	  else if ( dNames[d].Contains("nBTag1") ) bname="ch1";
+	  else if ( dNames[d].Contains("nBTag2p") ) bname="ch2";
+	  TString fname = Form("card_%s_%s.txt",sample.Data(),bname.Data());
+	  fout.open(fname.Data());
+	  fout << "imax *" << endl;
+	  fout << "jmax *" << endl;
+	  fout << "kmax *" << endl;
+	  fout << "------" << endl;
+	  //fout << "shapes * * FAKE" << endl;
+	  //fout << "------" << endl;
+	  fout << "bin\t\t" << bname << endl;
+	  fout << Form("observation\t%.2f",B) << endl;
+	  fout << "------" << endl;
+	  fout << "bin\t" << bname << "\t" << bname << endl;
+	  fout << "process\tsignal\tbackground" << endl;
+	  fout << "process\t0\t1" << endl;
+	  fout << Form("rate\t%.2f\t%.2f",S,B) << endl;
+	  fout.close();
+	}
       }
     }
   }
