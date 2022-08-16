@@ -1,6 +1,24 @@
 from collections import OrderedDict
 
-beforeSel = False
+beforeSel   = False
+splitInputs = False
+
+if splitInputs and not beforeSel:
+  years = ["2018","2017","2016APV","2016nonAPV"]
+  signals = ["Y3","DY3","DYp3","B3mL2"]
+  ifilenames = []
+  for y in years:
+    for s in signals:
+      ifilenames.append("./cpp/temp_data_"+s+"_"+y+"/yieldFile_AfterSel.txt")
+  tof = open('./cpp/yieldFile_AfterSel.txt',"w")
+  for ifnn,ifn in enumerate(ifilenames):
+    tif = open(ifn)
+    for ln,line in enumerate(tif.readlines()):
+      if ifnn>0 and ln==0:
+        continue
+      tof.write(line)
+    tif.close()
+  tof.close()
 
 ifile = open('./cpp/yieldFile_'+('Before' if beforeSel else 'After')+'Sel.txt')
 ofile = open('./cpp/yieldFileAllYears_'+('Before' if beforeSel else 'After')+'Sel.txt',"w")

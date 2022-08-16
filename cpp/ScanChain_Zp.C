@@ -107,13 +107,17 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, const char* outdir="temp_data") {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
 // +2: Apply positive variation
 // -2: Apply negative variation
   
+  if ( runBFFSync ) {
+    removeCorrections = true;
+    doMllBinsForBFF = true;
+  }
   if ( removeCorrections ) {
     prefireWeight = 0;
     topPtWeight = 0;
@@ -139,8 +143,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     isMC = false;
   }
   // SM processes and cross-sections:
-  else if ( process == "ttbar_v7" )          xsec = 76700.0; // fb
-  else if ( process == "DY_v7" )             xsec = 5929000.0; // fb
+  else if ( process == "TTv7" )              xsec = 76700.0; // fb
+  else if ( process == "DYv7" )              xsec = 5929000.0; // fb
   else if ( process == "ttbar" )             xsec = 87310.0; // fb
   else if ( process == "DY" )                xsec = 5765400.0; // fb
   else if ( process == "DYbb" )              xsec = 14670.0; // fb
@@ -167,12 +171,12 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   // Signal processes and cross-sections:
   else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000; // fb
   else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000; // fb
-  else if ( process == "Y3_M250"  )    xsec = 0.010116452*1000; // fb
-  else if ( process == "Y3_M400"  )    xsec = 0.0029093405*1000; // fb
+  else if ( process == "Y3_M250"  )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.010116452*1000; // fb
+  else if ( process == "Y3_M400"  )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0029093405*1000; // fb
   else if ( process == "Y3_M550"  )    xsec = 0.00122483125*1000; // fb
-  else if ( process == "Y3_M700"  )    xsec = 0.0006143530*1000; // fb
+  else if ( process == "Y3_M700"  )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0006143530*1000; // fb
   else if ( process == "Y3_M850"  )    xsec = 0.0003349177*1000; // fb
-  else if ( process == "Y3_M1000" )    xsec = 0.0001919544*1000; // fb
+  else if ( process == "Y3_M1000" )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0001919544*1000; // fb
   else if ( process == "Y3_M1250" )    xsec = 0.00008172256*1000; // fb
   else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000; // fb
   else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000; // fb
@@ -225,8 +229,17 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
   // Configuration setup: NanoCORE/Config.{h,cc}
   gconf.nanoAOD_ver = 9;
+  gconf.isAPV = (year=="2016APV") ? 1 : 0;
   gconf.GetConfigs(year.Atoi());
   lumi = gconf.lumi;
+
+  if ( runBFFSync ) {
+    lumi = 137.61;
+    if ( process.Contains("BFF") || process=="TTv7" || process=="DYv7" ) {
+      gconf.WP_DeepFlav_tight = 0.7221;
+      gconf.WP_DeepFlav_medium = 0.3093;
+    }
+  }
 
   // Golden JSON files
   if ( !isMC ) {
@@ -254,16 +267,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   }
 
   ifstream ifile_BeforeSel, ifile_AfterSel;
-  if ( writeOutYields_BeforeSel ) ifile_BeforeSel.open("yieldFile_BeforeSel.txt"); // Check file existence
-  if ( writeOutYields_AfterSel ) ifile_AfterSel.open("yieldFile_AfterSel.txt"); // Check file existence
+  TString fn_before = Form("%s/yieldFile_BeforeSel.txt",oDir.Data());
+  TString fn_after  = Form("%s/yieldFile_AfterSel.txt" ,oDir.Data());
+  if ( writeOutYields_BeforeSel ) ifile_BeforeSel.open(fn_before); // Check file existence
+  if ( writeOutYields_AfterSel ) ifile_AfterSel.open(fn_after); // Check file existence
 
   ofstream yieldFile_BeforeSel, yieldFile_AfterSel;
   if ( writeOutYields_BeforeSel ) {
-    yieldFile_BeforeSel.open("yieldFile_BeforeSel.txt",ios::app); // Append in existing file or create the file, if it is missing
+    yieldFile_BeforeSel.open(fn_before,ios::app); // Append in existing file or create the file, if it is missing
     if (!ifile_BeforeSel) yieldFile_BeforeSel<<"year,model,M,NbbZ_w,NbsZ_w,NssZ_w,NbbZbb_w NbsZbs_w NssZss_w,NbbZ_r,NbsZ_r,NssZ_r,NbbZbb_r NbsZbs_r NssZss_r" << endl;
   }
   if ( writeOutYields_AfterSel ) {
-    yieldFile_AfterSel.open("yieldFile_AfterSel.txt",ios::app); // Append in existing file or create the file, if it is missing
+    yieldFile_AfterSel.open(fn_after,ios::app); // Append in existing file or create the file, if it is missing
     if (!ifile_AfterSel) yieldFile_AfterSel<<"year,model,x,t23,M,N_w,f_w,N1_w,N2_w,N1bb_w,N2bb_w,N1bs_w,N2bs_w,N1ss_w,N2ss_w,N_r,f_r,N1_r,N2_r,N1bb_r,N2bb_r,N1bs_r,N2bs_r,N1ss_r,N2ss_r" << endl;
   }
 
@@ -293,7 +308,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   map<TString, TString> mllbinlabel;
   if (doMllBinsForBFF)
     mllbinDefinitionForBFF(mllbin, mllbinlabel);
-  else 
+  else
     mllbinDefinition(mllbin, doMllBins, mllbinlabel);
   const int nMllBins = mllbin.size();
   bool mllbinsel[nMllBins];
@@ -823,7 +838,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
 	// Apply L1 muon pre-firing weight (available in nanoAODv9):
 	// https://twiki.cern.ch/twiki/bin/view/CMS/L1PrefiringWeightRecipe
-        if ( prefireWeight!=0 && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
+        if ( prefireWeight!=0 && ( process!="DYbb" && process!="DYv7" && process!="TTv7" && !process.Contains("BFF") ) ) {
           if ( prefireWeight==1 ) weight *= nt.L1PreFiringWeight_Muon_Nom();
           if ( prefireWeight==2 ) weight *= nt.L1PreFiringWeight_Muon_SystUp(); // Syst unc. up --> Possibly merge with Stat up?
           if ( prefireWeight==3 ) weight *= nt.L1PreFiringWeight_Muon_StatUp(); // Stat unc. up --> Possibly merge with Syst up?
@@ -907,7 +922,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  continue;
 	if ( isinf(nt.PuppiMET_phi()) || isnan(nt.PuppiMET_phi()) )
 	  continue;
-	if ( isMC && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
+	if ( isMC && ( process!="DYbb" && process!="DYv7" && process!="TTv7" && !process.Contains("BFF") ) ) {
 	  // JES up
 	  if ( isinf(nt.PuppiMET_ptJESUp()) || isnan(nt.PuppiMET_ptJESUp()) )
 	    continue;
@@ -935,7 +950,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       double pfmet_phi = nt.MET_phi();
       double puppimet_pt = nt.PuppiMET_pt();
       double puppimet_phi = nt.PuppiMET_phi();
-      if ( isMC && ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) ) {
+      if ( isMC && ( process!="DYbb" && process!="DYv7" && process!="TTv7" && !process.Contains("BFF") ) ) {
         // JEC uncertainties on PUPPI MET
         if ( JECUnc==2 ) {
           puppimet_pt = nt.PuppiMET_ptJESUp();
@@ -1049,19 +1064,25 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
 	  }
 	  // Apply trigger SF
-	  if ( triggerSF!=0 && triggerWeight < 0.0 ) {
+	  if ( triggerSF!=0 && !(triggerWeight > 0.0) ) {
 	    TString tvariation = "central";
 	    if ( triggerSF==2 ) tvariation = "up";
 	    else if ( triggerSF==-2 ) tvariation = "down";
 	    float minPt  = 52.0;
 	    float maxEta = 2.4; 
-	    if ( Muon_pt.at(mu) < minPt ) {
-	      triggerWeight = 0.0;
+	    for ( int n = 0; n < nt.nTrigObj(); n++ ) {
+	      if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
+	      if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
+	      if ( IsMatched( nt.Muon_eta().at(mu), nt.Muon_phi().at(mu), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
+		if ( Muon_pt.at(mu) < minPt ) {
+		  triggerWeight = 0.0;
+		}
+		else if ( fabs(nt.Muon_eta().at(mu) ) < maxEta && mu_id ) {
+		  triggerWeight = get_triggerSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+		}
+		else continue;
+	      }
 	    }
-	    else if ( fabs(nt.Muon_eta().at(mu) ) < maxEta && mu_id ) {
-	      triggerWeight = get_triggerSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	    }
-	    else continue;
 	  }
 	}
       }
@@ -1217,7 +1238,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Number of good primary vertices
       if ( nt.PV_npvsGood() < 1 ) continue;
       // MET filters: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#UL_data
-      if ( process!="DYbb" && process!="DY_v7" && process!="ttbar_v7" && !process.Contains("BFF") ) { //v9
+      if ( process!="DYbb" && process!="DYv7" && process!="TTv7" && !process.Contains("BFF") ) { //v9
 	if ( // process.Contains("data") &&
 	    !( nt.Flag_goodVertices()>=1 &&
 	       nt.Flag_globalSuperTightHalo2016Filter()>=1 &&
@@ -1227,8 +1248,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	       nt.Flag_BadPFMuonFilter()>=1 &&
 	       nt.Flag_BadPFMuonDzFilter()>=1 &&
 	       nt.Flag_eeBadScFilter()>=1 &&
-	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
-	       ( year=="2016" ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
+	       ( year.Contains("2016") ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) &&
+	       ( year.Contains("2016") ? 1 : nt.Flag_hfNoisyHitsFilter()>=1 ) )
 	     ) continue;
       }
       else {
@@ -1240,7 +1261,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	       nt.Flag_EcalDeadCellTriggerPrimitiveFilter()>=1 &&
 	       nt.Flag_BadPFMuonFilter()>=1 &&
 	       nt.Flag_eeBadScFilter()>=1 &&
-	       ( year=="2016" ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) )
+	       ( year.Contains("2016") ? 1 : nt.Flag_ecalBadCalibFilter()>=1 ) )
 	     ) continue;
       }
 
@@ -1297,8 +1318,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 		break;
 	      // For jets, increase affected area by half of jet cone (i.e., by 0.2)
 	      if ( nt.Jet_jetId().at(i) > 1 &&
-		   nt.Jet_eta().at(i) > HEM_region[0]-0.2 && nt.Jet_eta().at(i) < HEM_region[1]+0.2 &&
-		   nt.Jet_phi().at(i) > HEM_region[2]-0.2 && nt.Jet_phi().at(i) < HEM_region[3]+0.2 ) {
+		   Jet_p4.at(i).eta() > HEM_region[0]-0.2 && Jet_p4.at(i).eta() < HEM_region[1]+0.2 &&
+		   Jet_p4.at(i).phi() > HEM_region[2]-0.2 && Jet_p4.at(i).phi() < HEM_region[3]+0.2 ) {
 		hasHEMjet = true;
 		break;
 	      }
@@ -1547,16 +1568,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       // Trigger object finding (match: dR<0.02)
       bool atLeastSelectedMu_matchedToTrigObj = false;
       vector<bool> muMatchedToTrigObj;
-      for ( int n = 0; n < nt.nTrigObj(); n++ ) {
-        if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
-        if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
-        for ( auto i_cand_muons : cand_muons ) {
+      for ( auto i_cand_muons : cand_muons ) {
+	if ( muMatchedToTrigObj.size() > i_cand_muons && muMatchedToTrigObj.at(i_cand_muons)==true ) continue;
+	for ( int n = 0; n < nt.nTrigObj(); n++ ) {
+	  if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
+	  if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
 	  if ( IsMatched( nt.Muon_eta().at(i_cand_muons), nt.Muon_phi().at(i_cand_muons), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
             muMatchedToTrigObj.push_back(true);
             atLeastSelectedMu_matchedToTrigObj = true;
+	    break;
           }
-          else muMatchedToTrigObj.push_back(false);
         }
+	if ( muMatchedToTrigObj.size() <= i_cand_muons ) 
+	  muMatchedToTrigObj.push_back(false);
       }
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
       // Fill histos: sel4
@@ -1636,13 +1660,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       mllbinsel[0] = true;
       if (doMllBins) {
-        if ( selectedPair_M > 175. && selectedPair_M < 300)
+        if ( selectedPair_M > 175. && selectedPair_M < 300.)
           mllbinsel[1] = true;
         else mllbinsel[1] = false;
-        if ( selectedPair_M > 300. && selectedPair_M < 500)
+        if ( selectedPair_M > 300. && selectedPair_M < 500.)
           mllbinsel[2] = true;
         else mllbinsel[2] = false;
-        if ( selectedPair_M > 500. && selectedPair_M < 900)
+        if ( selectedPair_M > 500. && selectedPair_M < 900.)
           mllbinsel[3] = true;
         else mllbinsel[3] = false;
         if ( selectedPair_M > 750. && selectedPair_M < 1250.)
@@ -1652,6 +1676,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           mllbinsel[5] = true;
         else mllbinsel[5] = false;
         if ( selectedPair_M > 1500. && selectedPair_M < 2500.)
+          mllbinsel[6] = true;
+        else mllbinsel[6] = false;
+      }
+      else if (doMllBinsForBFF) {
+        if ( selectedPair_M > 225. && selectedPair_M < 275.)
+          mllbinsel[1] = true;
+        else mllbinsel[1] = false;
+        if ( selectedPair_M > 315. && selectedPair_M < 385.)
+          mllbinsel[2] = true;
+        else mllbinsel[2] = false;
+        if ( selectedPair_M > 360. && selectedPair_M < 440.)
+          mllbinsel[3] = true;
+        else mllbinsel[3] = false;
+        if ( selectedPair_M > 450. && selectedPair_M < 550.)
+          mllbinsel[4] = true;
+        else mllbinsel[4] = false;
+        if ( selectedPair_M > 630. && selectedPair_M < 770.)
+          mllbinsel[5] = true;
+        else mllbinsel[5] = false;
+        if ( selectedPair_M > 900. && selectedPair_M < 1100.)
           mllbinsel[6] = true;
         else mllbinsel[6] = false;
       }
@@ -2044,16 +2088,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       vector<int> cand_bJets_tight, cand_bJets;
       unsigned int nbtagDeepFlavB = 0;
       for ( unsigned int jet = 0; jet < nt.nJet(); jet++ ) {
-        float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - nt.Jet_eta().at(jet);
-        float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - nt.Jet_eta().at(jet);
-        float d_phi_1 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(leadingMu_idx) - nt.Jet_phi().at(jet));
-        float d_phi_2 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(subleadingMu_idx) - nt.Jet_phi().at(jet));
+        float d_eta_1 = nt.Muon_eta().at(leadingMu_idx) - Jet_p4.at(jet).eta();
+        float d_eta_2 = nt.Muon_eta().at(subleadingMu_idx) - Jet_p4.at(jet).eta();
+        float d_phi_1 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(leadingMu_idx) - Jet_p4.at(jet).phi());
+        float d_phi_2 = TVector2::Phi_mpi_pi(nt.Muon_phi().at(subleadingMu_idx) - Jet_p4.at(jet).phi());
         float dr_jmu1 = TMath::Sqrt( d_eta_1*d_eta_1+d_phi_1*d_phi_1 );
         float dr_jmu2 = TMath::Sqrt( d_eta_2*d_eta_2+d_phi_2*d_phi_2 );
         // Reject jets if they are within dR = 0.4 of the candidate leptons
         if ( dr_jmu1 < 0.4 || dr_jmu2 < 0.4 ) continue;
         if ( Jet_p4.at(jet).Pt() > 20 &&
-             fabs(nt.Jet_eta().at(jet)) < 2.5 &&
+             fabs(Jet_p4.at(jet).eta()) < 2.5 &&
              nt.Jet_jetId().at(jet) > 1 ) {
           bool isBTagMedium = false, isBTagTight = false;
           if ( nt.Jet_btagDeepFlavB().at(jet) > gconf.WP_DeepFlav_medium ) {
@@ -2068,7 +2112,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           // https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
           if ( isMC && bTagSF!=0 ) {
             float pt = Jet_p4.at(jet).Pt();
-            float eta = nt.Jet_eta().at(jet);
+            float eta = Jet_p4.at(jet).eta();
             int flavor = nt.Jet_hadronFlavour().at(jet);
 
             float eff_tight = get_bTagEff(pt, eta, year, "tight", flavor, "central");
@@ -2176,8 +2220,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       float bjet1_pt = (cand_bJets.size() > 0 ? Jet_p4.at(cand_bJets[0]).Pt() : -1.0);
       float bjet2_pt = (cand_bJets.size() > 1 ? Jet_p4.at(cand_bJets[1]).Pt() : -1.0);
-      float bjet1_eta = (cand_bJets.size() > 0 ? nt.Jet_eta().at(cand_bJets[0]) : -999.0);
-      float bjet2_eta = (cand_bJets.size() > 1 ? nt.Jet_eta().at(cand_bJets[1]) : -999.0);
+      float bjet1_eta = (cand_bJets.size() > 0 ? Jet_p4.at(cand_bJets[0]).eta() : -999.0);
+      float bjet2_eta = (cand_bJets.size() > 1 ? Jet_p4.at(cand_bJets[1]).eta() : -999.0);
 
       // Construct mlb pairs from selected muon pair and candidate b jets
       float minDPhi_b_MET = 1e9, minDPhi_lb_MET = 1e9, minDPhi_llb_MET = 1e9, minDPhi_l_b = 1e9;
@@ -2450,7 +2494,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( writeOutYields_AfterSel ) {
+      if ( writeOutYields_AfterSel && min_mlb > 175.0 ) {
         if ( nbtagsel[1] ) {
           N1 += weight * factor;
           yN1++;
@@ -2498,7 +2542,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( triggerSF!=0 ) reset_triggerSF();
   if ( bTagSF!=0 ) reset_bTagEff();
 
-  if ( removeDataDuplicates )
+  if ( removeDataDuplicates && !(isMC) )
     cout << "Number of duplicates found: " << nDuplicates << endl;
 
   // Avoid histograms with unphysical negative bin content (due to negative GEN weights)
