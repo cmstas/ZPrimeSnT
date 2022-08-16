@@ -383,7 +383,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     }
     selection.push_back("sel10"); // minMlb > 175 GeV
     if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
-  }<
+  }
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
