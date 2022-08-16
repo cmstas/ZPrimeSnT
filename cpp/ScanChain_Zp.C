@@ -58,12 +58,12 @@ bool useOnlyRun2018B = false;
 bool doPartialUnblinding = true;
 
 // Looper setup flags
-int doHistos = 2; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
+int doHistos = 1; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
 bool muonDebug = false;
 bool doMllBins = false;
 bool doMllBinsForBFF = false;
 bool doNbTagBins = true;
-bool doTTEnriched = true;
+bool doTTEnriched = false;
 bool doDYEnriched = false;
 bool doOnlyDYEnriched = false; // Turns doDYEnriched on
 bool doMuDetRegionBins = false;
@@ -383,7 +383,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     }
     selection.push_back("sel10"); // minMlb > 175 GeV
     if (doTTEnriched) selection.push_back("antisel10"); // minMlb < 175 GeV, used for ttbar bkg reduction
-  }
+  }<
 
   vector<TString> plot_names = { };
   vector<TString> plot_names_b = { };
@@ -1064,19 +1064,25 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    weight *= get_muonIsoSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
 	  }
 	  // Apply trigger SF
-	  if ( triggerSF!=0 && triggerWeight < 0.0 ) {
+	  if ( triggerSF!=0 && !(triggerWeight > 0.0) ) {
 	    TString tvariation = "central";
 	    if ( triggerSF==2 ) tvariation = "up";
 	    else if ( triggerSF==-2 ) tvariation = "down";
 	    float minPt  = 52.0;
 	    float maxEta = 2.4; 
-	    if ( Muon_pt.at(mu) < minPt ) {
-	      triggerWeight = 0.0;
+	    for ( int n = 0; n < nt.nTrigObj(); n++ ) {
+	      if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
+	      if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
+	      if ( IsMatched( nt.Muon_eta().at(mu), nt.Muon_phi().at(mu), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
+		if ( Muon_pt.at(mu) < minPt ) {
+		  triggerWeight = 0.0;
+		}
+		else if ( fabs(nt.Muon_eta().at(mu) ) < maxEta && mu_id ) {
+		  triggerWeight = get_triggerSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
+		}
+		else continue;
+	      }
 	    }
-	    else if ( fabs(nt.Muon_eta().at(mu) ) < maxEta && mu_id ) {
-	      triggerWeight = get_triggerSF(Muon_pt.at(mu), nt.Muon_eta().at(mu), year, tvariation);
-	    }
-	    else continue;
 	  }
 	}
       }
@@ -2534,7 +2540,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( triggerSF!=0 ) reset_triggerSF();
   if ( bTagSF!=0 ) reset_bTagEff();
 
-  if ( removeDataDuplicates )
+  if ( removeDataDuplicates && !(isMC) )
     cout << "Number of duplicates found: " << nDuplicates << endl;
 
   // Avoid histograms with unphysical negative bin content (due to negative GEN weights)

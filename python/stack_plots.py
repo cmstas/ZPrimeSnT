@@ -39,6 +39,9 @@ os.system('cp '+args.inDir+'../../utils/index.php '+args.outDir)
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
 
+if "antisel10" in args.selections[0]:
+    args.signalMass = [200,400,700]
+
 massToExclude=[]
 if len(args.signalMass)>3:
     for i,m in enumerate(args.signalMass):
@@ -119,10 +122,10 @@ MuDetbin["BE"]="1 muon in Barrel, 1 muon in Endcap)"
 MuDetbin["EE"]="2 muons in Endcap"
 
 prodMode=dict()
-prodModelabel["all"]="All production modes"
-prodModelabel["ss"]="bs production mode"
-prodModelabel["bs"]="bs production mode"
-prodModelabel["bb"]="bb production mode"
+prodMode["all"]="All production modes"
+prodMode["ss"]="bs production mode"
+prodMode["bs"]="bs production mode"
+prodMode["bb"]="bb production mode"
 
 # Samples
 samples=[]
@@ -490,15 +493,15 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         thissel=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-4]
-            if not thissel.Contains("sel"):
+            if not "sel" in thissel:
                 thissel = plotname.split("_")[len(plotname.split("_"))-5]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thissel = plotname.split("_")[len(plotname.split("_"))-3]
-            if not thissel.Contains("sel"):
+            if not "sel" in thissel:
                 thissel = plotname.split("_")[len(plotname.split("_"))-4]
         else:
             thissel = plotname.split("_")[len(plotname.split("_"))-2]
-            if not thissel.Contains("sel"):
+            if not "sel" in thissel:
                 thissel = plotname.split("_")[len(plotname.split("_"))-3]
         if thissel not in args.selections:
             return(0)
@@ -506,15 +509,15 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         thismll=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thismll = plotname.split("_")[len(plotname.split("_"))-3]
-            if not thismll.Contains("mll"):
+            if not "mll" in thismll:
                 thismll = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thismll = plotname.split("_")[len(plotname.split("_"))-2]
-            if not thismll.Contains("mll"):
+            if not "mll" in thismll:
                 thismll = plotname.split("_")[len(plotname.split("_"))-3]
         else:
             thismll = plotname.split("_")[len(plotname.split("_"))-1]
-            if not thismll.Contains("mll"):
+            if not "mll" in thismll:
                 thismll = plotname.split("_")[len(plotname.split("_"))-2]
         if not args.plotMllSlices and 'inclusive' not in thismll:
             return(0)
@@ -522,25 +525,25 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         thisMuDet=""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
             thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
-            if not (thisMuDet.Contains("MuDetAll") or thisMuDet.Contains("BB") or thisMuDet.Contains("BE") or thisMuDet.Contains("EE")):
+            if not ("MuDetAll" in thisMuDet or "BB" in thisMuDet or "BE" in thisMuDet or "EE" in thisMuDet):
                 thisMuDet = plotname.split("_")[len(plotname.split("_"))-2]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
             thisMuDet = plotname.split("_")[len(plotname.split("_"))-1]
-            if not (thisMuDet.Contains("MuDetAll") or thisMuDet.Contains("BB") or thisMuDet.Contains("BE") or thisMuDet.Contains("EE")):
+            if not ("MuDetAll" in thisMuDet or "BB" in thisMuDet or "BE" in thisMuDet or "EE" in thisMuDet):
                 thisMuDet = plotname.split("_")[len(plotname.split("_"))-2]
         else:
             thisMuDet = "All"
         if not args.plotMuonDetRegions and 'All' not in thisMuDet:
             return(0)
 
-        if not args.plotProdModes and plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+        if not args.plotProdModes and "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
             return(0)
     else:
         if not args.plotMllSlices and ("cutflow" in plotname and "mll" in plotname and "inclusive" not in plotname):
             return(0)
         if not args.plotMuonDetRegions and ("cutflow" in plotname and "MuDet" in plotname and "All" not in plotname):
             return(0)
-        if not args.plotProdModes and plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+        if not args.plotProdModes and "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
             return(0)
 
     # Get histograms
@@ -991,7 +994,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         whichMuDet = ""
         whichsel = ""
         if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
-            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+            if "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
                 whichMuDet = plotname.split("_")[len(plotname.split("_"))-2]
                 whichnb  = plotname.split("_")[len(plotname.split("_"))-3]
                 whichmll = plotname.split("_")[len(plotname.split("_"))-4]
@@ -1002,7 +1005,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 whichmll = plotname.split("_")[len(plotname.split("_"))-3]
                 whichsel = plotname.split("_")[len(plotname.split("_"))-4]
         elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
-            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+            if "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
                 whichMuDet = plotname.split("_")[len(plotname.split("_"))-2]
                 whichmll = plotname.split("_")[len(plotname.split("_"))-3]
                 whichsel = plotname.split("_")[len(plotname.split("_"))-4]
@@ -1011,7 +1014,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 whichmll = plotname.split("_")[len(plotname.split("_"))-2]
                 whichsel = plotname.split("_")[len(plotname.split("_"))-3]
         else:
-            if plotname.split("_")[len(plotname.split("_"))-1].Contains("ProdModes"):
+            if "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
                 whichmll = plotname.split("_")[len(plotname.split("_"))-2]
                 whichsel = plotname.split("_")[len(plotname.split("_"))-3]
             else:
@@ -1097,7 +1100,8 @@ for year in args.years:
     listkeys = listfile.GetListOfKeys()
     size = listkeys.GetSize()
     for i in range(0,size):
-        listofplots.append(listkeys.At(i).GetName())
+        if "TH1" in listkeys.At(i).GetClassName():
+            listofplots.append(listkeys.At(i).GetName())
     toexclude = []
     for plot in listofplots:
         if plot in toexclude:
