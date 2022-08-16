@@ -274,7 +274,7 @@
 	if (year.Contains("2016") && sample=="DYbb")
 	  sample_names[sample] = "DYBBJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8";
         TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
-        if ( sample.Contains("BFF") && !(sample.Contains("BFF_M250")) )
+        if ( sample.Contains("BFF") )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/merged/merged.root";
         if ( runOnSignalBeforeSkim )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";

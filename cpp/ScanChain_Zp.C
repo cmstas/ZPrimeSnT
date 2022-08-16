@@ -1576,9 +1576,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	  if ( IsMatched( nt.Muon_eta().at(i_cand_muons), nt.Muon_phi().at(i_cand_muons), nt.TrigObj_eta().at(n), nt.TrigObj_phi().at(n), 0.02 ) ) {
             muMatchedToTrigObj.push_back(true);
             atLeastSelectedMu_matchedToTrigObj = true;
+	    break;
           }
-          else muMatchedToTrigObj.push_back(false);
         }
+	if ( muMatchedToTrigObj.size() <= i_cand_muons ) 
+	  muMatchedToTrigObj.push_back(false);
       }
       if ( !atLeastSelectedMu_matchedToTrigObj ) continue;
       // Fill histos: sel4
