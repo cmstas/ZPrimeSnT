@@ -1,11 +1,10 @@
+R__LOAD_LIBRARY(../NanoCORE/NANO_CORE.so)
+#include "ScanChain_Zp.C+"
+
 double getSumOfGenEventSumw(TChain *chaux);
 
 void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0)
 {
-  gROOT->ProcessLine(".L ../NanoCORE/NANO_CORE.so");  // NanoCORE library
-  gROOT->ProcessLine(".L ScanChain_Zp.C+");  // Macro that performs the selection
-  //gROOT->ProcessLine(".L ScanChain_Zp_C.so");  // Macro that performs the selection, in case already compiled
-
   // Event weights / scale factors:
   //  0: Do not apply
   //  1: Apply central value
@@ -314,8 +313,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) gROOT->ProcessLine("ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir)");
-      else gROOT->ProcessLine("ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir)");
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
     }
     cout<<endl;
   }
