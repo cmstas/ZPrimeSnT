@@ -19,7 +19,7 @@ COMMAND="root -l -b -q 'doAll_Zp.C(\"$DIR\", \"$YEAR\", $DATA, $BKG, $SIG, $BFF,
 echo ""
 echo "Arguments:"
 echo "----------"
-echo "Directory = "$PWD"/"$DIR
+echo "Directory = "$DIR
 echo "Year = "$YEAR
 echo "Run data = "$DATA
 echo "Run bkg = "$BKG

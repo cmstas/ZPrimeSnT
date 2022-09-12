@@ -407,6 +407,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         plot_names.push_back("mu2_dxy");
         plot_names.push_back("mu1_dz");
         plot_names.push_back("mu2_dz");
+        plot_names.push_back("mu1_relPtErr");
+        plot_names.push_back("mu2_relPtErr");
+        plot_names.push_back("mu1_tunepRelPt");
+        plot_names.push_back("mu2_tunepRelPt");
         plot_names.push_back("mu1_trkRelIso");
         plot_names.push_back("mu1_trkAbsIso");
         plot_names.push_back("mu2_trkRelIso");
@@ -427,6 +431,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
             plot_names.push_back("mu2_dxy");
             plot_names.push_back("mu1_dz");
             plot_names.push_back("mu2_dz");
+            plot_names.push_back("mu1_relPtErr");
+            plot_names.push_back("mu2_relPtErr");
+            plot_names.push_back("mu1_tunepRelPt");
+            plot_names.push_back("mu2_tunepRelPt");
             plot_names.push_back("mu1_trkRelIso");
             plot_names.push_back("mu1_trkAbsIso");       
             plot_names.push_back("mu2_trkRelIso");       
@@ -572,6 +580,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       plot_names.push_back("mu2_dxy");
       plot_names.push_back("mu1_dz");
       plot_names.push_back("mu2_dz");
+      plot_names.push_back("mu1_relPtErr");
+      plot_names.push_back("mu2_relPtErr");
+      plot_names.push_back("mu1_tunepRelPt");
+      plot_names.push_back("mu2_tunepRelPt");
       plot_names.push_back("mu1_trkRelIso");
       plot_names.push_back("mu1_trkAbsIso");       
       plot_names.push_back("mu2_trkRelIso");       
@@ -1163,6 +1175,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           plot_names.push_back("mu2_dz");
           variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(1))});
 
+          plot_names.push_back("mu1_relPtErr");
+          variable.insert({"mu1_relPtErr", nt.Muon_ptErr().at(0) / Muon_pt.at(0)});
+
+          plot_names.push_back("mu2_relPtErr");
+          variable.insert({"mu2_relPtErr", nt.Muon_ptErr().at(1) / Muon_pt.at(1)});
+
+          plot_names.push_back("mu1_tunepRelPt");
+          variable.insert({"mu1_tunepRelPt", nt.Muon_tunepRelPt().at(0)});
+
+          plot_names.push_back("mu2_tunepRelPt");
+          variable.insert({"mu2_tunepRelPt", nt.Muon_tunepRelPt().at(1)});
+
           plot_names.push_back("mu1_trkRelIso");
           variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(0)});
 
@@ -1452,6 +1476,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id[1]));
           variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[0]));
           variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id[1]));
+          variable["mu1_relPtErr"] = nt.Muon_ptErr().at(cand_muons_id[0]) / Muon_pt.at(cand_muons_id[0]);
+          variable["mu2_relPtErr"] = nt.Muon_ptErr().at(cand_muons_id[1]) / Muon_pt.at(cand_muons_id[1]);
+          variable["mu1_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons_id[0]);
+          variable["mu2_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons_id[1]);
           variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[0]);
           variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id[0]) * Muon_pt.at(cand_muons_id[0]);
           variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id[1]);
@@ -1500,6 +1528,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons_id_pteta[1]));
           variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[0]));
           variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons_id_pteta[1]));
+          variable["mu1_relPtErr"] = nt.Muon_ptErr().at(cand_muons_id_pteta[0]) / Muon_pt.at(cand_muons_id_pteta[0]);
+          variable["mu2_relPtErr"] = nt.Muon_ptErr().at(cand_muons_id_pteta[1]) / Muon_pt.at(cand_muons_id_pteta[1]);
+          variable["mu1_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons_id_pteta[0]);
+          variable["mu2_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons_id_pteta[1]);
           variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]);
           variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[0]) * Muon_pt.at(cand_muons_id_pteta[0]);
           variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons_id_pteta[1]);
@@ -1549,6 +1581,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(cand_muons[1]));
           variable["mu1_dz"] = fabs(nt.Muon_dz().at(cand_muons[0]));
           variable["mu2_dz"] = fabs(nt.Muon_dz().at(cand_muons[1]));
+          variable["mu1_relPtErr"] = nt.Muon_ptErr().at(cand_muons[0]) / Muon_pt.at(cand_muons[0]);
+          variable["mu2_relPtErr"] = nt.Muon_ptErr().at(cand_muons[1]) / Muon_pt.at(cand_muons[1]);
+          variable["mu1_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons[0]);
+          variable["mu2_tunepRelPt"] = nt.Muon_tunepRelPt().at(cand_muons[1]);
           variable["mu1_trkRelIso"] = Muon_tkRelIso.at(cand_muons[0]);
           variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(cand_muons[0]) * Muon_pt.at(cand_muons[0]);
           variable["mu2_trkRelIso"] = Muon_tkRelIso.at(cand_muons[1]);
@@ -1732,6 +1768,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           variable["mu2_dxy"] = fabs(nt.Muon_dxy().at(subleadingMu_idx));
           variable["mu1_dz"] = fabs(nt.Muon_dz().at(leadingMu_idx));
           variable["mu2_dz"] = fabs(nt.Muon_dz().at(subleadingMu_idx));
+          variable["mu1_relPtErr"] = nt.Muon_ptErr().at(leadingMu_idx) / Muon_pt.at(leadingMu_idx);
+          variable["mu2_relPtErr"] = nt.Muon_ptErr().at(subleadingMu_idx) / Muon_pt.at(subleadingMu_idx);
+          variable["mu1_tunepRelPt"] = nt.Muon_tunepRelPt().at(leadingMu_idx);
+          variable["mu2_tunepRelPt"] = nt.Muon_tunepRelPt().at(subleadingMu_idx);
           variable["mu1_trkRelIso"] = Muon_tkRelIso.at(leadingMu_idx);
           variable["mu1_trkAbsIso"] = Muon_tkRelIso.at(leadingMu_idx) * Muon_pt.at(leadingMu_idx);
           variable["mu2_trkRelIso"] = Muon_tkRelIso.at(subleadingMu_idx);
@@ -1768,6 +1808,18 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
           plot_names.push_back("mu2_dz");
           variable.insert({"mu2_dz", fabs(nt.Muon_dz().at(subleadingMu_idx))});
+
+          plot_names.push_back("mu1_relPtErr");
+          variable.insert({"mu1_relPtErr", nt.Muon_ptErr().at(leadingMu_idx) / Muon_pt.at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_relPtErr");
+          variable.insert({"mu2_relPtErr", nt.Muon_ptErr().at(subleadingMu_idx) / Muon_pt.at(subleadingMu_idx)});
+
+          plot_names.push_back("mu1_tunepRelPt");
+          variable.insert({"mu1_tunepRelPt", nt.Muon_tunepRelPt().at(leadingMu_idx)});
+
+          plot_names.push_back("mu2_tunepRelPt");
+          variable.insert({"mu2_tunepRelPt", nt.Muon_tunepRelPt().at(subleadingMu_idx)});
 
           plot_names.push_back("mu1_trkRelIso");
           variable.insert({"mu1_trkRelIso", Muon_tkRelIso.at(leadingMu_idx)});

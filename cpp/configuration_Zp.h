@@ -119,37 +119,57 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   nbins.insert({"mu1_dxy", 200});
   low.insert({"mu1_dxy", 0.001});
   high.insert({"mu1_dxy", 0.021});
-  title.insert({"mu1_dxy", "d_{xy} (leading #mu)"});
+  title.insert({"mu1_dxy", "|d_{xy}| (leading #mu) [cm]"});
 
   nbins.insert({"mu2_dxy", 200});
   low.insert({"mu2_dxy", 0.001});
   high.insert({"mu2_dxy", 0.021});
-  title.insert({"mu2_dxy", "d_{xy} (subleading #mu)"});
+  title.insert({"mu2_dxy", "|d_{xy}| (subleading #mu) [cm]"});
 
   nbins.insert({"mu1_dz", 100});
   low.insert({"mu1_dz", 0.001});
   high.insert({"mu1_dz", 0.101});
-  title.insert({"mu1_dz", "d_{z} (leading #mu)"});
+  title.insert({"mu1_dz", "|d_{z}| (leading #mu) [cm]"});
 
   nbins.insert({"mu2_dz", 100});
   low.insert({"mu2_dz", 0.001});
   high.insert({"mu2_dz", 0.101});
-  title.insert({"mu2_dz", "d_{z} (subleading #mu)"});
+  title.insert({"mu2_dz", "|d_{z}| (subleading #mu) [cm]"});
+
+  nbins.insert({"mu1_relPtErr", 100});
+  low.insert({"mu1_relPtErr", 0.001});
+  high.insert({"mu1_relPtErr", 1.001});
+  title.insert({"mu1_relPtErr", "Relative p_{T} error (leading #mu)"});
+
+  nbins.insert({"mu2_relPtErr", 100});
+  low.insert({"mu2_relPtErr", 0.001});
+  high.insert({"mu2_relPtErr", 1.001});
+  title.insert({"mu2_relPtErr", "Relative p_{T} error (subleading #mu)"});
+
+  nbins.insert({"mu1_tunepRelPt", 100});
+  low.insert({"mu1_tunepRelPt", 0.001});
+  high.insert({"mu1_tunepRelPt", 2.001});
+  title.insert({"mu1_tunepRelPt", "TuneP relative p_{T} (leading #mu)"});
+
+  nbins.insert({"mu2_tunepRelPt", 100});
+  low.insert({"mu2_tunepRelPt", 0.001});
+  high.insert({"mu2_tunepRelPt", 2.001});
+  title.insert({"mu2_tunepRelPt", "TuneP relative p_{T} (subleading #mu)"});
 
   nbins.insert({"mu1_trkRelIso", 100});
   low.insert({"mu1_trkRelIso", 0.001});
   high.insert({"mu1_trkRelIso", 0.051});
   title.insert({"mu1_trkRelIso", "Track iso./p_{T} (leading #mu)"});
 
-  nbins.insert({"mu1_trkAbsIso", 100});
-  low.insert({"mu1_trkAbsIso", 0.1});
-  high.insert({"mu1_trkAbsIso", 5.1});
-  title.insert({"mu1_trkAbsIso", "Track iso. (leading #mu)"});
-
   nbins.insert({"mu2_trkRelIso", 100});
   low.insert({"mu2_trkRelIso", 0.001});
   high.insert({"mu2_trkRelIso", 0.051});
   title.insert({"mu2_trkRelIso", "Track iso./p_{T} (subleading #mu)"});
+
+  nbins.insert({"mu1_trkAbsIso", 100});
+  low.insert({"mu1_trkAbsIso", 0.1});
+  high.insert({"mu1_trkAbsIso", 5.1});
+  title.insert({"mu1_trkAbsIso", "Track iso. (leading #mu)"});
 
   nbins.insert({"mu2_trkAbsIso", 100});
   low.insert({"mu2_trkAbsIso", 0.1});
