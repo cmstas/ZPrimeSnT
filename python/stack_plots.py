@@ -420,7 +420,6 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
 
     maxx = 1000.0
     if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()) or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName():
-    if "antisel10" in plot.GetName() and ("mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()) or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName():
         if "mu1_pt" in plot.GetName():
             maxx = 700.0
         if "mu2_pt" in plot.GetName():
@@ -745,7 +744,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
         h_axis_ratio.GetYaxis().SetNdivisions(505)
     if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname or "bjet1_pt" in plotname or "bjet2_pt" in plotname or "nbtag" in plotname):
-    if "antisel10" in plotname and ("mu1_pt" in plotname or "mu2_pt" in plotname or "bjet1_pt" in plotname or "bjet2_pt" in plotname or "nbtag" in plotname):
         maxx = 1000.0
         if "mu1_pt" in plotname:
             maxx=700.0
