@@ -1035,26 +1035,26 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       //
       for ( unsigned int mu = 0; mu < nt.nMuon(); mu++ ) {
 	Muon_p4.push_back(LorentzVector(nt.Muon_pt().at(mu),nt.Muon_eta().at(mu),nt.Muon_phi().at(mu),nt.Muon_mass().at(mu)));
-       if ( isMC && muonResUnc != 0 ) { // 2 means that variation are to be applied
-         // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018#Momentum_Resolution
-         // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2017#Momentum_Resolution
-         // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Momentum_Resolution
-         float a, b, c;
-         if ( fabs(Muon_p4[mu].Eta()) < 1.2 ) {
-           a = ( year == "2018" ?  0.0141926   : ( year == "2017" ?  0.0145351   :  0.0146577   ) );
-           b = ( year == "2018" ?  4.23456e-05 : ( year == "2017" ?  4.24022e-05 :  4.48517e-05 ) );
-           c = ( year == "2018" ? -9.91644e-09 : ( year == "2017" ? -1.01461e-08 : -9.87206e-09 ) );
-         }
-         else {
-           a = ( year == "2018" ?  0.016883    : ( year == "2017" ?  0.0168087   :  0.0155794   ) );
-           b = ( year == "2018" ?  6.21438e-05 : ( year == "2017" ?  5.57382e-05 :  7.22117e-05 ) );
-           c = ( year == "2018" ? -9.79418e-09 : ( year == "2017" ? -8.89713e-09 : -1.27255e-08 ) );
-         }
-         float muonP = Muon_p4[mu].P();
-         float muonResSmearParam = a + b * muonP + c * muonP * muonP;
-         double muonResSmearFactor = rnd_muonMomRes.Gaus(0,muonResSmearParam*0.46);
-         Muon_p4[mu].SetPt( Muon_p4[mu].Pt()*(1 + 0.5*muonResUnc*muonResSmearFactor) ); // 0.5*muonResUnc = sign of variation
-       }
+        if ( isMC && muonResUnc != 0 ) { // 2 means that variation are to be applied
+          // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2018#Momentum_Resolution
+          // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2017#Momentum_Resolution
+          // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Momentum_Resolution
+          float a, b, c;
+          if ( fabs(Muon_p4[mu].Eta()) < 1.2 ) {
+            a = ( year == "2018" ?  0.0141926   : ( year == "2017" ?  0.0145351   :  0.0146577   ) );
+            b = ( year == "2018" ?  4.23456e-05 : ( year == "2017" ?  4.24022e-05 :  4.48517e-05 ) );
+            c = ( year == "2018" ? -9.91644e-09 : ( year == "2017" ? -1.01461e-08 : -9.87206e-09 ) );
+          }
+          else {
+            a = ( year == "2018" ?  0.016883    : ( year == "2017" ?  0.0168087   :  0.0155794   ) );
+            b = ( year == "2018" ?  6.21438e-05 : ( year == "2017" ?  5.57382e-05 :  7.22117e-05 ) );
+            c = ( year == "2018" ? -9.79418e-09 : ( year == "2017" ? -8.89713e-09 : -1.27255e-08 ) );
+          }
+          float muonP = Muon_p4[mu].P();
+          float muonResSmearParam = a + b * muonP + c * muonP * muonP;
+          double muonResSmearFactor = rnd_muonMomRes.Gaus(0,muonResSmearParam*0.46);
+          Muon_p4[mu].SetPt( Muon_p4[mu].Pt()*(1 + 0.5*muonResUnc*muonResSmearFactor) ); // 0.5*muonResUnc = sign of variation
+        }
 	Muon_pt.push_back(Muon_p4[mu].Pt());
 	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(mu)); // We don't change the relative isolation based on the muon momentum resolution, as this seems to be out of the scope of this uncertainty
 	//
