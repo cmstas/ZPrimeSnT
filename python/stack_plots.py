@@ -39,7 +39,7 @@ os.system('cp '+os.environ.get("PWD")+'/utils/index.php '+args.outDir)
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
 
-if "antisel10" in args.selections[0]:
+if "antisel10" in args.selections:
     args.signalMass = [200,400,700]
 
 massToExclude=[]
