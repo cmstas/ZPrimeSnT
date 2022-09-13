@@ -3,7 +3,7 @@ R__LOAD_LIBRARY(../NanoCORE/NANO_CORE.so)
 
 double getSumOfGenEventSumw(TChain *chaux);
 
-void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=0, int run_MCbkg=1, int run_signal=0, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
+void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
 {
   // Event weights / scale factors:
   //  0: Do not apply
