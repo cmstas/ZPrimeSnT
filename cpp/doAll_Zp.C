@@ -3,7 +3,7 @@ R__LOAD_LIBRARY(../NanoCORE/NANO_CORE.so)
 
 double getSumOfGenEventSumw(TChain *chaux);
 
-void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=2, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0)
+void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=0, int run_MCbkg=1, int run_signal=0, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
 {
   // Event weights / scale factors:
   //  0: Do not apply
@@ -15,6 +15,7 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   //muonResUnc: No central value, set to +/-2 to get variations
   //JECUnc: No central value, set to +/-2 to get variations
   //JERUnc: Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
+  //UnclEnUnc: No central value, set to +/-2 to get variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -227,6 +228,7 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     bTagSF=0;
     JECUnc=0;
     JERUnc=0;
+    UnclEnUnc=0;
 
     // ttbarv7
     if ( sampleArg=="TTv7" || sampleArg=="all" ) {
@@ -315,8 +317,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,run_BFF,outdir);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
     }
     cout<<endl;
   }

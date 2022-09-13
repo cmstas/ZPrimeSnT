@@ -107,7 +107,7 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
@@ -130,6 +130,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     bTagSF = 0;
     JECUnc = 0;
     JERUnc = 0;
+    UnclEnUnc = 0;
   }
 
   int mdir = mkdir(outdir,0755);
@@ -959,6 +960,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    continue;
 	  if ( isinf(nt.PuppiMET_phiJERDown()) || isnan(nt.PuppiMET_phiJERDown()) )
 	    continue;
+	  // Unclustered up
+	  if ( isinf(nt.PuppiMET_ptUnclusteredUp()) || isnan(nt.PuppiMET_ptUnclusteredUp()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiUnclusteredUp()) || isnan(nt.PuppiMET_phiUnclusteredUp()) )
+	    continue;
+	  // Unclustered down
+	  if ( isinf(nt.PuppiMET_ptUnclusteredDown()) || isnan(nt.PuppiMET_ptUnclusteredDown()) )
+	    continue;
+	  if ( isinf(nt.PuppiMET_phiUnclusteredDown()) || isnan(nt.PuppiMET_phiUnclusteredDown()) )
+	    continue;
 	}
       }
 
@@ -984,6 +995,14 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( JERUnc==-2 ) {
           puppimet_pt = nt.PuppiMET_ptJERDown();
           puppimet_phi = nt.PuppiMET_phiJERDown();
+        }
+        if ( UnclEnUnc==2 ) {
+          puppimet_pt = nt.PuppiMET_ptUnclusteredUp();
+          puppimet_phi = nt.PuppiMET_phiUnclusteredUp();
+        }
+        if ( UnclEnUnc==-2 ) {
+          puppimet_pt = nt.PuppiMET_ptUnclusteredDown();
+          puppimet_phi = nt.PuppiMET_phiUnclusteredDown();
         }
       }
 
