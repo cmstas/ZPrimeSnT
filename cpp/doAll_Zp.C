@@ -195,11 +195,22 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   // Signals
   if(run_signal){
     vector<TString> sigModel;
-    if ( sampleArg=="Y3" || sampleArg=="all" ) sigModel.push_back("Y3");
-    if ( sampleArg=="DY3" || sampleArg=="all" ) sigModel.push_back("DY3");
-    if ( sampleArg=="DYp3" || sampleArg=="all" ) sigModel.push_back("DYp3");
-    if ( sampleArg=="B3mL2" || sampleArg=="all" ) sigModel.push_back("B3mL2");
+    if ( sampleArg=="all" ) {
+      sigModel.push_back("Y3");
+      sigModel.push_back("DY3");
+      sigModel.push_back("DYp3");
+      sigModel.push_back("B3mL2");
+    }
+    else {
+      if ( sampleArg.Contains("B3mL2") ) sigModel.push_back("B3mL2");
+      else if ( sampleArg.Contains("DYp3") ) sigModel.push_back("DYp3");
+      else if ( sampleArg.Contains("DY3") ) sigModel.push_back("DY3");
+      else if ( sampleArg.Contains("Y3") ) sigModel.push_back("Y3");
+      else cout << "Invalid signal model!\n";
+    }
     vector<TString> sigMass = { /*"100",*/ "200", "250", "400", "550", "700", "850", "1000", "1250", "1500", "2000" };
+    if ( sampleArg.Contains("_low" ) ) sigMass = { "200", "250", "400", "550", "700" };
+    if ( sampleArg.Contains("_high" ) ) sigMass = { "850", "1000", "1250", "1500", "2000" };
     for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
       for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
