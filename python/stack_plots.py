@@ -34,12 +34,12 @@ args.outDir = args.outDir.rstrip("/")+"/"
 
 if not os.path.exists(args.outDir):
     os.makedirs(args.outDir)
-os.system('cp '+args.inDir+'../../utils/index.php '+args.outDir)
+os.system('cp '+os.environ.get("PWD")+'/utils/index.php '+args.outDir)
 
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
 
-if "antisel10" in args.selections[0]:
+if "antisel10" in args.selections:
     args.signalMass = [200,400,700]
 
 massToExclude=[]
@@ -374,6 +374,12 @@ def get_plots(sampleDict, plotname):
                         tplot = copy.deepcopy(inFile.Get(plotname))
                     else:
                         tplot.Add(inFile.Get(plotname))
+
+        for b in range(0, tplot.GetNbinsX()+2):
+            if plot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
+                tplot.SetBinContent(b,0.0)
+                tplot.SetBinError(b,0.0)
+
         plotDict[gsample] = tplot
 
     return plotDict
@@ -419,9 +425,17 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #        plot.Rebin(2)
 
     maxx = 1000.0
-    if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()):
-        if "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName():
+    if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()) or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName():
+        if "mu1_pt" in plot.GetName():
+            maxx = 700.0
+        if "mu2_pt" in plot.GetName():
             maxx = 500.0
+        if "bjet1_pt" in plot.GetName():
+            maxx = 500.0
+        if "bjet2_pt" in plot.GetName():
+            maxx = 300.0
+        if "nbtag" in plot.GetName():
+            maxx = 3.0
         tb = plot.GetXaxis().FindBin(maxx)
         sumc  = 0.0
         sume2 = 0.0
@@ -735,10 +749,18 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if "cutflow" in plotname:
         h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
         h_axis_ratio.GetYaxis().SetNdivisions(505)
-    if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname):
-        maxx = 500.0
-        if "mmumu" in plotname:
-            maxx=1000.0
+    if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname or "bjet1_pt" in plotname or "bjet2_pt" in plotname or "nbtag" in plotname):
+        maxx = 1000.0
+        if "mu1_pt" in plotname:
+            maxx=700.0
+        if "mu2_pt" in plotname:
+            maxx=500.0
+        if "bjet1_pt" in plotname:
+            maxx=500.0
+        if "bjet2_pt" in plotname:
+            maxx=300.0
+        if "nbtag" in plotname:
+            maxx=3.0
         h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
         h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
