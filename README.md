@@ -27,23 +27,43 @@ For more dedtails, refer to `cpp/README.md`.
 
 ### Example instructions
 
-Edit `cpp/doAll_Zp.C` with an appropriate file (or hopefully the default one still exists).
+Edit `cpp/doAll_Zp.C` and/or `cpp/ScanChain_Zp.C` with an appropriate file (or hopefully the default one still exists).
+
+**To run locally:**
 
 ```bash
-pushd cpp/
-root -b -q -l -n doAll_Zp.C
-popd
+sh cpp/runOutput_Zp.sh DIRECTORY/FOR/OUTPUT/FILES YEAR RUNDATA RUNBKG RUNSIGNAL RUNBFF SAMPLE ADDITIONALBOOLEANFLAGS
 ```
+
+For example, to run all data, bkg and signal but not the BFF samples, for all years and with all additional flags to their default values, the command to save the files in a folder called "temp_data" would be:
+
+```bash
+sh cpp/runOutput_Zp.sh temp_data all 1 1 1 0 all
+```
+
+One should check `cpp/doAll_Zp.C` for details on the (additional) arguments and their meaning.
 
 This loops and creates a number of output files of the form `output_"process"_"year".root` containing histograms. 
 Optionally, the file also contains a `RooDataSet` to be used as input for fitting (see below).
 
-To produce plots:
+**To run on condor:**
+
+```bash
+voms-proxy-init -voms cms
+export X509_USER_PROXY=/ABSOLUTE/PATH/TO/PROXY/LOCATION
+sh utils/condor/runOutput_Zp_onCondor.sh FOLDER/FOR/OUTPUT/FILES
+```
+
+This script will package the current state of the repository and send it to condor jobs running the `cpp/runOutput_Zp.sh` with the arguments included in the different lines of `utils/condor/runOutput_Zp_onCondor.sub` (please edit this file to control what condor jobs you send). More details on this are included in the description of [PR#57](https://github.com/cmstas/ZPrimeSnT/pull/57).
+
+The output of your jobs will be found under `/ceph/cms/store/user/$USER/ZPrimeSnTOutput/FOLDER/FOR/OUTPUT/FILES` and the plotting logs under `utils/condor/plotting_logs`.
+
+**To produce plots:**
 ```bash
 python python/stack_plots.py
 ```
 
-To produce cutflow table:
+**To produce cutflow table:**
 ```bash
 python python/make_cutflow_table.py
 ```
