@@ -338,7 +338,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
   // Define RooDataSet's for fit
   RooRealVar mfit("mfit", "mfit", 175.0, 6500.0);
-  RooRealVar roow("roow", "roow", 0.0, 100.0);
+  RooRealVar roow("roow", "roow", -10000.0, 10000.0);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -843,7 +843,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
 
       if ( isMC ) {
-	if(removeSpikes && weight*factor>1e2) continue;
+	if(removeSpikes && fabs(weight*factor)>1e2) continue;
 	if (process=="DYbb") {
 	  int nGluons = 0;
 	  for ( unsigned int p=0; p<nt.nLHEPart(); p++ ) {
@@ -2640,16 +2640,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( removeDataDuplicates && !(isMC) )
     cout << "Number of duplicates found: " << nDuplicates << endl;
 
-  // Avoid histograms with unphysical negative bin content (due to negative GEN weights)
-  map<TString, TH1F*>::iterator it;
-  for ( it = histos.begin(); it != histos.end(); it++ ) {
-    for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ ) { 
-      if ( (it->second)->GetBinContent(b)<0.0) {
-	(it->second)->SetBinContent(b,0.0);
-	(it->second)->SetBinError(b,0.0);
-      }
-    }
-  }
+  //// Avoid histograms with unphysical negative bin content (due to negative GEN weights)
+  //map<TString, TH1F*>::iterator it;
+  //for ( it = histos.begin(); it != histos.end(); it++ ) {
+  //  for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ ) {
+  //    if ( (it->second)->GetBinContent(b)<0.0) {
+  //	(it->second)->SetBinContent(b,0.0);
+  //	(it->second)->SetBinError(b,0.0);
+  //    }
+  //  }
+  //}
 
   if ( writeOutYields_BeforeSel ) {
     TString model = ((TObjString *)process.Tokenize("_")->At(0))->String();
