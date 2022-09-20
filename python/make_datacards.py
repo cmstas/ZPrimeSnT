@@ -180,6 +180,7 @@ for y in years:
                     maxsyst = 0.02
                 jecsyst = max(0.0,(maxsyst-minsyst)/(maxm-minm)*float(m) + minsyst - minm/(maxm-minm)*(maxsyst-minsyst))
 
+                # Shape systematic on signal mean, linearly increasing with mass
                 minsyst = 0.000
                 maxsyst = 0.002
                 meanvar = max(0.0,(maxsyst-minsyst)/(maxm-minm)*float(m) + minsyst - minm/(maxm-minm)*(maxsyst-minsyst))*float(m)

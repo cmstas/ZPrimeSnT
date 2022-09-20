@@ -581,7 +581,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     maxNormalization = bgNormalization + 2.0*(-bgNormalization+maxNormalization);
     if ( bgNormalization < 0.001 ) bgNormalization=0.001;
 
-    RooRealVar nBG_exp(Form("background_exponential%s_norma",catExt.Data()),Form("background_exponential%s_norm",catExt.Data()),bgNormalization,minNormalization,maxNormalization);
+    RooRealVar nBG_exp(Form("background_exponential%s_norm",catExt.Data()),Form("background_exponential%s_norm",catExt.Data()),bgNormalization,minNormalization,maxNormalization);
     RooRealVar nBG_pow(Form("background_powerlaw%s_norm",catExt.Data()),Form("background_powerlaw%s_norm",catExt.Data()),bgNormalization,minNormalization,maxNormalization);
     RooRealVar nBG_pol(Form("background_bernstein%s_norm",catExt.Data()),Form("background_bernstein%s_norm",catExt.Data()),bgNormalization,minNormalization,maxNormalization);
     RooRealVar nBG(Form("roomultipdf%s_norm",catExt.Data()),Form("roomultipdf%s_norm",catExt.Data()),bgNormalization,minNormalization,maxNormalization);
@@ -654,6 +654,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
 
     frame->remove("background_exponential");
 
+    // If p-value is zero, fit does not converge, zero events, or less than 10 events and less than 0.1 events/GeV, do not include
     if ( chi2ExponentialPvalue > 0.01 &&
 	 fitStatusExponential==0 &&
 	 !( nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) ) ) {
@@ -769,6 +770,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
 
     frame->remove("background_powerlaw");
 
+    // If p-value is zero, fit does not converge, zero events, or less than 10 events and less than 0.1 events/GeV, do not include
     if ( chi2PowerlawPvalue > 0.01 &&
 	 fitStatusPowerlaw==0 && 
 	 !( nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) ) ) {
@@ -953,6 +955,7 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
       if ( ftestChi2 < 0.0 ) ftestChi2 = 0.0;
       if ( (bestBernsteinOrder < 0 && fitStatusBernstein[to-1]==0 && TMath::Prob(ftestChi2,1) > 0.05 && to-1 >= 0) || to>maxpolyorder ) 
 	bestBernsteinOrder = to-1;
+      // If zero events, or less than 10 events and less than 0.1 events/GeV, only use lowest order
       if ( nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) )
 	   bestBernsteinOrder=0;
 
@@ -965,7 +968,9 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
 	int maxBernsteinOrder = (addBernsteinOrders) ? bestBernsteinOrder+1 : bestBernsteinOrder;
 	for ( int tto = minBernsteinOrder; tto <= maxBernsteinOrder; tto++) {
 	  if ( tto < 0 ) continue;
+	  // If zero events, or less than 10 events and less than 0.1 events/GeV, only use lowest order
 	  if ( (nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) ) && tto > 0 ) continue;
+	  // If p-value is zero, fit does not converge, zero events, or less than 10 events and less than 0.1 events/GeV, do not include
 	  if ( ( chi2BernsteinPvalue[tto] > 0.01 &&
 		 fitStatusBernstein[tto]==0 )
 	       || ( nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) ) ) {

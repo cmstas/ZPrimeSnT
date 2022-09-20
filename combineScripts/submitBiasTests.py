@@ -6,11 +6,16 @@ from datetime import date
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
+### if date ("MMM-DD-YYYY") is not specified, use today's date
+inDate = today
+if len(argv)>1:
+    inDate=argv[1]
+
 wsname = "wfit"
 thisDir = os.environ.get("PWD")
-inDir  = "%s/datacards_all_Sep-13-2022/"%thisDir
+inDir  = "%s/datacards_all_%s/"%(thisDir,inDate)
 
-limDir = "%s/limits_all_Sep-13-2022/"%thisDir
+limDir = "%s/limits_all_%s/"%(thisDir,inDate)
 
 biasCombination = True
 biasPerChannel = True
@@ -23,7 +28,7 @@ useCategorizedBackground = True
 rs = [0,1,2]
 #rs.append(3)
 
-outDir = "%s/limits_all_Sep-13-2022_checks/"%thisDir
+outDir = "%s/limits_all_%s_checks/"%(thisDir,inDate)
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
@@ -117,13 +122,13 @@ for y in years:
                 numpars = []
                 pdfs = w.pdf("roomultipdf%s"%catExtB)
                 for p in range(nPDF):
-                    numpars.append(w.pdf(pdfs.getPdf(p).GetName()).getVariables().getSize()-2)
+                    numpars.append(w.pdf(pdfs.getPdf(p).GetName()).getVariables().getSize()-1)
                     if "exponential" in pdfs.getPdf(p).GetName():
                         pdfnames.append("Exponential")
                     elif "powerlaw" in pdfs.getPdf(p).GetName():
                         pdfnames.append("Power-law")
                     else:
-                        pdfnames.append("Bernstein<%d>"%(numpars[p]+1))
+                        pdfnames.append("Bernstein<%d>"%(numpars[p]))
                 pdfnames.append("Envelope")
                 # Retrieve range
                 maxm = w.var("mfit").getMax()
@@ -162,8 +167,10 @@ for y in years:
 
                         if not biasPerChannel or not biasPerPDF:
                             continue
+                        ### If injected signal is >3x the existing background, do not perform test
                         if float(r)*expLim*nSig/nBG>3.0:
                             continue
+                        ### If total yield is <=10.0 and yield/GeV<0.1, do not perform test
                         if float(r)*expLim*nSig+nBG<=10.0 and (float(r)*expLim*nSig+nBG)/mrange<0.1:
                             continue
                         ### Bias, per channel, per PDF
@@ -179,8 +186,10 @@ for y in years:
 
                     if not biasPerChannel:
                         break
+                    ### If injected signal is >3x the existing background, do not perform test
                     if float(r)*expLim*nSig/nBG>3.0:
                         break
+                    ### If total yield is <=10.0 and yield/GeV<0.1, do not perform test
                     if float(r)*expLim*nSig+nBG<=10.0 and (float(r)*expLim*nSig+nBG)/mrange<0.1:
                         break
                     ### Bias, per channel
@@ -255,9 +264,10 @@ for y in years:
                     td = fd.Get("limit")
                     xl = []
                     yl = []
-                    penalty=0.0
-                    if nf<len(fnmultidim)-1:
-                        penalty=0.5*numpars[nf]
+                    ### Penalty assigned to PDFs with >1 DOF:
+                    #penalty=0.0
+                    #if nf<len(fnmultidim)-1:
+                    #    penalty=0.5*(numpars[nf]-1)
                     for e in range(td.GetEntries()):
                         td.GetEntry(e)
                         if (td.deltaNLL>1e-9 or td.deltaNLL<-1e-9) and td.deltaNLL>-1e9 and td.deltaNLL<1e9:
@@ -314,8 +324,10 @@ for y in years:
             #options=options+"--X-rtd TMCSO_AdaptivePseudoAsimov=1"
 
             for rn,r in enumerate(rs):
+                ### If injected signal is >3x the existing background, do not perform test
                 if float(r)*expLim*(nS1b+nS2b)/nBGAll>3.0:
                     break
+                ### If total yield is <=10.0 and yield/GeV<0.1, do not perform test
                 if (float(r)*expLim*(nS1b+nS2b)+nBGAll)/mrange<0.1 and float(r)*expLim*(nS1b+nS2b)+nBGAll<=10.0:
                     break
                 os.system("combine %s -M GenerateOnly --toysFrequentist -t 100 --expectSignal %f --saveToys -m %s -n _%s_M%s_r%d_envelope_combined"%(card,float(r)*expLim,m,s,m,r))
