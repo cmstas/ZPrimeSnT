@@ -79,9 +79,8 @@
   }
 
   // Signals
-  //vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
-  vector<TString> sigModel = { "Y3" };
-  vector<float> sigMass = { /*100.0,*/ 200.0, 400.0, 700.0, 1000.0, 1500.0, 2000.0 };
+  vector<TString> sigModel = { "Y3"/*, "DY3", "DYp3", "B3mL2"*/ };
+  vector<float> sigMass = { /*200.0,*/ 250.0, 400.0, 550.0, 700.0, 850.0, 1000.0, 1250.0, 1500.0, 2000.0 };
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
@@ -134,10 +133,9 @@
 
 	  // Create workspace, import data and model
 	  TString outDir = "fitResults";
-
 	  RooWorkspace wfit("wfit","workspace");
 
-	  fitmass(mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbg", outDir);
+	  fitmass(mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbfastg", outDir);
 	  if ( samples.size() > 0 ) {
 	    if ( useData )
 	      fitmass(*mmumu_bkg, "Background", true, false, sigmodels[isample], sigmasses[isample], wfit, "", outDir);
@@ -203,7 +201,8 @@
 	  TFile fin(inFile);
 	  RooDataSet *tds;
 	  if ( iyear==0 ) {
-	    mmumu_sig.push_back((RooDataSet*) fin.Get(dNames[d])->Clone());
+	    tds = (RooDataSet*) fin.Get(dNames[d])->Clone();
+	    mmumu_sig.push_back(tds);
 	  }
 	  else {
 	    RooDataSet *tds_other = (RooDataSet*) fin.Get(dNames[d])->Clone();
@@ -217,7 +216,7 @@
 	TString outDir = "fitResults";
 	RooWorkspace wfit("wfit","workspace");
 
-	fitmass(*mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbg", outDir);
+	fitmass(*mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbfastg", outDir);
 	if ( samples.size() > 0 ) {
 	  if ( useData )
 	    fitmass(*mmumu_bkg, "Background", true, false, sigmodels[isample], sigmasses[isample], wfit, "", outDir);
