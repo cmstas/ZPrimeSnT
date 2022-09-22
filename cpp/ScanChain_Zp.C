@@ -30,6 +30,7 @@
 #include "../NanoCORE/Tools/muonIDSF.h"
 #include "../NanoCORE/Tools/muonIsoSF.h"
 #include "../NanoCORE/Tools/muonTriggerSF.h"
+#include "../NanoCORE/Tools/GEScaleSyst/GEScaleSyst.h"
 #include "../NanoCORE/Tools/bTagEff.h"
 #include "../NanoCORE/Tools/btagsf/BTagCalibrationStandalone_v2.h"
 #include "../NanoCORE/Tools/jetcorr/JetCorrectionUncertainty.h"
@@ -107,7 +108,7 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
@@ -125,6 +126,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     muonRecoSF = 0;
     muonIdSF = 0;
     muonIsoSF = 0;
+    muonScaleUnc=0;
     muonResUnc=0;
     triggerSF = 0;
     bTagSF = 0;
@@ -665,6 +667,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( triggerSF!=0 ) set_triggerSF();
   if ( bTagSF!=0 ) set_allbTagEff();
 
+  // Setting up muon momentum scale
+  std::string muonScaleEra = (year+"_UL").Data();
+  GEScaleSyst GE(muonScaleEra); // Only available for 2017!
+  GE.SetVerbose(0);
+
   // Setting up muon momentum resolution
   TRandom3 rnd_muonMomRes(12345);
 
@@ -1054,6 +1061,16 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           float muonResSmearParam = a + b * muonP + c * muonP * muonP;
           double muonResSmearFactor = rnd_muonMomRes.Gaus(0,muonResSmearParam*0.46);
           Muon_p4[mu].SetPt( Muon_p4[mu].Pt()*(1 + 0.5*muonResUnc*muonResSmearFactor) ); // 0.5*muonResUnc = sign of variation
+        }
+        if ( isMC && muonScaleUnc != 0 ) { // 2 means that variation are to be applied
+          // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Momentum_Scale
+          // https://gitlab.cern.ch/cms-muonPOG/GeneralizedEndpoint/GEScaleSyst
+          if ( year=="2018" || year.Contains("2016") ) { } // Only available for 2017!
+          else {
+            float muonScaleCorrPt = GE.GEScaleCorrPt(Muon_p4[mu].Pt(), Muon_p4[mu].Eta(), Muon_p4[mu].Phi(), nt.Muon_pdgId().at(mu)/abs(nt.Muon_pdgId().at(mu)), 0, 0);
+            if ( muonScaleCorrPt < -1e8 ) muonScaleCorrPt = Muon_p4[mu].Pt(); // Do not assign the crazy -1e9 value to muons out of the range of their correction tables => Fall back to the non-corrected value.
+            Muon_p4[mu].SetPt( muonScaleCorrPt );
+          }
         }
 	Muon_pt.push_back(Muon_p4[mu].Pt());
 	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(mu)); // We don't change the relative isolation based on the muon momentum resolution, as this seems to be out of the scope of this uncertainty
