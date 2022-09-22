@@ -58,10 +58,9 @@ if len(args.years)==0:
 
 # Only for test on Run2018B (7.05/fb)
 scaleToTestLumi = 1.0
-testLumi = -1.0
+testLumiRatio = -1.0
 if args.data and args.partialUnblinding:
-    #testLumi=7.050180294
-    testLumi=0.1*137.61
+    testLumiRatio=0.1
 
 # Do signal/MC ratio
 doSignalMCRatio = False
@@ -376,7 +375,7 @@ def get_plots(sampleDict, plotname):
                         tplot.Add(inFile.Get(plotname))
 
         for b in range(0, tplot.GetNbinsX()+2):
-            if plot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
+            if tplot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
                 tplot.SetBinContent(b,0.0)
                 tplot.SetBinError(b,0.0)
 
@@ -478,9 +477,9 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latexSel.SetTextSize(0.02-0.1*legoffset)
     latexSel.SetNDC(True)
 
-    if testLumi>0.0:
-        scaleToTestLumi = testLumi/lumi
-        lumi = testLumi
+    if testLumiRatio>0.0:
+        scaleToTestLumi = testLumiRatio
+        lumi = testLumiRatio*lumi
 
     yearenergy=""
     if year!="all" or lumi<100.0:
@@ -569,7 +568,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[model],sampleLineColor[model]+i%len(args.signalMass),sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
             else:
                 curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[model],sampleLineColor[model],sampleLineWidth[model],sampleMarkerStyle[model],sampleMarkerSize[model]))
-            if testLumi>0.0:
+            if testLumiRatio>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                 if "cutflow" not in plotname:
@@ -590,7 +589,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         # Bkg
         else:
             curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
-            if testLumi>0.0:
+            if testLumiRatio>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
             if not totalSM:
                 totalSM = curPlots[sample].Clone("totalSM")
