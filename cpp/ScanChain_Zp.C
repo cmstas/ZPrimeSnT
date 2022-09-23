@@ -1065,8 +1065,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( isMC && muonScaleUnc != 0 ) { // 2 means that variation are to be applied
           // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Momentum_Scale
           // https://gitlab.cern.ch/cms-muonPOG/GeneralizedEndpoint/GEScaleSyst
-          if ( year=="2018" || year.Contains("2016") ) { } // Only available for 2017!
-          else {
+          if ( year=="2017" ) { // Only available for 2017!
             float muonScaleCorrPt = GE.GEScaleCorrPt(Muon_p4[mu].Pt(), Muon_p4[mu].Eta(), Muon_p4[mu].Phi(), nt.Muon_pdgId().at(mu)/abs(nt.Muon_pdgId().at(mu)), 0, 0);
             if ( muonScaleCorrPt < -1e8 ) muonScaleCorrPt = Muon_p4[mu].Pt(); // Do not assign the crazy -1e9 value to muons out of the range of their correction tables => Fall back to the non-corrected value.
             Muon_p4[mu].SetPt( muonScaleCorrPt );
