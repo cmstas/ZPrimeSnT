@@ -37,7 +37,11 @@
   }
   else {
     // ttbar
-    samples.push_back("ttbar");
+    vector<TString> fs = { "2L2Nu", "SemiLeptonic", "Hadronic" };
+    for ( unsigned int ifs=0; ifs<fs.size(); ifs++)
+      {
+        samples.push_back("ttbar_"+fs[ifs]);
+      }
 
     // DY
     //samples.push_back("DY");

@@ -62,10 +62,15 @@ def get_plots(sampleDict, plotname):
     plotDict=OrderedDict()
     groupedSamples = OrderedDict()
     tempGroups = OrderedDict()
+    tempGroups["ttbar"] = ["ttbar_2L2Nu","ttbar_SemiLeptonic","ttbar_Hadronic"]
     tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
     tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
     for sample in sampleDict.keys():
-        if sample in tempGroups["tW+tZq"]:
+        if sample in tempGroups["ttbar"]:
+            if "ttbar" not in groupedSamples.keys():
+                groupedSamples["ttbar"]=[]
+            groupedSamples["ttbar"].append(sample)
+        elif sample in tempGroups["tW+tZq"]:
             if "tW+tZq" not in groupedSamples.keys():
                 groupedSamples["tW+tZq"]=[]
             groupedSamples["tW+tZq"].append(sample)
