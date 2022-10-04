@@ -1,6 +1,6 @@
 include Makefile.arch
 
-SOURCES=$(wildcard *.cc) $(wildcard Tools/*.cc) $(wildcard Tools/btagsf/*.cc)
+SOURCES=$(wildcard *.cc) $(wildcard Tools/*.cc) $(wildcard Tools/btagsf/*.cc) $(wildcard Tools/GEScaleSyst/*.cc)
 OBJECTS=$(SOURCES:.cc=.o)
 LIB=NANO_CORE.so
 

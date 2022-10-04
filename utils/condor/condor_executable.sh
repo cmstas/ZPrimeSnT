@@ -53,7 +53,7 @@ cd ZPrimeSnT/
 export SCRAM_ARCH=${SCRAMARCH} && scramv1 project CMSSW ${CMSSWVERSION}
 cd ${CMSSWVERSION}/src
 cmsenv
-git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git PhysicsTools/NanoAODTools
+mv ../../PhysicsTools/ .
 scram b -j
 
 cd ../.. # Get back to ZPrimeSnT/

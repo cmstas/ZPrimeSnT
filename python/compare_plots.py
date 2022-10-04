@@ -94,7 +94,7 @@ def get_plots(sampleDict, plotname):
                         tplot.Add(inFile.Get(plotname))
 
         for b in range(0, tplot.GetNbinsX()+2):
-            if plot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
+            if tplot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
                 tplot.SetBinContent(b,0.0)
                 tplot.SetBinError(b,0.0)
 
