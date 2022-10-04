@@ -3,7 +3,7 @@ R__LOAD_LIBRARY(../NanoCORE/NANO_CORE.so)
 
 double getSumOfGenEventSumw(TChain *chaux);
 
-void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
+void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
 {
   // Event weights / scale factors:
   //  0: Do not apply
@@ -12,6 +12,7 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   // -2: Apply negative variation
   //prefireWeight: +/-2 = Syst variations, +/-3 = Stat variations --> Possibly merge in the future?
   //topPtWeight: bool variable, only have or not have
+  //muonScaleUnc: No central value, set to +/-2 to get variations
   //muonResUnc: No central value, set to +/-2 to get variations
   //JECUnc: No central value, set to +/-2 to get variations
   //JERUnc: Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
@@ -81,12 +82,16 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   if(run_MCbkg){
     // ttbar
     if ( sampleArg=="ttbar" || sampleArg=="all" ) {
-      samples.push_back("ttbar");
-      sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
-      sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                     { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                     { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                     { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+      vector<TString> fs = { "2L2Nu", "SemiLeptonic", "Hadronic" };
+      for ( unsigned int ifs=0; ifs<fs.size(); ifs++)
+      {
+        samples.push_back("ttbar_"+fs[ifs]);
+        sample_names.insert({"ttbar_"+fs[ifs],"TTTo"+fs[ifs]+"_TuneCP5_13TeV-powheg-pythia8"});
+        sample_prod.insert({"ttbar_"+fs[ifs], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                                { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                                { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                                { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+      }
     }
 
     // DY
@@ -248,6 +253,7 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     muonRecoSF=0;
     muonIdSF=0;
     muonIsoSF=0;
+    muonScaleUnc=0;
     muonResUnc=0;
     triggerSF=0;
     bTagSF=0;
@@ -333,8 +339,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
     }
     cout<<endl;
   }

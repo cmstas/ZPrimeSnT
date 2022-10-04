@@ -30,6 +30,7 @@
 #include "../NanoCORE/Tools/muonIDSF.h"
 #include "../NanoCORE/Tools/muonIsoSF.h"
 #include "../NanoCORE/Tools/muonTriggerSF.h"
+#include "../NanoCORE/Tools/GEScaleSyst/GEScaleSyst.h"
 #include "../NanoCORE/Tools/bTagEff.h"
 #include "../NanoCORE/Tools/btagsf/BTagCalibrationStandalone_v2.h"
 #include "../NanoCORE/Tools/jetcorr/JetCorrectionUncertainty.h"
@@ -107,7 +108,7 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
@@ -125,6 +126,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     muonRecoSF = 0;
     muonIdSF = 0;
     muonIsoSF = 0;
+    muonScaleUnc=0;
     muonResUnc=0;
     triggerSF = 0;
     bTagSF = 0;
@@ -145,31 +147,33 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     isMC = false;
   }
   // SM processes and cross-sections:
-  else if ( process == "TTv7" )              xsec = 76700.0; // fb
-  else if ( process == "DYv7" )              xsec = 5929000.0; // fb
-  else if ( process == "ttbar" )             xsec = 87310.0; // fb
-  else if ( process == "DY" )                xsec = 5765400.0; // fb
-  else if ( process == "DYbb" )              xsec = 14670.0; // fb
-  else if ( process == "ZToMuMu_50_120" )    xsec = 2112904.0; // fb
-  else if ( process == "ZToMuMu_120_200" )   xsec = 20553.0; // fb
-  else if ( process == "ZToMuMu_200_400" )   xsec = 2886.0; // fb
-  else if ( process == "ZToMuMu_400_800" )   xsec = 251.7; // fb
-  else if ( process == "ZToMuMu_800_1400" )  xsec = 17.07; // fb
-  else if ( process == "ZToMuMu_1400_2300" ) xsec = 1.366; // fb
-  else if ( process == "ZToMuMu_2300_3500" ) xsec = 0.08178; // fb
-  else if ( process == "ZToMuMu_3500_4500" ) xsec = 0.003191; // fb
-  else if ( process == "ZToMuMu_4500_6000" ) xsec = 0.0002787; // fb
-  else if ( process == "ZToMuMu_6000_Inf" )  xsec = 0.000009569; // fb
-  else if ( process == "WW" )                xsec = 118700.0; // fb 
-  else if ( process == "WZ" )                xsec = 47130.0; // fb
-  else if ( process == "ZZ" )                xsec = 16523.0; // fb
-  else if ( process == "tW" )                xsec = 19550; // fb
-  else if ( process == "tbarW" )             xsec = 19550; // fb
-  else if ( process == "tZq" )               xsec = 75.8; // fb
-  else if ( process == "TTW" )               xsec = 204.3; // fb
-  else if ( process == "TTZ" )               xsec = 252.9; // fb
-  else if ( process == "TTHToNonbb" )        xsec = 507.5*(1-0.575); // fb
-  else if ( process == "TTHTobb" )           xsec = 507.5*0.575; // fb
+  else if ( process == "TTv7" )               xsec = 76700.0; // fb
+  else if ( process == "DYv7" )               xsec = 5929000.0; // fb
+  else if ( process == "ttbar_2L2Nu" )        xsec = 831.76*1000*(3*0.108)*(3*0.108); // fb
+  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
+  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*2*(3*0.108)*(1-3*0.108); // fb
+  else if ( process == "DY" )                 xsec = 5765400.0; // fb
+  else if ( process == "DYbb" )               xsec = 14670.0; // fb
+  else if ( process == "ZToMuMu_50_120" )     xsec = 2112904.0; // fb
+  else if ( process == "ZToMuMu_120_200" )    xsec = 20553.0; // fb
+  else if ( process == "ZToMuMu_200_400" )    xsec = 2886.0; // fb
+  else if ( process == "ZToMuMu_400_800" )    xsec = 251.7; // fb
+  else if ( process == "ZToMuMu_800_1400" )   xsec = 17.07; // fb
+  else if ( process == "ZToMuMu_1400_2300" )  xsec = 1.366; // fb
+  else if ( process == "ZToMuMu_2300_3500" )  xsec = 0.08178; // fb
+  else if ( process == "ZToMuMu_3500_4500" )  xsec = 0.003191; // fb
+  else if ( process == "ZToMuMu_4500_6000" )  xsec = 0.0002787; // fb
+  else if ( process == "ZToMuMu_6000_Inf" )   xsec = 0.000009569; // fb
+  else if ( process == "WW" )                 xsec = 118700.0; // fb 
+  else if ( process == "WZ" )                 xsec = 47130.0; // fb
+  else if ( process == "ZZ" )                 xsec = 16523.0; // fb
+  else if ( process == "tW" )                 xsec = 19550; // fb
+  else if ( process == "tbarW" )              xsec = 19550; // fb
+  else if ( process == "tZq" )                xsec = 75.8; // fb
+  else if ( process == "TTW" )                xsec = 204.3; // fb
+  else if ( process == "TTZ" )                xsec = 252.9; // fb
+  else if ( process == "TTHToNonbb" )         xsec = 507.5*(1-0.575); // fb
+  else if ( process == "TTHTobb" )            xsec = 507.5*0.575; // fb
   // Signal processes and cross-sections:
   else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000; // fb
   else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000; // fb
@@ -665,6 +669,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( triggerSF!=0 ) set_triggerSF();
   if ( bTagSF!=0 ) set_allbTagEff();
 
+  // Setting up muon momentum scale
+  std::string muonScaleEra = (year+"_UL").Data();
+  GEScaleSyst GE(muonScaleEra); // Only available for 2017!
+  GE.SetVerbose(0);
+
   // Setting up muon momentum resolution
   TRandom3 rnd_muonMomRes(12345);
 
@@ -1056,6 +1065,15 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           float muonResSmearParam = a + b * muonP + c * muonP * muonP;
           double muonResSmearFactor = rnd_muonMomRes.Gaus(0,muonResSmearParam*0.46);
           Muon_p4[mu].SetPt( Muon_p4[mu].Pt()*(1 + 0.5*muonResUnc*muonResSmearFactor) ); // 0.5*muonResUnc = sign of variation
+        }
+        if ( isMC && muonScaleUnc != 0 ) { // 2 means that variation are to be applied
+          // https://twiki.cern.ch/twiki/bin/view/CMS/MuonUL2016#Momentum_Scale
+          // https://gitlab.cern.ch/cms-muonPOG/GeneralizedEndpoint/GEScaleSyst
+          if ( year=="2017" ) { // Only available for 2017!
+            float muonScaleCorrPt = GE.GEScaleCorrPt(Muon_p4[mu].Pt(), Muon_p4[mu].Eta(), Muon_p4[mu].Phi(), nt.Muon_pdgId().at(mu)/abs(nt.Muon_pdgId().at(mu)), 0, 0);
+            if ( muonScaleCorrPt < -1e8 ) muonScaleCorrPt = Muon_p4[mu].Pt(); // Do not assign the crazy -1e9 value to muons out of the range of their correction tables => Fall back to the non-corrected value.
+            Muon_p4[mu].SetPt( muonScaleCorrPt );
+          }
         }
 	Muon_pt.push_back(Muon_p4[mu].Pt());
 	Muon_tkRelIso.push_back(nt.Muon_tkRelIso().at(mu)); // We don't change the relative isolation based on the muon momentum resolution, as this seems to be out of the scope of this uncertainty
