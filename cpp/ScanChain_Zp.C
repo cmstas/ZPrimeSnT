@@ -145,31 +145,33 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     isMC = false;
   }
   // SM processes and cross-sections:
-  else if ( process == "TTv7" )              xsec = 76700.0; // fb
-  else if ( process == "DYv7" )              xsec = 5929000.0; // fb
-  else if ( process == "ttbar" )             xsec = 87310.0; // fb
-  else if ( process == "DY" )                xsec = 5765400.0; // fb
-  else if ( process == "DYbb" )              xsec = 14670.0; // fb
-  else if ( process == "ZToMuMu_50_120" )    xsec = 2112904.0; // fb
-  else if ( process == "ZToMuMu_120_200" )   xsec = 20553.0; // fb
-  else if ( process == "ZToMuMu_200_400" )   xsec = 2886.0; // fb
-  else if ( process == "ZToMuMu_400_800" )   xsec = 251.7; // fb
-  else if ( process == "ZToMuMu_800_1400" )  xsec = 17.07; // fb
-  else if ( process == "ZToMuMu_1400_2300" ) xsec = 1.366; // fb
-  else if ( process == "ZToMuMu_2300_3500" ) xsec = 0.08178; // fb
-  else if ( process == "ZToMuMu_3500_4500" ) xsec = 0.003191; // fb
-  else if ( process == "ZToMuMu_4500_6000" ) xsec = 0.0002787; // fb
-  else if ( process == "ZToMuMu_6000_Inf" )  xsec = 0.000009569; // fb
-  else if ( process == "WW" )                xsec = 118700.0; // fb 
-  else if ( process == "WZ" )                xsec = 47130.0; // fb
-  else if ( process == "ZZ" )                xsec = 16523.0; // fb
-  else if ( process == "tW" )                xsec = 19550; // fb
-  else if ( process == "tbarW" )             xsec = 19550; // fb
-  else if ( process == "tZq" )               xsec = 75.8; // fb
-  else if ( process == "TTW" )               xsec = 204.3; // fb
-  else if ( process == "TTZ" )               xsec = 252.9; // fb
-  else if ( process == "TTHToNonbb" )        xsec = 507.5*(1-0.575); // fb
-  else if ( process == "TTHTobb" )           xsec = 507.5*0.575; // fb
+  else if ( process == "TTv7" )               xsec = 76700.0; // fb
+  else if ( process == "DYv7" )               xsec = 5929000.0; // fb
+  else if ( process == "ttbar_2L2Nu" )        xsec = 831.76*1000*(3*0.108)*(3*0.108); // fb
+  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
+  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*2*(3*0.108)*(1-3*0.108); // fb
+  else if ( process == "DY" )                 xsec = 5765400.0; // fb
+  else if ( process == "DYbb" )               xsec = 14670.0; // fb
+  else if ( process == "ZToMuMu_50_120" )     xsec = 2112904.0; // fb
+  else if ( process == "ZToMuMu_120_200" )    xsec = 20553.0; // fb
+  else if ( process == "ZToMuMu_200_400" )    xsec = 2886.0; // fb
+  else if ( process == "ZToMuMu_400_800" )    xsec = 251.7; // fb
+  else if ( process == "ZToMuMu_800_1400" )   xsec = 17.07; // fb
+  else if ( process == "ZToMuMu_1400_2300" )  xsec = 1.366; // fb
+  else if ( process == "ZToMuMu_2300_3500" )  xsec = 0.08178; // fb
+  else if ( process == "ZToMuMu_3500_4500" )  xsec = 0.003191; // fb
+  else if ( process == "ZToMuMu_4500_6000" )  xsec = 0.0002787; // fb
+  else if ( process == "ZToMuMu_6000_Inf" )   xsec = 0.000009569; // fb
+  else if ( process == "WW" )                 xsec = 118700.0; // fb 
+  else if ( process == "WZ" )                 xsec = 47130.0; // fb
+  else if ( process == "ZZ" )                 xsec = 16523.0; // fb
+  else if ( process == "tW" )                 xsec = 19550; // fb
+  else if ( process == "tbarW" )              xsec = 19550; // fb
+  else if ( process == "tZq" )                xsec = 75.8; // fb
+  else if ( process == "TTW" )                xsec = 204.3; // fb
+  else if ( process == "TTZ" )                xsec = 252.9; // fb
+  else if ( process == "TTHToNonbb" )         xsec = 507.5*(1-0.575); // fb
+  else if ( process == "TTHTobb" )            xsec = 507.5*0.575; // fb
   // Signal processes and cross-sections:
   else if ( process == "Y3_M100"  )    xsec = 0.0211372800*1000; // fb
   else if ( process == "Y3_M200"  )    xsec = 0.0159797150*1000; // fb

@@ -81,12 +81,16 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   if(run_MCbkg){
     // ttbar
     if ( sampleArg=="ttbar" || sampleArg=="all" ) {
-      samples.push_back("ttbar");
-      sample_names.insert({"ttbar","TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8"});
-      sample_prod.insert({"ttbar", { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
-                                     { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
-                                     { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
-                                     { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+      vector<TString> fs = { "2L2Nu", "SemiLeptonic", "Hadronic" };
+      for ( unsigned int ifs=0; ifs<fs.size(); ifs++)
+      {
+        samples.push_back("ttbar_"+fs[ifs]);
+        sample_names.insert({"ttbar_"+fs[ifs],"TTTo"+fs[ifs]+"_TuneCP5_13TeV-powheg-pythia8"});
+        sample_prod.insert({"ttbar_"+fs[ifs], { { "2018",       { "RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1" } },
+                                                { "2017",       { "RunIISummer20UL17NanoAODv9-106X_mc2017_realistic_v9-v1" } },
+                                                { "2016APV",    { "RunIISummer20UL16NanoAODAPVv9-106X_mcRun2_asymptotic_preVFP_v11-v1" } },
+                                                { "2016nonAPV", { "RunIISummer20UL16NanoAODv9-106X_mcRun2_asymptotic_v17-v1" } } } });
+      }
     }
 
     // DY
