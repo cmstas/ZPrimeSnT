@@ -1,11 +1,12 @@
 {
   gROOT->ProcessLine(".L fit_dimuon.C+");  // Macro that performs the selection
 
-  bool useData = false;
+  bool useData = true;
   bool writeWS = true;
   bool mergeYears = true;
 
-  TString inDir = "temp_data/";
+  //TString inDir = "temp_data/";
+  TString inDir = "/ceph/cms/store/user/mmasciov/ZPrimeSnTOutput/partialUnblinding_minM275/";
   vector<TString> dNames = { };
   dNames.push_back("d_mllinclusive_nBTag1p_MuDetAll");
   dNames.push_back("d_mllinclusive_nBTag1_MuDetAll");
@@ -38,10 +39,10 @@
   else {
     // ttbar
     samples.push_back("ttbar");
-
+  
     // DY
     //samples.push_back("DY");
-
+  
     // ZToMuMu
     vector<TString> lowM = { "50", "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000" };
     vector<TString> uppM = { "120", "200", "400", "800", "1400", "2300", "3500", "4500", "6000", "Inf" };
@@ -49,14 +50,14 @@
       {
   	samples.push_back("ZToMuMu_"+lowM[imass]+"_"+uppM[imass]);
       }
-
+  
     // VV
     vector<TString> VV = { "WW", "WZ", "ZZ" };
     for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
       {
   	samples.push_back(VV[iVV]);
       }
-
+  
     // tW
     vector<TString> top = { "", "anti" };
     vector<TString> top_name = { "tW", "tbarW" };
@@ -64,7 +65,7 @@
       {
   	samples.push_back(top_name[itop]);
       }
-
+  
     // tZq
     samples.push_back("tZq");
 
@@ -79,8 +80,10 @@
   }
 
   // Signals
-  vector<TString> sigModel = { "Y3"/*, "DY3", "DYp3", "B3mL2"*/ };
-  vector<float> sigMass = { /*200.0,*/ 250.0, 400.0, 550.0, 700.0, 850.0, 1000.0, 1250.0, 1500.0, 2000.0 };
+  //vector<TString> sigModel = { "Y3", "DY3", "DYp3", "B3mL2" };
+  //vector<float> sigMass = { 200.0, 250.0, 400.0, 550.0, 700.0, 850.0, 1000.0, 1250.0, 1500.0, 2000.0 };
+  vector<TString> sigModel = { "Y3" };
+  vector<float> sigMass = { 400.0, 550.0 };
   vector<TString> sigMassString = { };
   for ( unsigned int m=0; m<sigMass.size(); m++ )
     sigMassString.push_back(Form("%.0f",sigMass[m]));
@@ -213,7 +216,7 @@
 	mmumu_sig[isample]->SetName(dNames[d]+"_"+sample+"_allyears");
 
 	// Create workspace, import data and model
-	TString outDir = "fitResults";
+	TString outDir = "fitResults_partialUnbliding_Sep-27-2022";
 	RooWorkspace wfit("wfit","workspace");
 
 	fitmass(*mmumu_sig[isample], sample, false, true, sigmodels[isample], sigmasses[isample], wfit, "dcbfastg", outDir);

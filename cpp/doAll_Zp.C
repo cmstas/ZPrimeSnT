@@ -211,16 +211,30 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     vector<TString> sigMass = { /*"100",*/ "200", "250", "400", "550", "700", "850", "1000", "1250", "1500", "2000" };
     if ( sampleArg.Contains("_low" ) ) sigMass = { "200", "250", "400", "550", "700" };
     if ( sampleArg.Contains("_high" ) ) sigMass = { "850", "1000", "1250", "1500", "2000" };
+    if ( sampleArg.Contains("_bwCutoff" ) ) sigMass = { "1000" };
     for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
       for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
       {
-        samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
-        sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
-        sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
-                                                                  { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
-                                                                  { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
-                                                                  { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
+	if ( !(sampleArg.Contains("_bwCutoff")) )
+	{
+	  samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
+	  sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+	  sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
+                                                                     { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
+                                                                     { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
+                                                                     { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
+	}
+	else
+	{
+	  vector<TString> bwCutoff = { "15", "50", "1000", "15000" };
+	  for ( unsigned int ib=0; ib<bwCutoff.size(); ib++ )
+	  {
+	    samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib]);
+	    sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_bwcutoff_"+bwCutoff[ib]+"_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+	    sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib], { { "2018", { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2" } } }});
+	  }
+	}
       }
     }
   }
@@ -245,20 +259,14 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     if ( sampleArg=="TTv7" || sampleArg=="all" ) {
       samples.push_back("TTv7");
       sample_names.insert({"TTv7","TTTo2L2Nu_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8"});
-      sample_prod.insert({"TTv7", { { "2018",       { "" } },
-                                    { "2017",       { "" } },
-             { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
-             { "2016nonAPV", { "" } } } });
+      sample_prod.insert({"TTv7", { { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
     }
 
     // DYv7
     if ( sampleArg=="DYv7" || sampleArg=="all" ) {
       samples.push_back("DYv7");
       sample_names.insert({"DYv7","DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8"});
-      sample_prod.insert({"DYv7", { { "2018",       { "" } },
-                                    { "2017",       { "" } },
-             { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1" } },
-             { "2016nonAPV", { "" } } } });
+      sample_prod.insert({"DYv7", { { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1" } } } });
     }
 
     vector<TString> sigMass = { "250", "350", "500" };
@@ -267,17 +275,11 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       {
         samples.push_back("BFF_M"+sigMass[imass]);
         sample_names.insert({"BFF_M"+sigMass[imass],"BFFZprimeToMuMu_M_"+sigMass[imass]+"_TuneCUETP8M1_13TeV-madgraph-pythia8"});
-        sample_prod.insert({"BFF_M"+sigMass[imass], { { "2018",       { "" } },
-                                                      { "2017",       { "" } },
-                                                      { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
-                                                      { "2016nonAPV", { "" } } } });
+        sample_prod.insert({"BFF_M"+sigMass[imass], { { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
       }
       samples.push_back("BFFdbs1p0_M350");
       sample_names.insert({"BFFdbs1p0_M350","BFFZprimeToMuMu_M_350_dbs1p0_TuneCUETP8M1_13TeV-madgraph-pythia8"});
-      sample_prod.insert({"BFFdbs1p0_M350", { { "2018",       { "" } },
-                                              { "2017",       { "" } },
-                                              { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } },
-                                              { "2016nonAPV", { "" } } } });
+      sample_prod.insert({"BFFdbs1p0_M350", { { "2016APV",    { "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1" } } } });
     }
 
     sigMass.clear();
@@ -287,10 +289,7 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       {
         samples.push_back("Y3_M"+sigMass[imass]);
         sample_names.insert({"Y3_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_Y3_5f_madgraph_pythia8_NoPSWgts"});
-        sample_prod.insert({"Y3_M"+sigMass[imass], { { "2018",       { "" } },
-                                                { "2017",       { "" } },
-                  { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
-                  { "2016nonAPV", { "" } } } });
+        sample_prod.insert({"Y3_M"+sigMass[imass], { { "2016APV", { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } } } });
       }
     }
   }
@@ -308,7 +307,11 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     for ( int isample=0; isample<samples.size(); isample++ )
     {
       TString sample = samples[isample];
-
+      if ( sampleArg.Contains("_bwCutoff") ) {
+	if ( year!="2018" && !(sample.Contains("Y3")) )
+	     continue;
+	baseDir = "/ceph/cms/store/group/zprime/BWCutoff_Y3_M1000_2018/";
+      }
       TString dataformat = "NANOAOD";
       if ( !(sample.Contains("data")) )
 	dataformat+="SIM";
@@ -321,6 +324,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
         TString dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"_"+skimPackage+"/merged/merged.root";
         if ( sample.Contains("BFF") )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/merged/merged.root";
+        if ( sample.Contains("_bwCutoff") )
+          dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_merged.root";
         if ( runOnSignalBeforeSkim )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";
         ch_temp->Add(dir);

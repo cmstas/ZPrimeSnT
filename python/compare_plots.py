@@ -10,8 +10,8 @@ user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
 doRatio = True
-extendedLegend = False
-shape = True
+extendedLegend = True
+shape = False
 plotData = False
 
 signalMass = []
@@ -24,6 +24,8 @@ sampleFillColor.append(None)
 sampleLineColor=[]
 sampleLineColor.append(ROOT.kBlack)
 sampleLineColor.append(ROOT.kRed)
+sampleLineColor.append(ROOT.kBlue)
+sampleLineColor.append(ROOT.kMagenta)
 
 sampleLineWidth=[]
 sampleLineWidth.append(2)
@@ -89,7 +91,7 @@ def get_plots(sampleDict, plotname):
                         tplot.Add(inFile.Get(plotname))
 
         for b in range(0, tplot.GetNbinsX()+2):
-            if plot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
+            if tplot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
                 tplot.SetBinContent(b,0.0)
                 tplot.SetBinError(b,0.0)
 
@@ -157,7 +159,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
 
     return plot
 
-def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, thisOutDir, plotname, logY=True, logX=False, plotData=False, doRatio=True, lumi=59.83, year="2018"):
+def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, thisOutDir, plotname, logY=True, logX=False, plotData=False, doRatio=True, lumi=59.83, year="2018", xsecScaleRef=-1.0, xsecScaleOther=-1.0):
 
     # Labels
     latex = ROOT.TLatex()
@@ -212,6 +214,10 @@ def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, 
             mass = sample.split("_")[1].lstrip("M")
         curPlotsRef[sample] = copy.deepcopy(customize_plot(sample,plotDictRef[sample],sampleFillColor[0],sampleLineColor[0],sampleLineWidth[0],sampleMarkerStyle[0],sampleMarkerSize[0]))
         curPlotsOther[sample] = copy.deepcopy(customize_plot(sample,plotDictOther[sample],sampleFillColor[1],sampleLineColor[1],sampleLineWidth[1],sampleMarkerStyle[1],sampleMarkerSize[1]))
+        if xsecScaleRef > 0.0:
+            curPlotsRef[sample].Scale(xsecScaleRef)
+        if xsecScaleOther > 0.0:
+            curPlotsOther[sample].Scale(xsecScaleOther)
         if shape and curPlotsRef[sample].Integral(0,-1)>0.0:
             curPlotsOther[sample].Scale(1.0/curPlotsRef[sample].Integral(0,-1))
             curPlotsRef[sample].Scale(1.0/curPlotsRef[sample].Integral(0,-1))
@@ -432,14 +438,22 @@ def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-inDirRef = "./cpp/nominal/"
-legRef = "Nominal"
+#inDirRef = "./cpp/nominal/"
+#legRef = "Nominal"
+inDirRef = "./cpp/temp_data_bwCutoffDefault/"
+legRef = "BW cutoff=15k"
 inDirOther = []
 legOther = []
-inDirOther.append("./cpp/temp_data_JECUp/")
-inDirOther.append("./cpp/temp_data_JECDn/")
-legOther.append("JES up")
-legOther.append("JES down")
+inDirOther.append("./cpp/temp_data_bwCutoff15/")
+inDirOther.append("./cpp/temp_data_bwCutoff50/")
+inDirOther.append("./cpp/temp_data_bwCutoff1000/")
+legOther.append("BW cutoff=15")
+legOther.append("BW cutoff=50")
+legOther.append("BW cutoff=1k")
+#inDirOther.append("./cpp/temp_data_JECUp/")
+#inDirOther.append("./cpp/temp_data_JECDn/")
+#legOther.append("JES up")
+#legOther.append("JES down")
 #inDirOther.append("./cpp/temp_data_JERCentral/")
 #inDirOther.append("./cpp/temp_data_JERUp/")
 #inDirOther.append("./cpp/temp_data_JERDn/")
@@ -471,6 +485,10 @@ legOther.append("JES down")
 #legOther.append("Trigger SF up")
 #legOther.append("Trigger SF down")
 
+xsecNom = (0.192745833333+0.190323076923+0.192126315789+0.192622380952)/4.0
+xsecRef  = 0.196012990937
+xsecOther = [0.191542168675, 0.194979001019, 0.196013407258]
+
 outDir = []
 for d in inDirOther:
     to = d.replace("/","").split("_")[2]
@@ -480,8 +498,8 @@ for d in outDir:
         os.makedirs(d)
     os.system('cp utils/index.php '+d)
 
-year="all"
-#year="2018"
+#year="all"
+year="2018"
 lumi=0.0 #fb^-1
 if year == "2018":
     lumi = 59.83
@@ -496,12 +514,13 @@ elif year == "all":
 
 # Sample
 samplesRef = []
-samplesRef.append("B3mL2_M200")
-samplesRef.append("B3mL2_M700")
-samplesRef.append("B3mL2_M1500")
-#samplesRef.append("Y3_M200")
+#samplesRef.append("B3mL2_M200")
+#samplesRef.append("B3mL2_M700")
+#samplesRef.append("B3mL2_M1500")
+##samplesRef.append("Y3_M200")
 #samplesRef.append("Y3_M700")
 #samplesRef.append("Y3_M1500")
+samplesRef.append("Y3_M1000")
 #
 samplesOther = samplesRef
 
@@ -521,5 +540,7 @@ for on,o in enumerate(inDirOther):
         for plot in listofplots:
             if plot in toexclude:
                 continue
+            #draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, True , False, False, True, lumi, year, xsecRef/xsecNom, xsecOther[on]/xsecNom)
+            #draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, False, False, False, True, lumi, year, xsecRef/xsecNom, xsecOther[on]/xsecNom)
             draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, True , False, False, True, lumi, year)
             draw_plot(sampleDictRef, sampleDictOther, legRef, legOther[on], outDir[on], plot, False, False, False, True, lumi, year)
