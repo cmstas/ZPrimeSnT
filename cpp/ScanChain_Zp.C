@@ -148,8 +148,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "TTv7" )               xsec = 76700.0; // fb
   else if ( process == "DYv7" )               xsec = 5929000.0; // fb
   else if ( process == "ttbar_2L2Nu" )        xsec = 831.76*1000*(3*0.108)*(3*0.108); // fb
-  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
-  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*2*(3*0.108)*(1-3*0.108); // fb
+  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*2*(1-3*0.108)*(3*0.108); // fb
+  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
   else if ( process == "DY" )                 xsec = 5765400.0; // fb
   else if ( process == "DYbb" )               xsec = 14670.0; // fb
   else if ( process == "ZToMuMu_50_120" )     xsec = 2112904.0; // fb
