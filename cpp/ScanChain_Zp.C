@@ -56,7 +56,7 @@
 
 // For testing purposes only
 bool useOnlyRun2018B = false;
-bool doPartialUnblinding = true;
+bool doPartialUnblinding = false;
 
 // Looper setup flags
 int doHistos = 1; // 0: Do not plot histos, 1: Plot only final plots, 2: Plot for every selection
@@ -466,7 +466,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           plot_names.push_back("mu3_trkAbsIso"); ++nExtraHistos;
           plot_names.push_back("ele_extra_pt"); ++nExtraHistos;
           plot_names.push_back("ele_extra_eta"); ++nExtraHistos;
-          plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
+          //plot_names.push_back("ele_extra_miniPFRelIso"); ++nExtraHistos;
           plot_names.push_back("lepIsoTrack_extra_pt"); ++nExtraHistos;
           plot_names.push_back("lepIsoTrack_extra_eta"); ++nExtraHistos;
           plot_names.push_back("lepIsoTrack_extra_PFRelIsoChg"); ++nExtraHistos;
@@ -1432,7 +1432,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	      if ( nt.Electron_pt().at(i) < HEM_lepPtCut )
 		break;
 	      if ( nt.Electron_cutBased().at(i) > 0 &&
-		   nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
 		   fabs(nt.Electron_dxy().at(i)) < 0.2 &&
 		   fabs(nt.Electron_dz().at(i)) < 0.5 &&
 		   nt.Electron_eta().at(i) > HEM_region[0] && nt.Electron_eta().at(i) < HEM_region[1] &&
@@ -1994,7 +1993,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( nt.Electron_pt().at(i) > 10. &&
 	     fabs(nt.Electron_eta().at(i)) < 2.5 &&
 	     nt.Electron_cutBased().at(i) > 0 &&
-	     nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
 	     fabs(nt.Electron_dxy().at(i)) < 0.2 &&
 	     fabs(nt.Electron_dz().at(i)) < 0.5 ) {
           extra_electrons.push_back(i);
@@ -2085,8 +2083,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           extra_plot_names.push_back("ele_extra_eta");
           extra_variable.insert({"ele_extra_eta", nt.Electron_eta().at(extra_electrons[0])});
 
-          extra_plot_names.push_back("ele_extra_miniPFRelIso");
-          extra_variable.insert({"ele_extra_miniPFRelIso", nt.Electron_miniPFRelIso_all().at(extra_electrons[0])});
+          //extra_plot_names.push_back("ele_extra_miniPFRelIso");
+          //extra_variable.insert({"ele_extra_miniPFRelIso", nt.Electron_miniPFRelIso_all().at(extra_electrons[0])});
         }
 
         if ( extra_isotracks_lep.size() > 0 ) {

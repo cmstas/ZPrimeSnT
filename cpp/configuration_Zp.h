@@ -247,10 +247,10 @@ void histoDefinition(map<TString, int> &nbins, map<TString, float> &low, map<TSt
   high.insert({"ele_extra_eta", 3});
   title.insert({"ele_extra_eta", "#eta (extra electron)"});
 
-  nbins.insert({"ele_extra_miniPFRelIso", 50});
-  low.insert({"ele_extra_miniPFRelIso", 0.01});
-  high.insert({"ele_extra_miniPFRelIso", 0.51});
-  title.insert({"ele_extra_miniPFRelIso", "PF mini-iso./p_{T} (extra electron)"});
+  //nbins.insert({"ele_extra_miniPFRelIso", 50});
+  //low.insert({"ele_extra_miniPFRelIso", 0.01});
+  //high.insert({"ele_extra_miniPFRelIso", 0.51});
+  //title.insert({"ele_extra_miniPFRelIso", "PF mini-iso./p_{T} (extra electron)"});
 
   // Extra lepton properties: Isotracks
   nbins.insert({"nExtra_lepIsoTracks", 6});
