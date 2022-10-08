@@ -131,10 +131,10 @@ samples=[]
 if args.data:
     samples.append("data")
 # Signal MC
-samples.append("Y3")
+#samples.append("Y3")
 #samples.append("DY3")
 #samples.append("DYp3")
-samples.append("B3mL2")
+#samples.append("B3mL2")
 # SM MC
 #samples.append("DYbb")
 samples.append("ZToMuMu")
@@ -746,14 +746,14 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     g_ratio_unc = ROOT.TGraphAsymmErrors()
     g_ratio_signal = ROOT.TMultiGraph()
 
-    h_axis = ROOT.TH1D()
-    h_axis_ratio = ROOT.TH1D()
-    h_axis = ROOT.TH1D("h_axis","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+    h_axis = ROOT.TH1F()
+    h_axis_ratio = ROOT.TH1F()
+    h_axis = ROOT.TH1F("h_axis","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
     if "cutflow" in plotname:
         for b in range(1, curPlots[curPlots.keys()[0]].GetNbinsX()+1):
             tlabel = curPlots[curPlots.keys()[0]].GetXaxis().GetBinLabel(b)
             h_axis.GetXaxis().SetBinLabel(b, tlabel)
-    h_axis_ratio = ROOT.TH1D("h_axis_ratio","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
+    h_axis_ratio = ROOT.TH1F("h_axis_ratio","", MCplot.GetNbinsX(), MCplot.GetXaxis().GetBinLowEdge(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
     if logX and MCplot.GetXaxis().GetBinLowEdge(1) < epsilon:
         h_axis.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
         h_axis_ratio.GetXaxis().SetRangeUser(MCplot.GetXaxis().GetBinCenter(1)-0.25*MCplot.GetXaxis().GetBinWidth(1), MCplot.GetXaxis().GetBinUpEdge(MCplot.GetNbinsX()))
