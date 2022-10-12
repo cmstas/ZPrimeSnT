@@ -270,7 +270,7 @@ def customize_plot(sample, plot):
 def draw_onePlot(plotname, samplename, logZ, logY, logX, hist, canvas, yearenergy):
   histMax = hist.GetMaximum()
   exp = None
-  if histMax > 0.0:
+  if histMax > 0.0 and not logZ:
     exp = int(math.floor(math.log10(histMax)))
     if exp!=0:
       hist.Scale(pow(10,-exp))
@@ -298,6 +298,8 @@ def draw_onePlot(plotname, samplename, logZ, logY, logX, hist, canvas, yearenerg
       hist.GetXaxis().SetRangeUser(hist.GetXaxis().GetBinCenter(1)-0.25*hist.GetXaxis().GetBinWidth(1), hist.GetXaxis().GetBinUpEdge(hist.GetNbinsX()))
       h_axis_ratio.GetXaxis().SetRangeUser(hist.GetXaxis().GetBinCenter(1)-0.25*hist.GetXaxis().GetBinWidth(1), hist.GetXaxis().GetBinUpEdge(hist.GetNbinsX()))
 
+  if logZ:
+      canvas.SetLogz()
   if logY:
       canvas.SetLogy()
   if logX:
@@ -326,14 +328,13 @@ def draw_onePlot(plotname, samplename, logZ, logY, logX, hist, canvas, yearenerg
   if logZ:
     histMax = histMax*1e3
     hist.SetMinimum(1e-3)
-  hist.SetMaximum(1.1*histMax)
 
   palette = hist.GetListOfFunctions().FindObject("palette")
   if palette:
     palette.SetX2NDC(palette.GetX2NDC()-0.02)
     palette.SetY1NDC(palette.GetY1NDC()+zoffset)
-    if exp:
-      hist.SetMaximum(histMax*pow(10,-exp))
+    if exp and not logZ:
+      hist.SetMaximum(1.1*histMax*pow(10,-exp))
       latexZaxis.DrawLatex(0.98, 0.91, "#times10^{"+str(int(exp))+"}")
       hist.GetZaxis().SetRangeUser(0.0,1.1*histMax*pow(10,-exp))
     hist.GetZaxis().SetMaxDigits(2)
@@ -714,4 +715,5 @@ for year in args.years:
   for plot in listofplots:
     if plot in toexclude:
       continue
-    draw_plot(sampleDict, plot, False, False, False, lumi, year) # logZ option needs some work
+    draw_plot(sampleDict, plot, False, False, False, lumi, year)
+    draw_plot(sampleDict, plot, True, False, False, lumi, year)
