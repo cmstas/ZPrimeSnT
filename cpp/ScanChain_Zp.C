@@ -2545,7 +2545,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       float jet1_pt = (cand_jets.size() > 0 ? Jet_p4.at(cand_jets[0]).Pt() : -1.0);
       float jet1_eta = (cand_bJets.size() > 0 ? Jet_p4.at(cand_jets[0]).eta() : -999.0);
 
+      float st_scalar = (cand_jets.size() > 0 ? puppimet_pt + Muon_pt.at(cand_muons[0]) + Muon_pt.at(cand_muons[1]) + jet1_pt :
+                                                puppimet_pt + Muon_pt.at(cand_muons[0]) + Muon_pt.at(cand_muons[1]));
       float st_scalar_jet = (cand_jets.size() > 0 ? puppimet_pt + Muon_pt.at(cand_muons[0]) + Muon_pt.at(cand_muons[1]) + jet1_pt : -1.0);
+      float st_vector = (cand_jets.size() > 0 ? (puppimet_p4 + Muon_p4.at(cand_muons[0]) + Muon_p4.at(cand_muons[1]) + Jet_p4.at(cand_jets[0])).Pt() :
+                                                (puppimet_p4 + Muon_p4.at(cand_muons[0]) + Muon_p4.at(cand_muons[1])).Pt());
       float st_vector_jet = (cand_jets.size() > 0 ? (puppimet_p4 + Muon_p4.at(cand_muons[0]) + Muon_p4.at(cand_muons[1]) + Jet_p4.at(cand_jets[0])).Pt() : -1.0);
 
       float bjet1_pt = (cand_bJets.size() > 0 ? Jet_p4.at(cand_bJets[0]).Pt() : -1.0);
@@ -2628,11 +2632,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
         plot2D_names.push_back("jet1_pt_VS_st_scalar_jet");
         variableX.insert({"jet1_pt_VS_st_scalar_jet", variable["jet1_pt"]});
-        variableY.insert({"jet1_pt_VS_st_scalar_jet", variable["st_scalar_jet"]});
+        variableY.insert({"jet1_pt_VS_st_scalar_jet", st_scalar});
 
         plot2D_names.push_back("jet1_pt_VS_st_vector_jet");
         variableX.insert({"jet1_pt_VS_st_vector_jet", variable["jet1_pt"]});
-        variableY.insert({"jet1_pt_VS_st_vector_jet", variable["st_vector_jet"]});
+        variableY.insert({"jet1_pt_VS_st_vector_jet", st_vector});
 
         if ( cand_bJets_tight.size() >= 1 ) {
 
