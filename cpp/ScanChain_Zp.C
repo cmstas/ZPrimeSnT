@@ -658,7 +658,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       plot_names.push_back("pfmet_phi");
       plot_names.push_back("puppimet_pt");
       plot_names.push_back("puppimet_phi");
-      plot2D_names.push_back("puppimet_pt_VS_puppimet_phi");
       plot_names.push_back("mmumu");
       plot_names.push_back("mu1_pt");
       plot_names.push_back("mu2_pt");
@@ -717,10 +716,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       plot_names_b.push_back("minDPhi_lb_MET");
       plot_names_b.push_back("minDPhi_llb_MET");
       plot_names_b.push_back("minDPhi_l_b");
-      plot_names.push_back("st_scalar_bjet");
-      plot_names.push_back("st_vector_bjet");
-      plot2D_names.push_back("bjet1_pt_VS_st_scalar_bjet");
-      plot2D_names.push_back("bjet1_pt_VS_st_vector_bjet");
+      plot_names_b.push_back("st_scalar_bjet");
+      plot_names_b.push_back("st_vector_bjet");
+      plot2D_names_b.push_back("bjet1_pt_VS_st_scalar_bjet");
+      plot2D_names_b.push_back("bjet1_pt_VS_st_vector_bjet");
       //
       plot_names_2b.push_back("bjet2_pt");
       plot_names_2b.push_back("bjet2_eta");

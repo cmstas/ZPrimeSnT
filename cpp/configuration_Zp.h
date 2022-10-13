@@ -513,7 +513,7 @@ void histo2DDefinition(map<TString, int> nbins, map<TString, float> low, map<TSt
   lowX.insert({"jet1_pt_VS_st_scalar_jet", low["jet1_pt"]});
   highX.insert({"jet1_pt_VS_st_scalar_jet", high["jet1_pt"]});
   xtitle.insert({"jet1_pt_VS_st_scalar_jet", title["jet1_pt"]});
-  nbinsY.insert({"jet1_pt_VS_st_scalar_jet", 300/*nbins["jet1_pt"]*/});
+  nbinsY.insert({"jet1_pt_VS_st_scalar_jet", nbins["st_scalar_jet"]});
   lowY.insert({"jet1_pt_VS_st_scalar_jet", low["st_scalar_jet"]});
   highY.insert({"jet1_pt_VS_st_scalar_jet", high["st_scalar_jet"]});
   ytitle.insert({"jet1_pt_VS_st_scalar_jet", title["st_scalar_jet"]});
@@ -522,25 +522,25 @@ void histo2DDefinition(map<TString, int> nbins, map<TString, float> low, map<TSt
   lowX.insert({"jet1_pt_VS_st_vector_jet", low["jet1_pt"]});
   highX.insert({"jet1_pt_VS_st_vector_jet", high["jet1_pt"]});
   xtitle.insert({"jet1_pt_VS_st_vector_jet", title["jet1_pt"]});
-  nbinsY.insert({"jet1_pt_VS_st_vector_jet", 300/*nbins["jet1_pt"]*/});
+  nbinsY.insert({"jet1_pt_VS_st_vector_jet", nbins["st_vector_jet"]});
   lowY.insert({"jet1_pt_VS_st_vector_jet", low["st_vector_jet"]});
   highY.insert({"jet1_pt_VS_st_vector_jet", high["st_vector_jet"]});
   ytitle.insert({"jet1_pt_VS_st_vector_jet", title["st_vector_jet"]});
 
-  nbinsX.insert({"bjet1_pt_VS_st_scalar_bjet", nbins["bjet1_pt"]});
+  nbinsX.insert({"bjet1_pt_VS_st_scalar_bjet", 300/*nbins["bjet1_pt"]*/});
   lowX.insert({"bjet1_pt_VS_st_scalar_bjet", low["bjet1_pt"]});
   highX.insert({"bjet1_pt_VS_st_scalar_bjet", high["bjet1_pt"]});
   xtitle.insert({"bjet1_pt_VS_st_scalar_bjet", title["bjet1_pt"]});
-  nbinsY.insert({"bjet1_pt_VS_st_scalar_bjet", 300/*nbins["bjet1_pt"]*/});
+  nbinsY.insert({"bjet1_pt_VS_st_scalar_bjet", nbins["st_scalar_bjet"]});
   lowY.insert({"bjet1_pt_VS_st_scalar_bjet", low["st_scalar_bjet"]});
   highY.insert({"bjet1_pt_VS_st_scalar_bjet", high["st_scalar_bjet"]});
   ytitle.insert({"bjet1_pt_VS_st_scalar_bjet", title["st_scalar_bjet"]});
 
-  nbinsX.insert({"bjet1_pt_VS_st_vector_bjet", nbins["bjet1_pt"]});
+  nbinsX.insert({"bjet1_pt_VS_st_vector_bjet", 300/*nbins["bjet1_pt"]*/});
   lowX.insert({"bjet1_pt_VS_st_vector_bjet", low["bjet1_pt"]});
   highX.insert({"bjet1_pt_VS_st_vector_bjet", high["bjet1_pt"]});
   xtitle.insert({"bjet1_pt_VS_st_vector_bjet", title["bjet1_pt"]});
-  nbinsY.insert({"bjet1_pt_VS_st_vector_bjet", 300/*nbins["bjet1_pt"]*/});
+  nbinsY.insert({"bjet1_pt_VS_st_vector_bjet", nbins["st_vector_bjet"]});
   lowY.insert({"bjet1_pt_VS_st_vector_bjet", low["st_vector_bjet"]});
   highY.insert({"bjet1_pt_VS_st_vector_bjet", high["st_vector_bjet"]});
   ytitle.insert({"bjet1_pt_VS_st_vector_bjet", title["st_vector_bjet"]});
