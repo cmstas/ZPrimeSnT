@@ -167,8 +167,20 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "ZToMuMu_4500_6000" )  xsec = 0.0002787; // fb
   else if ( process == "ZToMuMu_6000_Inf" )   xsec = 0.000009569; // fb
   else if ( process == "WW" )                 xsec = 118700.0; // fb 
+  else if ( process == "WWTo1L1Nu2Q" )        xsec = 50667.5; // fb 
+  else if ( process == "WWTo2L2Nu" )          xsec = 11090.000; // fb 
+  else if ( process == "WWTo4Q" )             xsec = 51627.500; // fb 
   else if ( process == "WZ" )                 xsec = 47130.0; // fb
+  else if ( process == "WZTo1L1Nu2Q" )        xsec = 9156.5; // fb
+  else if ( process == "WZTo1L3Nu" )          xsec = 3408.25; // fb
+  else if ( process == "WZTo2Q2L" )           xsec = 6417.75; // fb
+  else if ( process == "WZTo3LNu" )           xsec = 5231.0; // fb
   else if ( process == "ZZ" )                 xsec = 16523.0; // fb
+  else if ( process == "ZZTo2L2Nu" )          xsec = 973.8; // fb
+  else if ( process == "ZZTo2Nu2Q" )          xsec = 4552.0; // fb
+  else if ( process == "ZZTo2Q2L" )           xsec = 3683.5; // fb
+  else if ( process == "ZZTo4L" )             xsec = 1325.0; // fb
+  else if ( process == "ZZTo4Q" )             xsec = 3286.0; // fb
   else if ( process == "tW" )                 xsec = 19550; // fb
   else if ( process == "tbarW" )              xsec = 19550; // fb
   else if ( process == "tZq" )                xsec = 75.8; // fb

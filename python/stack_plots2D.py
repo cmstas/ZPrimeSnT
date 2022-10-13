@@ -74,9 +74,21 @@ samples.append("TTW")
 samples.append("TTZ")
 samples.append("TTHToNonbb")
 samples.append("TTHTobb")
-samples.append("WW")
-samples.append("ZZ")
-samples.append("WZ")
+#samples.append("WW")
+samples.append("WWTo1L1Nu2Q")
+samples.append("WWTo4Q")
+samples.append("WWTo2L2Nu")
+#samples.append("ZZ")
+samples.append("ZZTo2L2Nu")
+samples.append("ZZTo2Nu2Q")
+samples.append("ZZTo2Q2L")
+samples.append("ZZTo4L")
+samples.append("ZZTo4Q")
+#samples.append("WZ")
+samples.append("WZTo1L1Nu2Q")
+samples.append("WZTo1L3Nu")
+samples.append("WZTo2Q2L")
+samples.append("WZTo3LNu")
 # PreUL NanoAODv7 samples for BFF comparison
 # Signal MC
 #samples.append("BFF")
@@ -152,23 +164,38 @@ def get_nan_plots(sampleDict, plotname):
   groupedSamples = OrderedDict()
   tempGroups = OrderedDict()
   tempGroups["ttbar"]   = ["ttbar_2L2Nu","ttbar_SemiLeptonic","ttbar_Hadronic"]
+  tempGroups["WW"] = ["WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu"]
+  tempGroups["WZ"] = ["WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu"]
+  tempGroups["ZZ"] = ["ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q"]
   tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
   tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
   for sample in sampleDict.keys():
-   if sample in tempGroups["ttbar"]:
-     if "ttbar" not in groupedSamples.keys():
-       groupedSamples["ttbar"]=[]
-     groupedSamples["ttbar"].append(sample)
-   elif sample in tempGroups["tW+tZq"]:
-     if "tW+tZq" not in groupedSamples.keys():
-       groupedSamples["tW+tZq"]=[]
-     groupedSamples["tW+tZq"].append(sample)
-   elif sample in tempGroups["TTX"]:
-     if "TTX" not in groupedSamples.keys():
-       groupedSamples["TTX"]=[]
-     groupedSamples["TTX"].append(sample)
-   else:
-     groupedSamples[sample] = [sample]
+    if sample in tempGroups["ttbar"]:
+      if "ttbar" not in groupedSamples.keys():
+        groupedSamples["ttbar"]=[]
+      groupedSamples["ttbar"].append(sample)
+    elif sample in tempGroups["WW"]:
+      if "WW" not in groupedSamples.keys():
+        groupedSamples["WW"]=[]
+      groupedSamples["WW"].append(sample)
+    elif sample in tempGroups["WZ"]:
+      if "WZ" not in groupedSamples.keys():
+        groupedSamples["WZ"]=[]
+      groupedSamples["WZ"].append(sample)
+    elif sample in tempGroups["ZZ"]:
+      if "ZZ" not in groupedSamples.keys():
+        groupedSamples["ZZ"]=[]
+      groupedSamples["ZZ"].append(sample)
+    elif sample in tempGroups["tW+tZq"]:
+      if "tW+tZq" not in groupedSamples.keys():
+        groupedSamples["tW+tZq"]=[]
+      groupedSamples["tW+tZq"].append(sample)
+    elif sample in tempGroups["TTX"]:
+      if "TTX" not in groupedSamples.keys():
+        groupedSamples["TTX"]=[]
+      groupedSamples["TTX"].append(sample)
+    else:
+      groupedSamples[sample] = [sample]
 
   for gsample in groupedSamples.keys():
     tplot=None
@@ -200,6 +227,9 @@ def get_plots(sampleDict, plotname):
   groupedSamples = OrderedDict()
   tempGroups = OrderedDict()
   tempGroups["ttbar"] = ["ttbar_2L2Nu","ttbar_SemiLeptonic","ttbar_Hadronic"]
+  tempGroups["WW"] = ["WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu"]
+  tempGroups["WZ"] = ["WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu"]
+  tempGroups["ZZ"] = ["ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q"]
   tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
   tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
   for sample in sampleDict.keys():
@@ -207,6 +237,18 @@ def get_plots(sampleDict, plotname):
       if "ttbar" not in groupedSamples.keys():
         groupedSamples["ttbar"]=[]
       groupedSamples["ttbar"].append(sample)
+    elif sample in tempGroups["WW"]:
+      if "WW" not in groupedSamples.keys():
+        groupedSamples["WW"]=[]
+      groupedSamples["WW"].append(sample)
+    elif sample in tempGroups["WZ"]:
+      if "WZ" not in groupedSamples.keys():
+        groupedSamples["WZ"]=[]
+      groupedSamples["WZ"].append(sample)
+    elif sample in tempGroups["ZZ"]:
+      if "ZZ" not in groupedSamples.keys():
+        groupedSamples["ZZ"]=[]
+      groupedSamples["ZZ"].append(sample)
     elif sample in tempGroups["tW+tZq"]:
       if "tW+tZq" not in groupedSamples.keys():
         groupedSamples["tW+tZq"]=[]
