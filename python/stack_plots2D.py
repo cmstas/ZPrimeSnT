@@ -522,10 +522,11 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
       histMax = proj_data.GetMaximum()
     g_data.Draw("P,SAME")
     g_data_clone.Draw("P,SAME")
+  proj_MC.SetMaximum(1.1*histMax)
+  proj_MC.SetMinimum(0.0)
   if logY:
       histMax = histMax*1e3
       proj_MC.SetMinimum(1e-3)
-  proj_MC.SetMaximum(1.1*histMax)
 
   # Draw CMS headers
   expoffset=0.00
@@ -561,7 +562,7 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
   if args.shape:
       extension = extension+"_areaNormalized"
   
-  canvas.SaveAs(args.outDir + plotname + "/" + plotname + extension + titleExt + ".png")
+  canvas.SaveAs(args.outDir + plotname + extension + titleExt + ".png")
 
 
 def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83, year="2018"):
@@ -681,11 +682,11 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
     highX = args.projectY[1]
     titleExtY = "_py_"+str(int(lowX))+"_"+str(int(highX))
 
-    projY_MC = totalSM.ProjectionY(titleExtY+"_MC", totalSM.GetXaxis().FindBin(lowX), totalSM.GetXaxis().FindBin(highX))
+    projY_MC = totalSM.ProjectionY(plotname+titleExtY+"_MC_", totalSM.GetXaxis().FindBin(lowX), totalSM.GetXaxis().FindBin(highX))
     projY_MC.Rebin(3)
     projY_data = ROOT.TH2F()
     if plotData:
-      projY_data = curPlots["data"].ProjectionY(titleExtY+"_data", curPlots["data"].GetXaxis().FindBin(lowX), curPlots["data"].GetXaxis().FindBin(highX))
+      projY_data = curPlots["data"].ProjectionY(plotname+titleExtY+"_data", curPlots["data"].GetXaxis().FindBin(lowX), curPlots["data"].GetXaxis().FindBin(highX))
       projY_data.Rebin(3)
 
     draw_proj(plotname, projY_MC, projY_data, logY, logX, canvasY, yearenergy, titleExtY)
@@ -702,11 +703,11 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
     highY = args.projectX[1]
     titleExtX = "_px_"+str(int(lowY))+"_"+str(int(highY))
 
-    projX_MC = totalSM.ProjectionX(titleExtX+"_MC", totalSM.GetYaxis().FindBin(lowY), totalSM.GetYaxis().FindBin(highY))
+    projX_MC = totalSM.ProjectionX(plotname+titleExtX+"_MC", totalSM.GetYaxis().FindBin(lowY), totalSM.GetYaxis().FindBin(highY))
     #projX_MC.Rebin(3)
     projX_data = ROOT.TH2F()
     if plotData:
-      projX_data = curPlots["data"].ProjectionX(titleExtX+"_data", curPlots["data"].GetYaxis().FindBin(lowY), curPlots["data"].GetYaxis().FindBin(highY))
+      projX_data = curPlots["data"].ProjectionX(plotname+titleExtX+"_data", curPlots["data"].GetYaxis().FindBin(lowY), curPlots["data"].GetYaxis().FindBin(highY))
       #projX_data.Rebin(3)
 
     draw_proj(plotname, projX_MC, projX_data, logY, logX, canvasX, yearenergy, titleExtX)
