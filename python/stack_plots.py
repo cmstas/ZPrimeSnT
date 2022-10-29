@@ -15,12 +15,15 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
 parser.add_argument("--data", default=False, action="store_true", help="Plot data")
+parser.add_argument("--dataOnly", default=False, action="store_true", help="Plot only data, no MC bkg")
 parser.add_argument("--partialUnblinding", default=False, action="store_true", help="Plot 10% of data")
+parser.add_argument("--noSignal", default=False, action="store_true", help="Do not plot signals")
 parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
 parser.add_argument("--cumulative", default=False, action="store_true", help="Cumulative distributions")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
+parser.add_argument("--noSelPrint", default=False, action="store_true", help="Do not print slection onn plots")
 parser.add_argument("--selections", default=[], nargs="+", help="List of selections to be plotted. Default: only final selection ('sel10')")
 parser.add_argument("--years", default=[], nargs="+", help="List of years to be plotted. Default: all years")
 parser.add_argument("--plotMllSlices", default=False, action="store_true", help="Plot in slices of mll. Default: False")
@@ -35,6 +38,9 @@ args.outDir = args.outDir.rstrip("/")+"/"
 if not os.path.exists(args.outDir):
     os.makedirs(args.outDir)
 os.system('cp '+os.environ.get("PWD")+'/utils/index.php '+args.outDir)
+
+if args.dataOnly:
+    args.data = True
 
 if len(args.signalMass)==0: 
     args.signalMass = [200,400,700,1000,1500,2000]
@@ -75,7 +81,7 @@ sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
 sels.append("Track iso.(/p_{T})^{#mu_{1,2}}< 5.0 GeV (0.05)")
 sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
 sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
-sels.append("m_{#mu#mu}>175 GeV")
+sels.append("m_{#mu#mu}>275 GeV")
 sels.append("No extra lepton / iso. track")
 sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
 sels.append("E_{T}^{miss}<250 GeV, if aligned")
@@ -97,10 +103,10 @@ nsel["sel10"]=12
 nsel["antisel10"]=13
 
 nbbin=dict()
-nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, M WP)"
-nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
-nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
-nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
+nbbin["nBTag0"]="N_{b-tag} = 0"+("" if args.noSelPrint else " (p_{T}>20 GeV, M WP)")
+nbbin["nBTag1p"]="N_{b-tag} #geq 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
+nbbin["nBTag1"]="N_{b-tag} = 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T WP)")
+nbbin["nBTag2p"]="N_{b-tag} #geq 2"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
 
 mllbin=dict()
 if args.mllBinningForBFF:
@@ -131,38 +137,40 @@ samples=[]
 if args.data:
     samples.append("data")
 # Signal MC
-samples.append("Y3")
-#samples.append("DY3")
-#samples.append("DYp3")
-samples.append("B3mL2")
+if not args.noSignal:
+  samples.append("Y3")
+  #samples.append("DY3")
+  #samples.append("DYp3")
+  samples.append("B3mL2")
 # SM MC
-#samples.append("DYbb")
-samples.append("ZToMuMu")
-samples.append("ttbar_2L2Nu")
-samples.append("ttbar_SemiLeptonic")
-samples.append("ttbar_Hadronic")
-samples.append("tW")
-samples.append("tbarW")
-samples.append("tZq")
-samples.append("TTW")
-samples.append("TTZ")
-samples.append("TTHToNonbb")
-samples.append("TTHTobb")
-#samples.append("WW")
-samples.append("WWTo1L1Nu2Q")
-samples.append("WWTo4Q")
-samples.append("WWTo2L2Nu")
-#samples.append("ZZ")
-samples.append("ZZTo2L2Nu")
-samples.append("ZZTo2Nu2Q")
-samples.append("ZZTo2Q2L")
-samples.append("ZZTo4L")
-samples.append("ZZTo4Q")
-#samples.append("WZ")
-samples.append("WZTo1L1Nu2Q")
-samples.append("WZTo1L3Nu")
-samples.append("WZTo2Q2L")
-samples.append("WZTo3LNu")
+if not args.dataOnly:
+    #samples.append("DYbb")
+    samples.append("ZToMuMu")
+    samples.append("ttbar_2L2Nu")
+    samples.append("ttbar_SemiLeptonic")
+    samples.append("ttbar_Hadronic")
+    samples.append("tW")
+    samples.append("tbarW")
+    samples.append("tZq")
+    samples.append("TTW")
+    samples.append("TTZ")
+    samples.append("TTHToNonbb")
+    samples.append("TTHTobb")
+    #samples.append("WW")
+    samples.append("WWTo1L1Nu2Q")
+    samples.append("WWTo4Q")
+    samples.append("WWTo2L2Nu")
+    #samples.append("ZZ")
+    samples.append("ZZTo2L2Nu")
+    samples.append("ZZTo2Nu2Q")
+    samples.append("ZZTo2Q2L")
+    samples.append("ZZTo4L")
+    samples.append("ZZTo4Q")
+    #samples.append("WZ")
+    samples.append("WZTo1L1Nu2Q")
+    samples.append("WZTo1L3Nu")
+    samples.append("WZTo2Q2L")
+    samples.append("WZTo3LNu")
 # PreUL NanoAODv7 samples for BFF comparison
 # Signal MC
 #samples.append("BFF")
@@ -267,10 +275,10 @@ sampleMarkerSize["ttbar_v7"] = None
 
 sampleLegend=dict()
 sampleLegend["data"]     = "Data"
-sampleLegend["Y3"]       = "Y3"
-sampleLegend["DY3"]      = "DY3"
-sampleLegend["DYp3"]     = "DYp3"
-sampleLegend["B3mL2"]    = "B3mL2"
+sampleLegend["Y3"]       = "Y_{3}"+(" signal MC" if args.noSelPrint else "")
+sampleLegend["DY3"]      = "DY_{3}"+(" signal MC" if args.noSelPrint else "")
+sampleLegend["DYp3"]     = "DY'_{3}"+(" signal MC" if args.noSelPrint else "")
+sampleLegend["B3mL2"]    = "B_{3}-L_{2}"+(" signal MC" if args.noSelPrint else "")
 sampleLegend["DYbb"]     = "DY(#mu#mu)+bb"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
@@ -478,7 +486,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #        plot.Rebin(2)
 
     maxx = 1000.0
-    if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName()) or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName():
+    if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName() or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName()):
         if "mu1_pt" in plot.GetName():
             maxx = 700.0
         if "mu2_pt" in plot.GetName():
@@ -536,7 +544,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     latexSel = ROOT. TLatex()
     latexSel.SetTextAlign(11)
     latexSel.SetTextFont(42)
-    latexSel.SetTextSize(0.02-0.1*legoffset)
+    latexSel.SetTextSize(0.03 if args.noSelPrint else 0.02-0.1*legoffset)
     latexSel.SetNDC(True)
 
     if testLumiRatio>0.0:
@@ -658,6 +666,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             else:
                 totalSM.Add(curPlots[sample])
 
+    if args.dataOnly:
+        totalSM = curPlots["data"].Clone("totalSM")
     totalScale   = totalSM.Integral(0,-1)
     if args.cumulative:
         totalSM = plotUtils.GetCumulative(totalSM,lowToHighBinsCumulative)
@@ -669,14 +679,15 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     # Build stack
     stack = ROOT.THStack("stack","")
-    for i,sample in enumerate(reversed(plotDict.keys())):
-        # Bkg
-        if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or sample=="data"):
-            if args.shape and totalScale>0.0:
-                curPlots[sample].Scale(1.0/totalScale)
-            if args.cumulative:
-                curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
-            stack.Add(curPlots[sample])
+    if not args.dataOnly:
+        for i,sample in enumerate(reversed(plotDict.keys())):
+            # Bkg
+            if not ("Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or sample=="data"):
+                if args.shape and totalScale>0.0:
+                    curPlots[sample].Scale(1.0/totalScale)
+                if args.cumulative:
+                    curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
+                stack.Add(curPlots[sample])
 
 
     # Signal Scaling
@@ -706,15 +717,21 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 curPlots[sample].Scale(signalXSecScale[model][str(mass)])
 
     # Plot legends, ranges
+    legendXOffsetNoSelPrint = 0.18 if args.noSelPrint else 0.0
+    legendYOffsetNoSelPrint = 0.1 if (args.dataOnly and args.noSignal) else 0.0
     if args.data:
-        legend = ROOT.TLegend(0.7,0.6,0.91,0.91)
+        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.91,0.91)
+        if args.dataOnly:
+            legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.7+legendYOffsetNoSelPrint,0.89,0.89)
     else:
-        legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
+        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.89,0.89)
     if args.extendedLegend:
         if args.data:
-            legend = ROOT.TLegend(0.6,0.6,0.91,0.91)
+            legend = ROOT.TLegend(0.6-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.91,0.91)
+            if args.dataOnly:
+                legend = ROOT.TLegend(0.6-legendXOffsetNoSelPrint,0.7+legendYOffsetNoSelPrint,0.89,0.89)
         else:
-            legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
+            legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.89,0.89)
     legend.SetLineColor(0)
     legend.SetLineWidth(0)
     legend.SetFillColor(0)
@@ -784,6 +801,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     MCplot = copy.deepcopy(totalSM)
     g_unc = ROOT.TGraphAsymmErrors()
     g_data = ROOT.TGraphAsymmErrors()
+    g_data_clone = ROOT.TGraphAsymmErrors()
     g_ratio = ROOT.TGraphAsymmErrors()
     g_ratio_unc = ROOT.TGraphAsymmErrors()
     g_ratio_signal = ROOT.TMultiGraph()
@@ -817,8 +835,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
         h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
+    doRatio=False
     if plotData:
-        doRatio=True
+        if not args.dataOnly:
+            doRatio=True
 
         #plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=True, drawXerr=False)
         plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=False, drawXerr=False)
@@ -1008,36 +1028,39 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     #plot data, stack, signal, data  
     h_axis.GetYaxis().SetTitleSize(0.04)
+    if args.dataOnly:
+        h_axis.GetYaxis().SetTitleOffset(1.35)
     h_axis.GetXaxis().SetTitleSize(0.04)
     h_axis.GetXaxis().SetTitleOffset(1.25)
     if "cutflow" in plotname:
         h_axis.GetXaxis().SetLabelSize(0.023)
     else:
-        h_axis.GetXaxis().SetTitle(totalSM.GetXaxis().GetTitle())
+        h_axis.GetXaxis().SetTitle(MCplot.GetXaxis().GetTitle())
     if args.shape:
         h_axis.GetYaxis().SetTitle("A.U.")
     else:
-        h_axis.GetYaxis().SetTitle(totalSM.GetYaxis().GetTitle())
+        h_axis.GetYaxis().SetTitle(MCplot.GetYaxis().GetTitle())
     h_axis.GetYaxis().SetLabelSize(0.03)
     if not args.shape:
         h_axis.GetYaxis().SetMaxDigits(3)
     h_axis.Draw("")
-    stack.Draw("HIST,SAME")
-    g_unc.Draw("SAME,2")
+    if not args.dataOnly:
+        stack.Draw("HIST,SAME")
+        g_unc.Draw("SAME,2")
     histMax = 0.0
-    for sample in curPlots.keys():
-        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
-            if histMax < curPlots[sample].GetMaximum(): 
-                histMax = curPlots[sample].GetMaximum()
-            curPlots[sample].Draw("HIST,SAME")
     if plotData:
         if histMax < curPlots["data"].GetMaximum():
             histMax = curPlots["data"].GetMaximum()
         g_data.Draw("P,SAME")
         g_data_clone.Draw("P,SAME")
+    for sample in curPlots.keys():
+        if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample:
+            if histMax < curPlots[sample].GetMaximum(): 
+                histMax = curPlots[sample].GetMaximum()
+            curPlots[sample].Draw("HIST,SAME")
 
-    if histMax < stack.GetMaximum(): 
-        histMax = stack.GetMaximum()
+    if histMax < MCplot.GetMaximum(): 
+        histMax = MCplot.GetMaximum()
     if logY:
         histMax = histMax*1e3
         h_axis.SetMinimum(1e-3)
@@ -1096,44 +1119,55 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 whichmll = plotname.split("_")[len(plotname.split("_"))-1]
                 whichsel = plotname.split("_")[len(plotname.split("_"))-2]
         ts = 0
-        for s in range(0,nsel[whichsel]+1):
-            if 'inclusive' not in whichmll and s==8:
-                continue
-            if '1p' not in whichnb and s==10:
-                continue
-            if 'antisel10' in whichsel and s==12:
-                continue;
-            if 'anti' not in whichsel and 'sel10' in whichsel and s==13:
-                continue;    
-            ts = ts+1
-            if args.data:
-                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
-            else:
-                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
-        if 'inclusive' not in whichmll and nsel[whichsel]>=8:
-            ts = ts+1
-            if args.data:
-                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), mllbin[whichmll])
-            else:
-                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
-        if 'All' not in whichMuDet and nsel[whichsel]>=8:
-            ts = ts+1
-            if args.data:
-                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), MuDetbin[whichMuDet])
-            else:
-                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), MuDetbin[whichMuDet])
-        if '1p' not in whichnb and nsel[whichsel]>=10:
-            ts = ts+1
-            if args.data:
-                latexSel.DrawLatex(0.45+3*legoffset, 0.91-ts*(0.03-legoffset), nbbin[whichnb])
-            else:
-                latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
+        if args.noSelPrint:
+            if nsel[whichsel]>=8:
+                ts = ts+1
+                if args.data:
+                    latexSel.DrawLatex((0.20 if args.dataOnly else 0.19)+3*legoffset, (0.87 if args.dataOnly else 0.88)-ts*(0.03-legoffset), nbbin[whichnb])
+                else:
+                    latexSel.DrawLatex(0.21+3*legoffset, 0.86-ts*(0.03-legoffset), nbbin[whichnb])
+        else:
+            for s in range(0,nsel[whichsel]+1):
+                if 'inclusive' not in whichmll and s==8:
+                    continue
+                if '1p' not in whichnb and s==10:
+                    continue
+                if 'antisel10' in whichsel and s==12:
+                    continue;
+                if 'anti' not in whichsel and 'sel10' in whichsel and s==13:
+                    continue;    
+                ts = ts+1
+                if args.data:
+                    latexSel.DrawLatex((0.42 if args.dataOnly else 0.45)+3*legoffset, (0.9 if args.dataOnly else 0.91)-ts*(0.03-legoffset), sels[s])
+                else:
+                    latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), sels[s])
+            if 'inclusive' not in whichmll and nsel[whichsel]>=8:
+                ts = ts+1
+                if args.data:
+                    latexSel.DrawLatex((0.42 if args.dataOnly else 0.45)+3*legoffset, (0.9 if args.dataOnly else 0.91)-ts*(0.03-legoffset), mllbin[whichmll])
+                else:
+                    latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), mllbin[whichmll])
+            if 'All' not in whichMuDet and nsel[whichsel]>=8:
+                ts = ts+1
+                if args.data:
+                    latexSel.DrawLatex((0.42 if args.dataOnly else 0.45)+3*legoffset, (0.9 if args.dataOnly else 0.91)-ts*(0.03-legoffset), MuDetbin[whichMuDet])
+                else:
+                    latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), MuDetbin[whichMuDet])
+            if '1p' not in whichnb and nsel[whichsel]>=10:
+                ts = ts+1
+                if args.data:
+                    latexSel.DrawLatex((0.42 if args.dataOnly else 0.45)+3*legoffset, (0.9 if args.dataOnly else 0.91)-ts*(0.03-legoffset), nbbin[whichnb])
+                else:
+                    latexSel.DrawLatex(0.40+3*legoffset, 0.89-ts*(0.03-legoffset), nbbin[whichnb])
 
 
     # Print and save
     extension = "_"+year
     if plotData:
-        extension = extension+"_mcdata"
+        if args.dataOnly:
+            extension = extension+"_data"
+        else:
+            extension = extension+"_mcdata"
     else:
         extension = extension+"_sb"
     if logX:
