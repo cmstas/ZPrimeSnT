@@ -485,6 +485,46 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #    else:
     #        plot.Rebin(2)
 
+    # Fine tuning plots after comments
+    maxx = 1000.0
+    if "_sel10" in plot.GetName():
+        if "trkAbsIso" in plot.GetName():
+            plot.Rebin(10)
+        if "mmumu" in plot.GetName():
+            plot.Rebin(4)
+        if "bjet1_pt" in plot.GetName():
+            maxx = 500.0
+        if "bjet2_pt" in plot.GetName():
+            maxx = 300.0
+        if "bjet2_eta" in plot.GetName():
+            plot.Rebin(2)
+        if "nBTag2p" in plot.GetName():
+            if "mu1_pt" in plot.GetName():
+                plot.Rebin(2)
+            if "mu2_pt" in plot.GetName():
+                plot.Rebin(2)
+            if "mu1_eta" in plot.GetName():
+                plot.Rebin(2)
+            if "mu2_eta" in plot.GetName():
+                plot.Rebin(2)
+            if "bjet1_eta" in plot.GetName():
+                plot.Rebin(2)
+            if "puppimet_pt" in plot.GetName():
+                plot.Rebin(2)
+            if "puppimet_phi" in plot.GetName():
+                plot.Rebin(2)
+        tb = plot.GetXaxis().FindBin(maxx)
+        sumc  = 0.0
+        sume2 = 0.0
+        for b in range(tb, plot.GetNbinsX()+1):
+            sumc = sumc + plot.GetBinContent(b)
+            sume2 = sume2 + (plot.GetBinError(b))*(plot.GetBinError(b))
+            if b>tb:
+                plot.SetBinContent(b,0.0)
+                plot.SetBinError(b,0.0)
+        plot.SetBinContent(tb,sumc)
+        plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
+
     maxx = 1000.0
     if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName() or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName()):
         if "mu1_pt" in plot.GetName():
@@ -820,6 +860,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if "cutflow" in plotname:
         h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
         h_axis_ratio.GetYaxis().SetNdivisions(505)
+
+# Fine tuning plots after comments
+    if "_sel10" in plotname:
+        maxx = 1000.0
+        if "bjet1_pt" in plotname:
+            maxx=500.0
+        if "bjet2_pt" in plotname:
+            maxx=300.0
+        h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
+        h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
+
     if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname or "bjet1_pt" in plotname or "bjet2_pt" in plotname or "nbtag" in plotname):
         maxx = 1000.0
         if "mu1_pt" in plotname:
