@@ -55,7 +55,10 @@
       }
 
     // VV
-    vector<TString> VV = { "WW", "WZ", "ZZ" };
+    //vector<TString> VV = { "WW", "WZ", "ZZ" };
+    vector<TString> VV = { "WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu",
+                           "WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu",
+                           "ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q" };
     for ( unsigned int iVV=0; iVV<VV.size(); iVV++ )
       {
   	samples.push_back(VV[iVV]);

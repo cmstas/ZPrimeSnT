@@ -63,6 +63,9 @@ def get_plots(sampleDict, plotname):
     groupedSamples = OrderedDict()
     tempGroups = OrderedDict()
     tempGroups["ttbar"] = ["ttbar_2L2Nu","ttbar_SemiLeptonic","ttbar_Hadronic"]
+    tempGroups["WW"] = ["WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu"]
+    tempGroups["WZ"] = ["WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu"]
+    tempGroups["ZZ"] = ["ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q"]
     tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
     tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
     for sample in sampleDict.keys():
@@ -70,6 +73,18 @@ def get_plots(sampleDict, plotname):
             if "ttbar" not in groupedSamples.keys():
                 groupedSamples["ttbar"]=[]
             groupedSamples["ttbar"].append(sample)
+        elif sample in tempGroups["WW"]:
+            if "WW" not in groupedSamples.keys():
+                groupedSamples["WW"]=[]
+            groupedSamples["WW"].append(sample)
+        elif sample in tempGroups["WZ"]:
+            if "WZ" not in groupedSamples.keys():
+                groupedSamples["WZ"]=[]
+            groupedSamples["WZ"].append(sample)
+        elif sample in tempGroups["ZZ"]:
+            if "ZZ" not in groupedSamples.keys():
+                groupedSamples["ZZ"]=[]
+            groupedSamples["ZZ"].append(sample)
         elif sample in tempGroups["tW+tZq"]:
             if "tW+tZq" not in groupedSamples.keys():
                 groupedSamples["tW+tZq"]=[]
