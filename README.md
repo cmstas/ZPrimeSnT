@@ -100,7 +100,7 @@ make
 sh utils/condor_limits/runLimits_onCondor.sh <datacard directory> <limit output directory>
 ```
 
-Then, use scripts in `combineScripts/' to read and plot limits
+Then, use scripts in `combineScripts/` to read and plot limits from `<limit output directory>`.
 
 
 ## Pull requests:
