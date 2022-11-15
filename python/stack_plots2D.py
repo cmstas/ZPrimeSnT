@@ -52,11 +52,11 @@ if len(args.years)==0:
 doSignalMCRatio = False
 
 # Use fixed ratio axis
-useFixedRatio = True
+useFixedRatio = False
 
 # Do log scales:
 doLogX = False
-doLogY = True
+doLogY = False
 
 # Samples
 samples=[]
@@ -80,21 +80,21 @@ samples.append("TTW")
 samples.append("TTZ")
 samples.append("TTHToNonbb")
 samples.append("TTHTobb")
-samples.append("WW")
-#samples.append("WWTo1L1Nu2Q")
-#samples.append("WWTo4Q")
-#samples.append("WWTo2L2Nu")
-samples.append("ZZ")
-#samples.append("ZZTo2L2Nu")
-#samples.append("ZZTo2Nu2Q")
-#samples.append("ZZTo2Q2L")
-#samples.append("ZZTo4L")
-#samples.append("ZZTo4Q")
-samples.append("WZ")
-#samples.append("WZTo1L1Nu2Q")
-#samples.append("WZTo1L3Nu")
-#samples.append("WZTo2Q2L")
-#samples.append("WZTo3LNu")
+#samples.append("WW")
+samples.append("WWTo1L1Nu2Q")
+samples.append("WWTo4Q")
+samples.append("WWTo2L2Nu")
+#samples.append("ZZ")
+samples.append("ZZTo2L2Nu")
+samples.append("ZZTo2Nu2Q")
+samples.append("ZZTo2Q2L")
+samples.append("ZZTo4L")
+samples.append("ZZTo4Q")
+#samples.append("WZ")
+samples.append("WZTo1L1Nu2Q")
+samples.append("WZTo1L3Nu")
+samples.append("WZTo2Q2L")
+samples.append("WZTo3LNu")
 # PreUL NanoAODv7 samples for BFF comparison
 # Signal MC
 #samples.append("BFF")
@@ -256,7 +256,6 @@ nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
 nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
 nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
 
-
 # Labels
 latex = ROOT.TLatex()
 latex.SetTextFont(42)
@@ -328,9 +327,9 @@ def get_nan_plots(sampleDict, plotname):
   groupedSamples = OrderedDict()
   tempGroups = OrderedDict()
   tempGroups["ttbar"]   = ["ttbar_2L2Nu","ttbar_SemiLeptonic","ttbar_Hadronic"]
-  #tempGroups["WW"] = ["WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu"]
-  #tempGroups["WZ"] = ["WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu"]
-  #tempGroups["ZZ"] = ["ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q"]
+  tempGroups["WW"] = ["WWTo1L1Nu2Q", "WWTo4Q", "WWTo2L2Nu"]
+  tempGroups["WZ"] = ["WZTo1L1Nu2Q", "WZTo1L3Nu", "WZTo2Q2L","WZTo3LNu"]
+  tempGroups["ZZ"] = ["ZZTo2L2Nu", "ZZTo2Nu2Q", "ZZTo2Q2L", "ZZTo4L", "ZZTo4Q"]
   tempGroups["tW+tZq"] = ["tW","tbarW","tZq"]
   tempGroups["TTX"]   = ["TTW","TTZ","TTHToNonbb","TTHTobb"]
   for sample in sampleDict.keys():
@@ -608,7 +607,7 @@ def draw_proj(plotname, proj_BG, stack_BG, proj_MC, proj_data, logY, logX, canva
     g_ratio.SetMarkerStyle(20)
     g_ratio.SetMarkerSize(1.2)
     g_ratio.SetLineWidth(1)
-    
+
     minR=0.0
     maxR=2.0
     ty = numpy.array([])
