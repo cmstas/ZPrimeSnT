@@ -86,6 +86,23 @@ In order to plot fit results:
 python python/plot_fitResults.py
 ```
 
+
+## Limit code (condor):
+
+```bash
+git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+cd HiggsAnalysis/CombinedLimit/
+git fetch origin
+git checkout v8.2.0
+. env_standalone.sh
+make
+
+sh utils/condor_limits/runLimits_onCondor.sh <datacard directory> <limit output directory>
+```
+
+Then, use scripts in `combineScripts/' to read and plot limits
+
+
 ## Pull requests:
 
 When opening a PR against the `main` branch, please make sure your code is up-to-date:
