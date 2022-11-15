@@ -68,7 +68,6 @@ python python/stack_plots.py
 python python/make_cutflow_table.py
 ```
 
-
 ## Fitting code:
 
 ```bash
@@ -86,7 +85,6 @@ In order to plot fit results:
 ```bash
 python python/plot_fitResults.py
 ```
-
 
 ## Pull requests:
 

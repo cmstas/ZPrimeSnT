@@ -156,6 +156,35 @@ def GetPoissonRatioGraph(h_mc, h_data, g_ratio, drawZeros=True, drawXerr=True, d
         g_ratio.SetPoint(thisPoint, x, r)
         g_ratio.SetPointError(thisPoint, xerr, xerr, rerrdown, rerrup)
 
+def GetPullGraph(h_mc, h_data, g_ratio, drawZeros=True, drawXerr=True, drawYerr=True, useMCErr=True):
+
+    alpha = 1-0.6827
+
+    for i in range(1,h_mc.GetNbinsX()+1):
+        x = h_mc.GetBinCenter(i)
+        mcy = h_mc.GetBinContent(i)
+        datay = h_data.GetBinContent(i)
+
+        if mcy==0 or (datay==0 and not drawZeros):
+            continue
+
+        mcerr = h_mc.GetBinError(i)
+        if not useMCErr:
+            mcerr = 0
+        dataerrup = ROOT.Math.gamma_quantile_c(alpha/2, datay+1, 1) - datay
+        dataerrdown = 0 if datay==0 else (datay-ROOT.Math.gamma_quantile(alpha/2, datay, 1))
+
+        dataerr = dataerrdown
+        if datay<mcy:
+            dataerr = dataerrup
+        r = (datay-mcy)/dataerr
+
+        xerr = h_mc.GetBinWidth(i)/2 if drawXerr else 0.0
+
+        thisPoint = g_ratio.GetN()
+        g_ratio.SetPoint(thisPoint, x, r)
+        g_ratio.SetPointError(thisPoint, xerr, xerr, 0.0, 0.0)
+
 def GetEfficRatioGraph(hnum, hden, g_ratio):
     level = 0.6827
     for i in range(1, hnum.GetNbinsX()+1):
