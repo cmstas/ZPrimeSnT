@@ -150,8 +150,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "TTv7" )               xsec = 76700.0; // fb
   else if ( process == "DYv7" )               xsec = 5929000.0; // fb
   else if ( process == "ttbar_2L2Nu" )        xsec = 831.76*1000*(3*0.108)*(3*0.108); // fb
-  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
-  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*2*(3*0.108)*(1-3*0.108); // fb
+  else if ( process == "ttbar_SemiLeptonic" ) xsec = 831.76*1000*2*(3*0.108)*(1-3*0.108); // fb
+  else if ( process == "ttbar_Hadronic" )     xsec = 831.76*1000*(1-3*0.108)*(1-3*0.108); // fb
   else if ( process == "DY" )                 xsec = 5765400.0; // fb
   else if ( process == "DYbb" )               xsec = 14670.0; // fb
   else if ( process == "ZToMuMu_50_120" )     xsec = 2112904.0; // fb
@@ -1434,7 +1434,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	      if ( nt.Electron_pt().at(i) < HEM_lepPtCut )
 		break;
 	      if ( nt.Electron_cutBased().at(i) > 0 &&
-		   nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
+		   //nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
 		   fabs(nt.Electron_dxy().at(i)) < 0.2 &&
 		   fabs(nt.Electron_dz().at(i)) < 0.5 &&
 		   nt.Electron_eta().at(i) > HEM_region[0] && nt.Electron_eta().at(i) < HEM_region[1] &&
@@ -1955,11 +1955,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( selectedPair_M < 1000.0 ) continue;
-      //if ( selectedPair_M < 175.0 ) continue;
+      //if ( selectedPair_M < 275.0 ) continue;
+      if ( selectedPair_M < 175.0 ) continue;
       // Fill histos: sel6
-      label = "m_{#mu#mu}>1000 GeV";
-      //label = "m_{#mu#mu}>175 GeV";
+      //label = "m_{#mu#mu}>275 GeV";
+      label = "m_{#mu#mu}>175 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
       h_cutflow->GetXaxis()->SetBinLabel(icutflow+1,label);
@@ -1998,7 +1998,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         if ( nt.Electron_pt().at(i) > 10. &&
 	     fabs(nt.Electron_eta().at(i)) < 2.5 &&
 	     nt.Electron_cutBased().at(i) > 0 &&
-	     nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
+	     //nt.Electron_miniPFRelIso_all().at(i) < 0.1 &&
 	     fabs(nt.Electron_dxy().at(i)) < 0.2 &&
 	     fabs(nt.Electron_dz().at(i)) < 0.5 ) {
           extra_electrons.push_back(i);
