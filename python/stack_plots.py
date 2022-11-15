@@ -103,10 +103,10 @@ nsel["sel10"]=12
 nsel["antisel10"]=13
 
 nbbin=dict()
-nbbin["nBTag0"]="N_{b-tag} = 0"+("" if args.noSelPrint else " (p_{T}>20 GeV, M WP)")
-nbbin["nBTag1p"]="N_{b-tag} #geq 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
-nbbin["nBTag1"]="N_{b-tag} = 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T WP)")
-nbbin["nBTag2p"]="N_{b-tag} #geq 2"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
+nbbin["nBTag0"]="N_{b} = 0"+("" if args.noSelPrint else " (p_{T}>20 GeV, M WP)")
+nbbin["nBTag1p"]="N_{b} #geq 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
+nbbin["nBTag1"]="N_{b} = 1"+("" if args.noSelPrint else " (p_{T}>20 GeV, T WP)")
+nbbin["nBTag2p"]="N_{b} #geq 2"+("" if args.noSelPrint else " (p_{T}>20 GeV, T+Ms WP)")
 
 mllbin=dict()
 if args.mllBinningForBFF:
@@ -486,7 +486,7 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
     #        plot.Rebin(2)
 
     # Fine tuning plots after comments
-    maxx = 1000.0
+    maxx = None
     if "_sel10" in plot.GetName():
         if "trkAbsIso" in plot.GetName():
             plot.Rebin(10)
@@ -513,17 +513,18 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
                 plot.Rebin(2)
             if "puppimet_phi" in plot.GetName():
                 plot.Rebin(2)
-        tb = plot.GetXaxis().FindBin(maxx)
-        sumc  = 0.0
-        sume2 = 0.0
-        for b in range(tb, plot.GetNbinsX()+1):
-            sumc = sumc + plot.GetBinContent(b)
-            sume2 = sume2 + (plot.GetBinError(b))*(plot.GetBinError(b))
-            if b>tb:
-                plot.SetBinContent(b,0.0)
-                plot.SetBinError(b,0.0)
-        plot.SetBinContent(tb,sumc)
-        plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
+        if maxx != None:
+            tb = plot.GetXaxis().FindBin(maxx)
+            sumc  = 0.0
+            sume2 = 0.0
+            for b in range(tb, plot.GetNbinsX()+1):
+                sumc = sumc + plot.GetBinContent(b)
+                sume2 = sume2 + (plot.GetBinError(b))*(plot.GetBinError(b))
+                if b>tb:
+                    plot.SetBinContent(b,0.0)
+                    plot.SetBinError(b,0.0)
+            plot.SetBinContent(tb,sumc)
+            plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
 
     maxx = 1000.0
     if "antisel10" in plot.GetName() and ("mmumu" in plot.GetName() or "mu1_pt" in plot.GetName() or "mu2_pt" in plot.GetName() or "bjet1_pt" in plot.GetName() or "bjet2_pt" in plot.GetName() or "nbtag" in plot.GetName()):
@@ -861,15 +862,16 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         h_axis_ratio.GetXaxis().SetNdivisions(MCplot.GetNbinsX())
         h_axis_ratio.GetYaxis().SetNdivisions(505)
 
-# Fine tuning plots after comments
+    # Fine tuning plots after comments
+    maxx = None
     if "_sel10" in plotname:
-        maxx = 1000.0
         if "bjet1_pt" in plotname:
             maxx=500.0
         if "bjet2_pt" in plotname:
             maxx=300.0
-        h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
-        h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
+        if maxx != None:
+            h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
+            h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
     if "antisel10" in plotname and ("mmumu" in plotname or "mu1_pt" in plotname or "mu2_pt" in plotname or "bjet1_pt" in plotname or "bjet2_pt" in plotname or "nbtag" in plotname):
         maxx = 1000.0
