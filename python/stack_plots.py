@@ -30,6 +30,7 @@ parser.add_argument("--plotMllSlices", default=False, action="store_true", help=
 parser.add_argument("--mllBinningForBFF", default=False, action="store_true", help="Plot in slices of mll for BFF analysis comparison. Default: False")
 parser.add_argument("--plotMuonDetRegions", default=False, action="store_true", help="Plot muon divided by detector regions. Default: False")
 parser.add_argument("--plotProdModes", default=False, action="store_true", help="Plot signal samples split in production modes (ss, sb, bb). Bkgs cannot be splt in a simlar way and are plotted inclusively. Default: False")
+parser.add_argument("--pdf", default=False, action="store_true", help="Output format: .pdf. Default: .png")
 args = parser.parse_args()
 
 args.inDir = args.inDir.rstrip("/")+"/"
@@ -1232,7 +1233,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if args.cumulative:
         extension = extension+"_cumulative"
     
-    canvas.SaveAs(args.outDir + plotname + extension + ".png")
+    canvas.SaveAs(args.outDir + plotname + extension + ".pdf" if args.pdf else ".png")
 
 
 
