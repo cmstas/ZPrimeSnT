@@ -53,31 +53,19 @@ for m in masses:
         p2s = -1.0
         fname = []
         if model != "nomodel":
-            #fname.append("%s/lim_toysObs_%s_m%.0f.txt"%(limdir,model,m))
-            #fname.append("%s/lim_toysEm2_%s_m%.0f.txt"%(limdir,model,m))
-            #fname.append("%s/lim_toysEm1_%s_m%.0f.txt"%(limdir,model,m))
-            #fname.append("%s/lim_toysExp_%s_m%.0f.txt"%(limdir,model,m))
-            #fname.append("%s/lim_toysEp1_%s_m%.0f.txt"%(limdir,model,m))
-            #fname.append("%s/lim_toysEp2_%s_m%.0f.txt"%(limdir,model,m))
             fname.append("%s/lim_toysObs_%s_m%.0f.txt"%(limdir,model,m))
-            fname.append("%s/lim_toysEm1_%s_m%.0f.txt"%(limdir,model,m))
+            fname.append("%s/lim_toysEm2_%s_m%.0f.txt"%(limdir,model,m))
             fname.append("%s/lim_toysEm1_%s_m%.0f.txt"%(limdir,model,m))
             fname.append("%s/lim_toysExp_%s_m%.0f.txt"%(limdir,model,m))
             fname.append("%s/lim_toysEp1_%s_m%.0f.txt"%(limdir,model,m))
-            fname.append("%s/lim_toysEp1_%s_m%.0f.txt"%(limdir,model,m))
+            fname.append("%s/lim_toysEp2_%s_m%.0f.txt"%(limdir,model,m))
         else:
-            #fname.append("%s/lim_toysObs_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            #fname.append("%s/lim_toysEm2_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            #fname.append("%s/lim_toysEm1_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            #fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            #fname.append("%s/lim_toysEp1_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            #fname.append("%s/lim_toysEp2_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
             fname.append("%s/lim_toysObs_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
+            fname.append("%s/lim_toysEm2_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
+            fname.append("%s/lim_toysEm1_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
             fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
-            fname.append("%s/lim_toysExp_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
+            fname.append("%s/lim_toysEp1_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
+            fname.append("%s/lim_toysEp2_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m))
         allExist = True
         for fn in fname:
             if not os.path.exists(fn):

@@ -101,6 +101,19 @@ sh utils/condor_limits/runLimits_onCondor.sh <datacard directory> <limit output 
 ```
 
 Then, use scripts in `combineScripts/` to read and plot limits from `<limit output directory>`.
+For standard limits:
+```bash
+python combineScripts/readToyLimits.py nomodel <limit output directory>
+python combineScripts/plot2DLimits.py <limit output directory>
+
+cmsrel CMSSW_12_5_0
+pushd CMSSW_12_5_0/src
+cmsenv
+python3 combineScripts/getWeightedLimits.py <model> <limit output directory> <expected or observed>
+python3 combineScripts/plotWeightedLimits.py <model> <limit output directory> <expected or observed>
+```
+
+NOTE: as of today (November 15, 2022), we only plot expected limits by itself.
 
 
 ## Pull requests:
