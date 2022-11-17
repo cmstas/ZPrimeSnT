@@ -11,12 +11,15 @@ MF=350
 ML=1950
 F2B=101
 
-if [ $# == 5 ]
+if [ $# -lt 5 ]
+then
+    MF=350
+    ML=1950
+elif [ $# -lt 6 ]
 then
     MF=$5
     ML=0
-elif [ $# == 6 ]
-then
+else
     MF=$5
     ML=$6
 fi

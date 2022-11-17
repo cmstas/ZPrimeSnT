@@ -8,6 +8,8 @@ outdir=$2
 model=$3
 which=$4
 
+mF=350
+mL=2000
 if [ $# -lt 5 ]
 then
     mF=350
@@ -90,6 +92,12 @@ do
 	elif [ ${which} == "toysEp2" ]
 	then
 	    eval "combine ${indir}/card_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.975 >& ${outdir}/lim_${which}_${model}_m${m}.txt"
+	elif [ ${which} == "sigExp" ]
+	then
+	    eval "combine ${indir}/card_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rMax=5 -t -1 --expectSignal=1 >& ${outdir}/lim_${which}_${model}_m${m}.txt"
+	elif [ ${which} == "sigObs" ]
+	then
+	    eval "combine ${indir}/card_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rMax=5 >& ${outdir}/lim_${which}_${model}_m${m}.txt"
 	fi
 	rm higgsCombine*_${which}_${model}_M${m}*.root
     else
@@ -98,31 +106,38 @@ do
 	    name="-n _${which}_M${m}_f2b${f}"
 	    if [ ${which} == "asymptotic" ]
 	    then
+		echo "combine -M AsymptoticLimits ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root ${options} ${name} -m ${m} >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine -M AsymptoticLimits ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root ${options} ${name} -m ${m} >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysObs" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysExp" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.5 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.5 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysEm1" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.16 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.16 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysEp1" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.84 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.84 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysEm2" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.025 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.025 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "toysEp2" ]
 	    then
+		echo "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.975 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M HybridNew --LHCmode LHC-limits -T 500 -i 2 --rAbsAcc=0.01 --rRelAcc=0.025 ${options} ${name} -m ${m} --expectedFromGrid=0.975 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "sigExp" ]
 	    then
-		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rax=5 -t -1 --expectSignal=1 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
+		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rMax=5 -t -1 --expectSignal=1 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    elif [ ${which} == "sigObs" ]
 	    then
-		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rax=5 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
+		eval "combine ${indir}/card_f2b${f}_combined_${model}_M${m}_allyears.root -M Significance ${options} ${name} -m ${m} --uncapped=1 --rMin=-5 --rMax=5 >& ${outdir}/lim_${which}_f2b${f}_m${m}.txt"
 	    fi
 	    rm higgsCombine*_${which}_M${m}_f2b${f}*.root
 	done
