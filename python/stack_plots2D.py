@@ -11,7 +11,6 @@ import plotUtils
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
-
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
 parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/public_html/Zprime/plots_"+today, help="Choose output directory. Default: '/home/users/"+user+"/public_html/Zprime/pots_"+today+"'")
@@ -51,6 +50,13 @@ if len(args.years)==0:
 
 # Do signal/MC ratio
 doSignalMCRatio = False
+
+# Use fixed ratio axis
+useFixedRatio = False
+
+# Do log scales:
+doLogX = False
+doLogY = False
 
 # Samples
 samples=[]
@@ -96,8 +102,159 @@ samples.append("WZTo3LNu")
 #samples.append("DY_v7")
 #samples.append("ttbar_v7")
 
+sampleFillColor=dict()
+sampleFillColor["data"]     = None
+sampleFillColor["Y3"]       = None
+sampleFillColor["DY3"]      = None
+sampleFillColor["DYp3"]     = None
+sampleFillColor["B3mL2"]    = None
+sampleFillColor["DYbb"]     = ROOT.kRed
+sampleFillColor["ZToMuMu"]  = ROOT.kGreen+1
+sampleFillColor["ttbar"]    = ROOT.kAzure+1
+sampleFillColor["tW+tZq"]   = ROOT.kAzure+2
+sampleFillColor["TTX"]      = ROOT.kAzure+4
+sampleFillColor["WW"]       = ROOT.kOrange-3
+sampleFillColor["ZZ"]       = ROOT.kOrange-2
+sampleFillColor["WZ"]       = ROOT.kOrange-1
+#sampleFillColor["BFF"]      = None
+#sampleFillColor["BFFdbs1p0"]= None
+#sampleFillColor["DY_v7"]    = ROOT.kGreen+1
+#sampleFillColor["ttbar_v7"] = ROOT.kAzure+1
+
+sampleLineColor=dict()
+sampleLineColor["data"]     = ROOT.kBlack
+sampleLineColor["Y3"]       = ROOT.kViolet
+sampleLineColor["DY3"]      = ROOT.kMagenta
+sampleLineColor["DYp3"]     = ROOT.kRed
+sampleLineColor["B3mL2"]    = ROOT.kCyan
+sampleLineColor["DYbb"]     = None
+sampleLineColor["ZToMuMu"]  = None
+sampleLineColor["ttbar"]    = None
+sampleLineColor["tW+tZq"]   = None
+sampleLineColor["TTX"]      = None
+sampleLineColor["WW"]       = None
+sampleLineColor["ZZ"]       = None
+sampleLineColor["WZ"]       = None
+#sampleLineColor["BFF"]      = ROOT.kViolet
+#sampleLineColor["BFFdbs1p0"]= ROOT.kRed
+#sampleLineColor["DY_v7"]    = None
+#sampleLineColor["ttbar_v7"] = None
+
+sampleLineWidth=dict()
+sampleLineWidth["data"]     = 1
+sampleLineWidth["Y3"]       = 2
+sampleLineWidth["DY3"]      = 2
+sampleLineWidth["DYp3"]     = 2
+sampleLineWidth["B3mL2"]    = 2
+sampleLineWidth["DYbb"]     = 0
+sampleLineWidth["ZToMuMu"]  = 0
+sampleLineWidth["ttbar"]    = 0
+sampleLineWidth["tW+tZq"]   = 0
+sampleLineWidth["TTX"]      = 0
+sampleLineWidth["WW"]       = 0
+sampleLineWidth["ZZ"]       = 0
+sampleLineWidth["WZ"]       = 0
+#sampleLineWidth["BFF"]      = 2
+#sampleLineWidth["BFFdbs1p0"]= 2
+#sampleLineWidth["DY_v7"]    = 0
+#sampleLineWidth["ttbar_v7"] = 0
+
+sampleMarkerStyle=dict()
+sampleMarkerStyle["data"]     = 20
+sampleMarkerStyle["Y3"]       = None
+sampleMarkerStyle["DY3"]      = None
+sampleMarkerStyle["DYp3"]     = None
+sampleMarkerStyle["B3mL2"]    = None
+sampleMarkerStyle["DYbb"]     = None
+sampleMarkerStyle["ZToMuMu"]  = None
+sampleMarkerStyle["ttbar"]    = None
+sampleMarkerStyle["tW+tZq"]   = None
+sampleMarkerStyle["TTX"]      = None
+sampleMarkerStyle["WW"]       = None
+sampleMarkerStyle["ZZ"]       = None
+sampleMarkerStyle["WZ"]       = None
+#sampleMarkerStyle["BFF"]      = None
+#sampleMarkerStyle["BFFdbs1p0"]= None
+#sampleMarkerStyle["DY_v7"]    = None
+#sampleMarkerStyle["ttbar_v7"] = None
+
+sampleMarkerSize=dict()
+sampleMarkerSize["data"]     = 1.2
+sampleMarkerSize["Y3"]       = None
+sampleMarkerSize["DY3"]      = None
+sampleMarkerSize["DYp3"]     = None
+sampleMarkerSize["B3mL2"]    = None
+sampleMarkerSize["DYbb"]     = None
+sampleMarkerSize["ZToMuMu"]  = None
+sampleMarkerSize["ttbar"]    = None
+sampleMarkerSize["tW+tZq"]   = None
+sampleMarkerSize["TTX"]      = None
+sampleMarkerSize["WW"]       = None
+sampleMarkerSize["ZZ"]       = None
+sampleMarkerSize["WZ"]       = None
+#sampleMarkerSize["BFF"]      = None
+#sampleMarkerSize["BFFdbs1p0"]= None
+#sampleMarkerSize["DY_v7"]    = None
+#sampleMarkerSize["ttbar_v7"] = None
+
+sampleLegend=dict()
+sampleLegend["data"]     = "Data"
+sampleLegend["Y3"]       = "Y3"
+sampleLegend["DY3"]      = "DY3"
+sampleLegend["DYp3"]     = "DYp3"
+sampleLegend["B3mL2"]    = "B3mL2"
+sampleLegend["DYbb"]     = "DY(#mu#mu)+bb"
+sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
+sampleLegend["ttbar"]    = "t#bar{t}"
+sampleLegend["tW+tZq"]   = "tW+tZq"
+sampleLegend["TTX"]      = "t#bar{t}X"
+sampleLegend["WW"]       = "WW"
+sampleLegend["ZZ"]       = "ZZ"
+sampleLegend["WZ"]       = "WZ"
+#sampleLegend["BFF"]      = "BFF"
+#sampleLegend["BFFdbs1p0"]= "BFFdbs1p0"
+#sampleLegend["DY_v7"]    = "DY(#mu#mu)"
+#sampleLegend["ttbar_v7"] = "t#bar{t}"
+
 epsilon = 1e-6
 
+# Selection
+sels = []
+sels.append("N_{#mu}#geq 2, p_{T}^{#mu_{1}}>50 GeV, m_{#mu#mu}>100 GeV")
+sels.append("HLT selection")
+sels.append("N_{good PV}#geq 1 & E_{T}^{miss} filters")
+sels.append("N_{highPt ID #mu}#geq 2 (d_{xy, z} < 0.02, 0.1 cm)")
+sels.append("p_{T}^{#mu_{1,2}}>53 GeV & |#eta^{#mu_{1,2}}|<2.4")
+sels.append("Track iso.(/p_{T})^{#mu_{1,2}}< 5.0 GeV (0.05)")
+sels.append("N_{HLT match}#geq 1 (#DeltaR<0.02)")
+sels.append("N_{#mu#mu}#geq 1 (OS, not from Z)")
+#sels.append("m_{#mu#mu}>175 GeV")
+sels.append("m_{#mu#mu}>275 GeV")
+sels.append("No extra lepton / iso. track")
+sels.append("N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)")
+sels.append("E_{T}^{miss}<250 GeV, if aligned")
+sels.append("min m_{#mu b}>175 GeV")
+sels.append("min m_{#mu b}<175 GeV")
+
+nsel=dict()
+nsel["sel0"]=2
+nsel["sel1"]=3
+nsel["sel2"]=4
+nsel["sel3"]=5
+nsel["sel4"]=6
+nsel["sel5"]=7
+nsel["sel6"]=8
+nsel["sel7"]=9
+nsel["sel8"]=10
+nsel["sel9"]=11
+nsel["sel10"]=12
+nsel["antisel10"]=13
+
+nbbin=dict()
+nbbin["nBTag0"]="N_{b-tag}= 0 (p_{T}>20 GeV, M WP)"
+nbbin["nBTag1p"]="N_{b-tag}#geq 1 (p_{T}>20 GeV, T+Ms WP)"
+nbbin["nBTag1"]="N_{b-tag}= 1 (p_{T}>20 GeV, T WP)"
+nbbin["nBTag2p"]="N_{b-tag}#geq 2 (p_{T}>20 GeV, T+Ms WP)"
 
 # Labels
 latex = ROOT.TLatex()
@@ -123,6 +280,12 @@ latexCMSExtra.SetTextSize(0.04)
 latexCMSExtra.SetNDC(True)
 
 legoffset = 0.0
+
+latexSel = ROOT. TLatex()
+latexSel.SetTextAlign(11)
+latexSel.SetTextFont(42)
+latexSel.SetTextSize(0.02-0.1*legoffset)
+latexSel.SetNDC(True)
 
 if plotData:
   cmsExtra="Preliminary"
@@ -282,30 +445,38 @@ def get_plots(sampleDict, plotname):
   return plotDict
 
 
-#def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
-def customize_plot(sample, plot):
+def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, markerSize):
 
-  #error = ROOT.TMath.Sqrt(plot.GetBinError(0)*plot.GetBinError(0)+plot.GetBinError(1)*plot.GetBinError(1))
-  #plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
-  #plot.SetBinError(1, error)
-  #plot.SetBinContent(0, 0.0)
-  #plot.SetBinError(0, 0.0)
+    #error = ROOT.TMath.Sqrt(plot.GetBinError(0)*plot.GetBinError(0)+plot.GetBinError(1)*plot.GetBinError(1))
+    #plot.SetBinContent(1, plot.GetBinContent(1) + plot.GetBinContent(0))
+    #plot.SetBinError(1, error)
+    #plot.SetBinContent(0, 0.0)
+    #plot.SetBinError(0, 0.0)
 
-  #error = ROOT.TMath.Sqrt(plot.GetBinError(plot.GetNbinsX()+1)*plot.GetBinError(plot.GetNbinsX()+1)+plot.GetBinError(plot.GetNbinsX())*plot.GetBinError(plot.GetNbinsX()))
-  #plot.SetBinContent(plot.GetNbinsX(), plot.GetBinContent(plot.GetNbinsX()+1) + plot.GetBinContent(plot.GetNbinsX()))
-  #plot.SetBinError(plot.GetNbinsX(), error)
-  #plot.SetBinContent(plot.GetNbinsX()+1, 0.0)
-  #plot.SetBinError(plot.GetNbinsX()+1, 0.0)
+    error = ROOT.TMath.Sqrt(plot.GetBinError(plot.GetNbinsX()+1)*plot.GetBinError(plot.GetNbinsX()+1)+plot.GetBinError(plot.GetNbinsX())*plot.GetBinError(plot.GetNbinsX()))
+    plot.SetBinContent(plot.GetNbinsX(), plot.GetBinContent(plot.GetNbinsX()+1) + plot.GetBinContent(plot.GetNbinsX()))
+    plot.SetBinError(plot.GetNbinsX(), error)
+    plot.SetBinContent(plot.GetNbinsX()+1, 0.0)
+    plot.SetBinError(plot.GetNbinsX()+1, 0.0)
 
+    if fillColor: 
+        plot.SetFillColor(fillColor)
+        plot.SetLineColor(fillColor)
+        plot.SetMarkerColor(fillColor)
+    if lineColor: 
+        plot.SetLineColor(lineColor)
+        plot.SetMarkerColor(lineColor)
+    if lineWidth:
+        plot.SetLineWidth(lineWidth)
+    if markerStyle:
+        plot.SetMarkerStyle(markerStyle)
+    if markerSize:
+        plot.SetMarkerSize(markerSize)
+
+    return plot
+
+def customize_plot2d(sample, plot):
   plot.Rebin2D(5)
-
-  #### Remove spikes
-  #if sample!="data" and not "met_pt" in plot.GetName():
-  #    for b in range(1, plot.GetNbinsX()+1):
-  #        if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
-  #            plot.SetBinContent(b,0.0)
-  #            plot.SetBinError(b,0.0)
-
   return plot
 
 
@@ -395,10 +566,10 @@ def draw_onePlot(plotname, samplename, logZ, logY, logX, hist, canvas, yearenerg
   if args.shape:
       extension = extension+"_areaNormalized"
   
-  canvas.SaveAs(args.outDir + plotname + "/" + plotname + extension + "_" + samplename + ".png")
+  canvas.SaveAs(args.outDir + "/" + plotname + extension + "_" + samplename + ".png")
 
 
-def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titleExt):
+def draw_proj(plotname, proj_BG, stack_BG, proj_MC, proj_data, logY, logX, canvas, yearenergy, titleExt):
   g_unc = ROOT.TGraphAsymmErrors()
   g_ratio_unc = ROOT.TGraphAsymmErrors()
   for b in range(1,proj_MC.GetNbinsX()+1):
@@ -447,6 +618,9 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
     if tmax>maxR:
         maxR=tmax*1.05
     if maxR>5.0:
+      if useFixedRatio:
+        maxR=5.0
+      else:
         minR=0.1
     h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
     h_axis_ratio.SetMinimum(minR)
@@ -491,8 +665,9 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
     line.SetLineWidth(1)
     line.Draw("SAME")
     
-    pads[1].Modified();
-    pads[1].Update();
+    pads[1].Modified()
+    pads[1].Update()
+    pads[1].RedrawAxis()
 
   else:
       pads.append(ROOT.TPad("1","1",0,0,1,1))
@@ -514,19 +689,31 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
   if not args.shape:
     proj_MC.GetYaxis().SetMaxDigits(2)
 
-  proj_MC.Draw("HIST,SAME")
-  g_unc.Draw("SAME,2")
-  histMax =  proj_MC.GetMaximum()
+  histMin=0.0
+  histMax=0.0
+  typ = numpy.array([])
+  typ = g_unc.GetY()
+  if len(typ)>0:
+    histMax = numpy.amax(typ)
   if plotData:
-    if histMax < proj_data.GetMaximum():
-      histMax = proj_data.GetMaximum()
-    g_data.Draw("P,SAME")
-    g_data_clone.Draw("P,SAME")
-  proj_MC.SetMaximum(1.1*histMax)
-  proj_MC.SetMinimum(0.0)
+    typ = g_data.GetY()
+    if len(typ)>0 and numpy.amax(typ)>histMax:
+      histMax = numpy.amax(typ)
   if logY:
       histMax = histMax*1e3
-      proj_MC.SetMinimum(1e-3)
+      histMin = 1e-3
+  proj_MC.GetYaxis().SetRangeUser(histMin,1.1*histMax)
+  proj_MC.SetMaximum(histMin)  
+  proj_MC.SetMaximum(1.1*histMax)
+  proj_MC.SetLineColor(0)
+  proj_MC.SetLineWidth(0)
+  proj_MC.Draw("HIST,SAME")
+  stack_BG.Draw("HIST,SAME")
+  proj_MC.Draw("HIST,SAME")
+  g_unc.Draw("SAME,2")
+  if plotData:
+    g_data.Draw("P,SAME")
+    g_data_clone.Draw("P,SAME")
 
   # Draw CMS headers
   expoffset=0.00
@@ -537,18 +724,81 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
   latexCMS.DrawLatex(0.11+yoffset,0.93+expoffset,"CMS");
   latexCMSExtra.DrawLatex(0.19+yoffset,0.93+expoffset, cmsExtra);
 
+  # Draw selection
+  whichnb  = ""
+  whichsel = ""
+  if "sel8" in plotname or "sel9" in plotname or "sel10" in plotname:
+    whichnb  = plotname.split("_")[len(plotname.split("_"))-2]
+    whichsel = plotname.split("_")[len(plotname.split("_"))-4]
+  elif "sel7" in plotname or "sel6" in plotname or "sel5" in plotname:
+    whichsel = plotname.split("_")[len(plotname.split("_"))-3]
+  else:
+    whichsel = plotname.split("_")[len(plotname.split("_"))-2]
+  ts = 0
+  for s in range(1,nsel[whichsel]+1):
+    if '1p' not in whichnb and s==10:
+      continue
+    if '0' in whichnb and s>=12:
+      continue
+    if 'antisel10' in whichsel and s==12:
+      continue
+    if 'anti' not in whichsel and 'sel10' in whichsel and s==13:
+      continue    
+    ts = ts+1
+    latexSel.DrawLatex(0.57+3*legoffset, 0.91-ts*(0.03-legoffset), sels[s])
+  if '1p' not in whichnb and nsel[whichsel]>=10:
+    ts = ts+1
+    latexSel.DrawLatex(0.57+3*legoffset, 0.91-ts*(0.03-legoffset), nbbin[whichnb])
+  ts = ts+1
+  ptext = ""
+  if "_px" in titleExt:
+    if float(args.projectX[1]) >= 13000.0:
+      if float(args.projectX[0]) < 0.0:
+        ptext=""
+      else:
+        if "scalar" in plotname:
+          ptext = "S_{T}>%.0f GeV"%(float(args.projectX[0]))
+        else:
+          ptext = "|#vec{S_{T}}|>%.0f GeV"%(float(args.projectX[0])) 
+    else:
+      if "scalar" in plotname:
+        ptext = "%.0f<S_{T}<%.0f GeV"%(float(args.projectX[0]),float(args.projectX[1]))
+      else:
+        ptext = "%s<|#vec{S_{T}}|<%.0f GeV"%(float(args.projectX[0]),float(args.projectX[1]))
+  else:
+    if float(args.projectY[1]) >= 13000.0:
+      if float(args.projectY[0]) < 20.0:
+        ptext = ""
+      elif "bjet1" in plotname:
+        ptext = "p_{T}(b-jet_{1})>%.0f GeV"%(float(args.projectY[0]))
+      else:
+        ptext = "p_{T}(jet_{1})>%.0f GeV"%(float(args.projectY[0])) 
+    else:
+      if float(args.projectY[1]) < 20.0:
+        if "bjet1" in plotname:
+          ptext = "N_{b-tag} (p_{T}>20 GeV, T+M WPs)=0"
+        else:
+          ptext = "N_{jet} (p_{T}>20 GeV)=0"
+      elif "bjet1" in plotname:
+        ptext = "%.0f<p_{T}(b-jet_{1})<%.0f GeV"%(float(args.projectY[0]),float(args.projectY[1]))
+      else:
+        ptext = "%.0f<p_{T}(jet_{1})<%.0f GeV"%(float(args.projectY[0]),float(args.projectY[1]))
+  latexSel.DrawLatex(0.57+3*legoffset, 0.91-ts*(0.03-legoffset), ptext)
+
   # Plot legends, ranges
   if plotData:
-      legend = ROOT.TLegend(0.7,0.6,0.91,0.91)
+      legend = ROOT.TLegend(0.8,0.7,0.91,0.91)
   else:
-      legend = ROOT.TLegend(0.7,0.6,0.89,0.89)
+      legend = ROOT.TLegend(0.8,0.7,0.89,0.89)
   legend.SetLineColor(0)
   legend.SetLineWidth(0)
   legend.SetFillColor(0)
   legend.SetFillStyle(0)
-  legend.AddEntry(proj_MC,"Total SM","F")
   if plotData:
     legend.AddEntry(g_data,"Data","EPL")
+  for sample in proj_BG.keys():
+    legend.AddEntry(proj_BG[sample], sampleLegend[sample],"F")
+  #legend.AddEntry(proj_MC,"Total SM","L")
   legend.Draw()
   pads[0].Update()
   pads[0].RedrawAxis()
@@ -562,8 +812,8 @@ def draw_proj(plotname, proj_MC, proj_data, logY, logX, canvas, yearenergy, titl
   if args.shape:
       extension = extension+"_areaNormalized"
   
-  canvas.SaveAs(args.outDir + plotname + extension + titleExt + ".png")
-
+  if proj_MC.Integral()>0.0 or proj_data.Integral()>0.0:
+    canvas.SaveAs(args.outDir + "/" + plotname + extension + titleExt + ".png")
 
 def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83, year="2018"):
   yearenergy=""
@@ -617,9 +867,7 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
   else:
       thisMuDet = "All"
 
-  if not os.path.exists(args.outDir+plotname):
-    os.makedirs(args.outDir+plotname)
-  os.system('cp '+os.environ.get("PWD")+'/utils/index.php '+args.outDir+plotname)
+  os.system('cp '+os.environ.get("PWD")+'/utils/index.php '+args.outDir)
 
   # Get histograms
   plotDict = get_plots(sampleDict, plotname)
@@ -635,7 +883,7 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
           if "mmumu" not in plotname and mass in massToExclude:
               continue
           if "mmumu" not in plotname:
-              curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample]))
+              curPlots[sample] = copy.deepcopy(customize_plot2d(sample,plotDict[sample]))
           if args.shape and curPlots[sample].Integral(0,-1)>0.0:
               if "cutflow" not in plotname:
                   curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -646,7 +894,7 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
       # Data
       elif sample=="data": 
           if plotData:
-              curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample]))
+              curPlots[sample] = copy.deepcopy(customize_plot2d(sample,plotDict[sample]))
               if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                   if "cutflow" not in plotname:
                       curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -654,7 +902,7 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
                   curPlots[sample] = plotUtils.GetCumulative(curPlots[sample],lowToHighBinsCumulative)
       # Bkg
       else:
-          curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample]))
+          curPlots[sample] = copy.deepcopy(customize_plot2d(sample,plotDict[sample]))
           if not totalSM:
               totalSM = curPlots[sample].Clone("totalSM")
           else:
@@ -671,6 +919,8 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
 
 
   # Y projection
+  projY_BG=dict()
+  stackY_BG = ROOT.THStack("stackY_BG","")
   if projectY:
     canvasY = ROOT.TCanvas("canvasY","canvasY",800,800)
     if logY:
@@ -681,17 +931,28 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
     lowX = args.projectY[0]
     highX = args.projectY[1]
     titleExtY = "_py_"+str(int(lowX))+"_"+str(int(highX))
-
-    projY_MC = totalSM.ProjectionY(plotname+titleExtY+"_MC_", totalSM.GetXaxis().FindBin(lowX), totalSM.GetXaxis().FindBin(highX))
+    
+    for i,sample in enumerate(reversed(plotDict.keys())):
+      if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "data" in sample:
+        continue
+      projY_BG[sample] = curPlots[sample].ProjectionY(titleExtY+"_"+sample, curPlots[sample].GetXaxis().FindBin(lowX), curPlots[sample].GetXaxis().FindBin(highX))
+      projY_BG[sample].Rebin(3)
+      projY_BG[sample] = copy.deepcopy(customize_plot(sample,projY_BG[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerStyle[sample]))
+      stackY_BG.Add(projY_BG[sample])
+    projY_MC = totalSM.ProjectionY(titleExtY+"_MC", totalSM.GetXaxis().FindBin(lowX), totalSM.GetXaxis().FindBin(highX))
     projY_MC.Rebin(3)
+    projY_MC = copy.deepcopy(customize_plot("totalSM",projY_MC,0,0,0,0,0))
     projY_data = ROOT.TH2F()
     if plotData:
-      projY_data = curPlots["data"].ProjectionY(plotname+titleExtY+"_data", curPlots["data"].GetXaxis().FindBin(lowX), curPlots["data"].GetXaxis().FindBin(highX))
+      projY_data = curPlots["data"].ProjectionY(titleExtY+"_data", curPlots["data"].GetXaxis().FindBin(lowX), curPlots["data"].GetXaxis().FindBin(highX))
       projY_data.Rebin(3)
-
-    draw_proj(plotname, projY_MC, projY_data, logY, logX, canvasY, yearenergy, titleExtY)
+      projY_data = copy.deepcopy(customize_plot("data",projY_data,sampleFillColor["data"],sampleLineColor["data"],sampleLineWidth["data"],sampleMarkerStyle["data"],sampleMarkerStyle["data"]))
+      
+    draw_proj(plotname, projY_BG, stackY_BG, projY_MC, projY_data, doLogY, doLogX, canvasY, yearenergy, titleExtY)
 
   # X projection
+  projX_BG=dict()
+  stackX_BG = ROOT.THStack("stackX_BG","")
   if projectX:
     canvasX = ROOT.TCanvas("canvasX","canvasX",800,800)
     if logY:
@@ -703,14 +964,23 @@ def draw_plot(sampleDict, plotname, logZ=True, logY=True, logX=False, lumi=59.83
     highY = args.projectX[1]
     titleExtX = "_px_"+str(int(lowY))+"_"+str(int(highY))
 
-    projX_MC = totalSM.ProjectionX(plotname+titleExtX+"_MC", totalSM.GetYaxis().FindBin(lowY), totalSM.GetYaxis().FindBin(highY))
+    for i,sample in enumerate(reversed(plotDict.keys())):
+      if "Y3" in sample or "DY3" in sample or "DYp3" in sample or "B3mL2" in sample or "BFF" in sample or "data" in sample:
+        continue
+      projX_BG[sample] = curPlots[sample].ProjectionX(titleExtX+"_"+sample, curPlots[sample].GetYaxis().FindBin(lowY), curPlots[sample].GetYaxis().FindBin(highY))
+      #projX_BG[sample].Rebin(3)
+      projX_BG[sample] = copy.deepcopy(customize_plot(sample,projX_BG[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerStyle[sample]))
+      stackX_BG.Add(projX_BG[sample])
+    projX_MC = totalSM.ProjectionX(titleExtX+"_MC", totalSM.GetYaxis().FindBin(lowY), totalSM.GetYaxis().FindBin(highY))
     #projX_MC.Rebin(3)
+    projX_MC = copy.deepcopy(customize_plot("totalSM",projX_MC,0,0,0,0,0))
     projX_data = ROOT.TH2F()
     if plotData:
-      projX_data = curPlots["data"].ProjectionX(plotname+titleExtX+"_data", curPlots["data"].GetYaxis().FindBin(lowY), curPlots["data"].GetYaxis().FindBin(highY))
+      projX_data = curPlots["data"].ProjectionX(titleExtX+"_data", curPlots["data"].GetYaxis().FindBin(lowY), curPlots["data"].GetYaxis().FindBin(highY))
       #projX_data.Rebin(3)
+      projX_data = copy.deepcopy(customize_plot("data",projX_data,sampleFillColor["data"],sampleLineColor["data"],sampleLineWidth["data"],sampleMarkerStyle["data"],sampleMarkerStyle["data"]))
 
-    draw_proj(plotname, projX_MC, projX_data, logY, logX, canvasX, yearenergy, titleExtX)
+    draw_proj(plotname, projX_BG, stackX_BG, projX_MC, projX_data, doLogY, doLogX, canvasX, yearenergy, titleExtX)
 
   if not projectY and not projectX:
     if plotData:

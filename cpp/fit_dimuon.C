@@ -18,6 +18,8 @@
 #include "RooBreitWigner.h"
 #include "RooCBShape.h"
 #include "RooBernstein.h"
+#include "RooChebychev.h"
+#include "RooPolynomial.h"
 #include "RooExponential.h"
 #include "RooGenericPdf.h"
 #include "RooExtendPdf.h"
@@ -51,19 +53,20 @@ bool doBinnedFit = false;
 bool refitSignal = false;
 bool categorizeSignal = false;
 bool categorizeBackground = true;
+//bool useFixedSigma = true;
 bool useFixedSigma = false;
 bool addBernsteinOrders = false;
+//bool saveFitResult = true;
 bool saveFitResult = false;
-bool drawFits = true;
+bool drawFits = false;
 bool drawResidual = false;
 //
 bool useOnlyExponential = false;
 bool useOnlyPowerLaw = false;
 bool useOnlyBernstein = false;
-bool doNotUseMultiPDF = false;
-if ( useOnlyExponential || useOnlyPowerLaw || useOnlyBernstein ) doNotUseMultiPDF = true;
+bool doNotUseMultiPDF = ( useOnlyExponential || useOnlyPowerLaw || useOnlyBernstein ) ? true : false;
 
-void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TString sigmodel, float mass, RooWorkspace &wfit, TString sigshape="dcbfastg", const char* outDir = "fitResults")
+void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, bool isSignalMC, TString sigmodel, float mass, RooWorkspace &wfit, TString sigshape="dcbfastg", const char* outDir = "fitResults")
 {
 
   int mdir = mkdir(outDir,0755);
@@ -209,8 +212,15 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
   ffitParams->Close();
 
   if ( isSignal ) {
-    set_widths();
 
+    if ( !(isSignalMC) ) {
+      refitSignal = false;
+      saveFitResult = false;
+      drawFits = false;
+      drawResidual = false;
+    }
+
+    set_widths();
     double gamma = 0.001*mass;
     if ( widths[sigmodel].find(Form("%.0f",mass)) != widths[sigmodel].end() )
       gamma = widths[sigmodel][Form("%.0f",mass)];
@@ -254,12 +264,52 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
     TString catExt = "";
     if ( categorizeSignal ) 
       catExt = Form("_ch%d",binidx);
-    mmumu->SetName(Form("signalRooDataSet%s",catExt.Data()));
-    //wfit.import(*(mmumu));
-    double sigNormalization = (*mmumu).sumEntries(fitRange.Data());
-    int sigRawEntries = (*mmumu).numEntries();
+    mmumu->SetName(Form("signalRooDataSet%s",catExt.Data()));    
+    double sigNormalization =-1.0;
+    int sigRawEntries = -1;
+    if ( isSignalMC ) {
+      sigNormalization = (*mmumu).sumEntries(fitRange.Data());
+      sigRawEntries = (*mmumu).numEntries();
+    }
+    else {
+      TFile *fxsec = TFile::Open("../data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root");
+      TSpline3 *xsecbb = (TSpline3 *) fxsec->Get(Form("spline_%s_xsec_bb",sigmodel.Data()));
+      TSpline3 *xsecsb = (TSpline3 *) fxsec->Get(Form("spline_%s_xsec_sb",sigmodel.Data()));
+      double txsecbb = TMath::Exp(xsecbb->Eval(mass));
+      double txsecsb = TMath::Exp(xsecsb->Eval(mass));
+      fxsec->Close();
+      TFile *facc = TFile::Open("../data/acceff_interpolation_Run2.root");
+      TSpline3 *accbb_nb1 = (TSpline3 *) facc->Get("spline_avg_acceff_bb_Nb_eq_1_Run2");
+      TSpline3 *accbb_nb2 = (TSpline3 *) facc->Get("spline_avg_acceff_bb_Nb_geq_2_Run2");
+      TSpline3 *accsb_nb1 = (TSpline3 *) facc->Get("spline_avg_acceff_sb_Nb_eq_1_Run2");
+      TSpline3 *accsb_nb2 = (TSpline3 *) facc->Get("spline_avg_acceff_sb_Nb_geq_2_Run2");
+      double tacctot = 0.0;
+      double taccbb  = 0.0;
+      double taccsb  = 0.0;
+      if (binidx == 0){
+	taccbb  = accbb_nb1->Eval(mass)+accbb_nb2->Eval(mass);
+	taccsb  = accsb_nb1->Eval(mass)+accsb_nb2->Eval(mass);
+	tacctot = taccbb+taccsb;
+      }
+      else if (binidx == 1){
+	tacctot = accbb_nb1->Eval(mass)+accsb_nb1->Eval(mass);
+	taccbb  = accbb_nb1->Eval(mass);
+	taccsb  = accsb_nb1->Eval(mass);
+	tacctot = taccbb+taccsb;
+      }
+      else if (binidx == 2){
+	taccbb  = accbb_nb2->Eval(mass);
+	taccsb  = accsb_nb2->Eval(mass);
+	tacctot = taccbb+taccsb;
+      }
+      facc->Close();
+      int sigRawAll = 1e6;
+      sigNormalization = taccbb*txsecbb + taccsb*txsecsb;
+      sigRawEntries = (int) ((sigNormalization/(txsecbb+txsecsb))*sigRawAll);
+    }
     RooRealVar nSig(Form("signalNorm%s",catExt.Data()),Form("signalNorm%s",catExt.Data()),sigNormalization);
     RooRealVar nSigRaw(Form("signalRawNorm%s",catExt.Data()),Form("signalRawNorm%s",catExt.Data()),sigRawEntries);
+    wfit.import(*(mmumu));
     wfit.import(nSig);
     wfit.import(nSigRaw);
 
@@ -976,8 +1026,12 @@ void fitmass(RooDataSet mmumuAll, TString sample, bool isData, bool isSignal, TS
 	       || ( nBG.getVal() < 1 || ( nBG.getVal()/(mass+10.0*stddev-std::max(minMforFit,mass-10.0*stddev)) < 1e-1 && nBG.getVal() < 1e1 ) ) ) {
 	    bernsteinPDFOrders.push_back(tto);
 	    RooAbsPdf *bernstein;
-	    if (tto == 0)
-	      bernstein = new RooBernsteinFast<1>(Form("background_bernstein%s",catExt.Data()),Form("background_bernstein%s",catExt.Data()),x,parListBernstein[tto]);
+	    if (tto == 0) {
+	      if ( (*mmumuFit).sumEntries(Form("mfit>=%.3f",mass+3.0*stddev)) < (*mmumuFit).sumEntries(Form("mfit<%.3f",mass-3.0*stddev)) )
+		bernstein = new RooBernsteinFast<1>(Form("background_bernstein%s",catExt.Data()),Form("background_bernstein%s",catExt.Data()),x,parListBernstein[tto]);
+	      else
+		bernstein = new RooUniform(Form("background_uniform%s",catExt.Data()),Form("background_uniform%s",catExt.Data()),x);
+	    }
 	    else if (tto == 1)
 	      bernstein = new RooBernsteinFast<2>(Form("background_bernstein%s",catExt.Data()),Form("background_bernstein%s",catExt.Data()),x,parListBernstein[tto]);
 	    else if (tto == 2)

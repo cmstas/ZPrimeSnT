@@ -375,10 +375,16 @@ def get_nan_plots(sampleDict, plotname):
                             if numpy.isnan(tplot.GetBinContent(b)) or tplot.GetBinContent(b)<0.0 or not numpy.isfinite(tplot.GetBinContent(b)):
                                 tplot.SetBinContent(b,0.0)
                                 tplot.SetBinError(b,0.0)
+                            if numpy.isnan(tplot.GetBinError(b)) or tplot.GetBinError(b)<0.0 or not numpy.isfinite(tplot.GetBinError(b)):
+                                tplot.SetBinContent(b,0.0)
+                                tplot.SetBinError(b,0.0)
                     else:
                         temphist = inFile.Get(plotname).Clone()
                         for b in range(0, temphist.GetNbinsX()+2):
                             if numpy.isnan(temphist.GetBinContent(b)) or temphist.GetBinContent(b)<0.0 or not numpy.isfinite(temphist.GetBinContent(b)):
+                                temphist.SetBinContent(b,0.0)
+                                temphist.SetBinError(b,0.0)
+                            if numpy.isnan(temphist.GetBinError(b)) or temphist.GetBinError(b)<0.0 or not numpy.isfinite(temphist.GetBinError(b)):
                                 temphist.SetBinContent(b,0.0)
                                 temphist.SetBinError(b,0.0)
                         tplot.Add(temphist)
@@ -439,6 +445,9 @@ def get_plots(sampleDict, plotname):
 
         for b in range(0, tplot.GetNbinsX()+2):
             if tplot.GetBinContent(b)<0.0 or numpy.isnan(tplot.GetBinContent(b)) or not numpy.isfinite(tplot.GetBinContent(b)):
+                tplot.SetBinContent(b,0.0)
+                tplot.SetBinError(b,0.0)
+            if tplot.GetBinError(b)<=0.0 or numpy.isnan(tplot.GetBinError(b)) or not numpy.isfinite(tplot.GetBinError(b)):
                 tplot.SetBinContent(b,0.0)
                 tplot.SetBinError(b,0.0)
 
@@ -538,7 +547,8 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         if "bjet2_pt" in plot.GetName():
             maxx = 300.0
         if "nbtag" in plot.GetName():
-            maxx = 3.0
+            #maxx = 3.0
+            maxx = 5.0
         tb = plot.GetXaxis().FindBin(maxx)
         sumc  = 0.0
         sume2 = 0.0
@@ -550,13 +560,6 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
                 plot.SetBinError(b,0.0)
         plot.SetBinContent(tb,sumc)
         plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
-
-    ### Remove spikes
-    if sample!="data" and not "met_pt" in plot.GetName():
-        for b in range(1, plot.GetNbinsX()+1):
-            if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
-                plot.SetBinContent(b,0.0)
-                plot.SetBinError(b,0.0)
 
     return plot
 
@@ -663,6 +666,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if not args.plotProdModes and "ProdModes" in plotname.split("_")[len(plotname.split("_"))-1]:
             return(0)
 
+    integralData = 0.0
+    integralBG = 0.0
+    errorData = ROOT.Double(0.0)
+    errorBG = ROOT.Double(0.0)
     # Get histograms
     plotDict = get_plots(sampleDict, plotname)
     curPlots=OrderedDict()
@@ -693,6 +700,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         elif sample=="data": 
             if plotData:
                 curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
+                #integralData = curPlots[sample].Integral(0,-1)
+                integralData = curPlots[sample].IntegralAndError(0,-1,errorData)
                 if args.shape and curPlots[sample].Integral(0,-1)>0.0:
                     if "cutflow" not in plotname:
                         curPlots[sample].Scale(1.0/curPlots[sample].Integral(0,-1))
@@ -703,6 +712,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             curPlots[sample] = copy.deepcopy(customize_plot(sample,plotDict[sample],sampleFillColor[sample],sampleLineColor[sample],sampleLineWidth[sample],sampleMarkerStyle[sample],sampleMarkerSize[sample]))
             if testLumiRatio>0.0:
                 curPlots[sample].Scale(scaleToTestLumi)
+            #integralBG = integralBG + curPlots[sample].Integral(0,-1)
+            #### Remove spikes
+            #for b in range(1, curPlots[sample].GetNbinsX()+1):
+            #    if (abs(curPlots[sample].GetBinContent(b)>0) and abs(curPlots[sample].GetBinError(b))/abs(curPlots[sample].GetBinContent(b))>0.9) or curPlots[sample].GetBinContent(b)<0 or curPlots[sample].GetBinError(b)<=0.0:
+            #        curPlots[sample].SetBinContent(b,0.0)
+            #        curPlots[sample].SetBinError(b,0.0)
             if not totalSM:
                 totalSM = curPlots[sample].Clone("totalSM")
             else:
@@ -717,7 +732,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         totalScale = totalSM.GetBinContent(1)
     if args.shape and totalScale>0.0:
         totalSM.Scale(1.0/totalScale)
-
 
     # Build stack
     stack = ROOT.THStack("stack","")
@@ -885,7 +899,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if "bjet2_pt" in plotname:
             maxx=300.0
         if "nbtag" in plotname:
-            maxx=3.0
+            #maxx=3.0
+            maxx=5.0
         h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
         h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
@@ -895,7 +910,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
             doRatio=True
 
         #plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=True, drawXerr=False)
-        plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=False, drawXerr=False)
+        plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=False, drawXerr=True)
         g_data.SetMarkerStyle(20)
         g_data.SetMarkerSize(1.2)
         g_data.SetLineWidth(1)
@@ -904,7 +919,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         g_data_clone.SetMarkerSize(0.0)
 
         #plotUtils.GetPoissonRatioGraph(MCplot, curPlots["data"], g_ratio, drawZeros=True, drawXerr=False, useMCErr=False)
-        plotUtils.GetPoissonRatioGraph(MCplot, curPlots["data"], g_ratio, drawZeros=False, drawXerr=False, useMCErr=False)
+        plotUtils.GetPoissonRatioGraph(MCplot, curPlots["data"], g_ratio, drawZeros=False, drawXerr=True, useMCErr=False)
         g_ratio.SetMarkerStyle(20)
         g_ratio.SetMarkerSize(1.2)
         g_ratio.SetLineWidth(1)
@@ -1010,6 +1025,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
                 maxx = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetXaxis().FindBin(1000.0))
             if "mu1_pt" in plotname or "mu2_pt" in plotname:
                 maxx = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetXaxis().FindBin(500.0))
+        if "_sel10" in plotname and "mmumu" in plotname:
+            maxx = h_axis.GetXaxis().GetBinUpEdge(h_axis.GetXaxis().FindBin(2500.0))
         maxxl = maxx
 
         #line = ROOT.TLine(h_axis.GetXaxis().GetBinLowEdge(1), 1.0, h_axis.GetXaxis().GetBinUpEdge(h_axis.GetNbinsX()), 1.0)
@@ -1105,6 +1122,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if plotData:
         if histMax < curPlots["data"].GetMaximum():
             histMax = curPlots["data"].GetMaximum()
+        print "INTEGRALS: ", integralData, errorData, integralBG, errorBG
         g_data.Draw("P,SAME")
         g_data_clone.Draw("P,SAME")
     for sample in curPlots.keys():
@@ -1265,7 +1283,12 @@ for year in args.years:
     for i in range(0,size):
         if "TH1" in listkeys.At(i).GetClassName():
             listofplots.append(listkeys.At(i).GetName())
-    toexclude = []
+    toexclude = ["mu1_relPtErr_sel10_mllinclusive_nBTag1p_MuDetAll","mu2_relPtErr_sel10_mllinclusive_nBTag1p_MuDetAll"]
+    toexclude = toexclude + ["mu1_relPtErr_sel10_mllinclusive_nBTag1_MuDetAll","mu2_relPtErr_sel10_mllinclusive_nBTag1_MuDetAll"]
+    toexclude = toexclude + ["mu1_relPtErr_sel10_mllinclusive_nBTag2p_MuDetAll","mu2_relPtErr_sel10_mllinclusive_nBTag2p_MuDetAll"]
+    toexclude = toexclude + ["mu1_tunepRelPt_sel10_mllinclusive_nBTag1p_MuDetAll","mu2_tunepRelPt_sel10_mllinclusive_nBTag1p_MuDetAll"]
+    toexclude = toexclude + ["mu1_tunepRelPt_sel10_mllinclusive_nBTag1_MuDetAll","mu2_tunepRelPt_sel10_mllinclusive_nBTag1_MuDetAll"]
+    toexclude = toexclude + ["mu1_tunepRelPt_sel10_mllinclusive_nBTag2p_MuDetAll","mu2_tunepRelPt_sel10_mllinclusive_nBTag2p_MuDetAll"]
     for plot in listofplots:
         if plot in toexclude:
             continue

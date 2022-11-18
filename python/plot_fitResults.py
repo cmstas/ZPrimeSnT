@@ -406,7 +406,7 @@ for b in nbbins:
 
 ###
 
-haxis.GetYaxis().SetTitle("#sigma [GeV]")
+haxis.GetYaxis().SetTitle("#sigma_{mass} [GeV]")
 haxis.GetYaxis().SetRangeUser(0.0, 100.0)
 for m in models:
     haxis.Draw()

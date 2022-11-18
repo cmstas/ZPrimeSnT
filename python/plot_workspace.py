@@ -9,10 +9,14 @@ user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
 doRatio = True
+doPull = True
+useData = True
+useSignalMC = True
+doPartialUnblinding = False
 
 wsname = "wfit"
 thisDir = os.environ.get("PWD")
-inDir  = "%s/datacards_all_Sep-13-2022/"%thisDir
+inDir  = "%s/datacards_all_nomodel_Oct-10-2022/"%thisDir
 
 useCategorizedSignal = False
 useCategorizedBackground = True
@@ -42,15 +46,28 @@ sigModels.append("Y3")
 #sigModels.append("B3mL2")
 
 sigMasses = []
-sigMasses.append("250")
-sigMasses.append("400")
-sigMasses.append("550")
-sigMasses.append("700")
-sigMasses.append("850")
-sigMasses.append("1000")
-sigMasses.append("1250")
-sigMasses.append("1500")
-sigMasses.append("2000")
+if useSignalMC:
+    #sigMasses.append("250")
+    sigMasses.append("350")
+    sigMasses.append("500")
+    sigMasses.append("700")
+    #sigMasses.append("850")
+    sigMasses.append("1000")
+    #sigMasses.append("1250")
+    sigMasses.append("1500")
+    sigMasses.append("2000")
+else:
+    mF = 350.0
+    mL = 2000.0
+    sigMasses.append("%.0f"%mF)
+    tm = mF
+    while tm < mL:
+      if tm<400.0: tm=tm+5.0
+      elif tm<700.0: tm=tm+10.0
+      elif tm<1000.0: tm=tm+15.0
+      elif tm<1500.0: tm=tm+25.0
+      else: tm=tm+50.0
+      sigMasses.append("%.0f"%tm)
 
 
 def drawLabels(year="all",lumi=59.83+41.48+19.5+16.8,plotData=False):
@@ -103,7 +120,7 @@ def drawLabels(year="all",lumi=59.83+41.48+19.5+16.8,plotData=False):
         latexCMSExtra.DrawLatex(0.20,0.91+expoffset, cmsExtra);
 
 
-def getLegend(ch,gd,p,hp,hs,smodel,smass,sigsf=-1.0,plotSignal=True,plotData=False):
+def getLegend(ch,gd,p,hp,hs,smodel,smass,sigsf=-1.0,plotSignal=True,plotData=True):
     legend = ROOT.TLegend(0.7,0.6,0.91,0.91)
     legend.SetLineColor(0)
     legend.SetLineWidth(0)
@@ -116,17 +133,25 @@ def getLegend(ch,gd,p,hp,hs,smodel,smass,sigsf=-1.0,plotSignal=True,plotData=Fal
     for pn,pp in enumerate(p):
         legend.AddEntry(hp[pn],pp,"L")
     if plotSignal:
+        if smodel=="Y3":
+            smodel="Y_{3}"
+        elif smodel=="DY3":
+            smodel="DY_{3}"
+        elif smodel=="DYp3":
+            smodel="DY'_{3}"
+        elif smodel=="B3mL2":
+            smodel="B_{3}-L_{2}"
         if sigsf>0:
             legend.AddEntry(hs,"%s, M=%.0f GeV (x%d)"%(smodel,smass,sigsf), "L")
         else:
             legend.AddEntry(hs,"%s, M=%.0f GeV"%(smodel,smass), "L")
             
     if ch==0:
-        legend.SetHeader("N_{b-tag}#geq1")
+        legend.SetHeader("N_{b}#geq1")
     elif ch==1:
-        legend.SetHeader("N_{b-tag}=1")
+        legend.SetHeader("N_{b}=1")
     elif ch==2:
-        legend.SetHeader("N_{b-tag}#geq2")
+        legend.SetHeader("N_{b}#geq2")
 
     return legend
 
@@ -161,7 +186,12 @@ for y in years:
                 #nBins = int((maxx-minx)/(0.01*float(m)))
                 nBins = 5*10;
                 # Retrieve signal normalization
+                lumi=59.83+41.48+19.5+16.8                
+                if doPartialUnblinding:
+                    lumi = 0.1*lumi
                 nSig = w.var("signalNorm%s"%catExtS).getValV()
+                nSig = nSig*lumi
+                print(m, binidx, nSig)
                 # Retrieve signal mean and std. deviation
                 if binidx==0 or useCategorizedSignal:
                     mean = w.var("mean%s"%catExtS).getValV()
@@ -220,12 +250,15 @@ for y in years:
                 g_data_clone = g_data.Clone()
                 g_data_clone.SetMarkerSize(0.0)
 
-                h_axis_ratio = ROOT.TH1D("h_axis_ratio","", hd.GetNbinsX(), hd.GetXaxis().GetBinLowEdge(1), hd.GetXaxis().GetBinUpEdge(hd.GetNbinsX()))
+                h_axis_ratio = ROOT.TH2D("h_axis_ratio","", hd.GetNbinsX(), hd.GetXaxis().GetBinLowEdge(1), hd.GetXaxis().GetBinUpEdge(hd.GetNbinsX()), 2000, -100.0, 100.0)
                 g_ratio = [] 
                 for pp in range(nPDF):
                     g_ratio.append(ROOT.TGraphAsymmErrors())
-                    plotUtils.GetPoissonRatioGraph(hpr[pp], hd, g_ratio[pp], drawZeros=False, drawXerr=False, useMCErr=False)
-                    g_ratio[pp].SetMarkerStyle(20)
+                    if not doPull:
+                        plotUtils.GetPoissonRatioGraph(hpr[pp], hd, g_ratio[pp], drawZeros=False, drawXerr=False, useMCErr=False)
+                    else:
+                        plotUtils.GetPullGraph(hpr[pp], hd, g_ratio[pp], drawZeros=True, drawXerr=False, useMCErr=False)                        
+                    g_ratio[pp].SetMarkerStyle(4)
                     g_ratio[pp].SetMarkerSize(1.2)
                     g_ratio[pp].SetMarkerColor(hpr[pp].GetLineColor())
                     g_ratio[pp].SetLineWidth(1)
@@ -233,22 +266,46 @@ for y in years:
 
                 pads = []
                 if doRatio==True:
-                    minR=0.25
-                    maxR=1.75
-                    ty = numpy.array([])
-                    tmax=maxR
-                    for pp in range(nPDF):
-                        ty = g_ratio[pp].GetY()
-                        if len(ty)>0:
-                            tmax = numpy.amax(ty)
+                    if not doPull:
+                        minR=0.25
+                        maxR=1.75
+                        ty = numpy.array([])
+                        tmax=maxR
+                        for pp in range(nPDF):
+                            ty = g_ratio[pp].GetY()
+                            if len(ty)>0:
+                                tmax = numpy.amax(ty)
                             if tmax>maxR:
                                 maxR=tmax*1.05
-                            if maxR>5.0:
-                                minR=0.1
+                        if maxR>5.0:
+                            minR=0.1
+                    else:
+                        minR=-2.0
+                        maxR=+2.0
+                        ty = numpy.array([])
+                        tmax=maxR
+                        for pp in range(nPDF):
+                            ty = g_ratio[pp].GetY()
+                            if len(ty)>0:
+                                tmax = numpy.amax(ty)
+                                tmin = numpy.amin(ty)
+                            if tmax>maxR:
+                                maxR=tmax*1.10
+                            if tmin<minR:
+                                minR=tmin
+                                if minR<0.0:
+                                    minR = minR*1.10
+                                else:
+                                    minR = minR*0.90
+                        if maxR>5.0 and not doPull:
+                            minR=0.1
                     h_axis_ratio.GetYaxis().SetRangeUser(minR,maxR)
-                    h_axis_ratio.SetMinimum(minR)
-                    h_axis_ratio.SetMaximum(maxR)
-                    h_axis_ratio.SetTitle(";;Data / fit")
+                    #h_axis_ratio.SetMinimum(minR)
+                    #h_axis_ratio.SetMaximum(maxR)
+                    if not doPull:
+                        h_axis_ratio.SetTitle(";;Data / fit")
+                    else:
+                        h_axis_ratio.SetTitle(";;(Data-fit)/#sigma_{data}")
                     h_axis_ratio.GetYaxis().SetTitleSize(0.16)
                     h_axis_ratio.GetYaxis().SetTitleOffset(0.25)
                     h_axis_ratio.GetYaxis().SetLabelSize(0.12)
@@ -259,6 +316,12 @@ for y in years:
                     h_axis_ratio.GetXaxis().SetTickSize(0.06)
 
                     line = ROOT.TLine(minx, 1.0, maxx, 1.0)
+                    if doPull:
+                        line = ROOT.TLine(minx, 0.0, maxx, 0.0)
+                        linep1 = ROOT.TLine(minx, 1.0, maxx, 1.0)
+                        linep2 = ROOT.TLine(minx, 2.0, maxx, 2.0)
+                        linem1 = ROOT.TLine(minx, -1.0, maxx, -1.0)
+                        linem2 = ROOT.TLine(minx, -2.0, maxx, -2.0)
 
                     pads.append(ROOT.TPad("1","1",0.0,0.18,1.0,1.0))
                     pads.append(ROOT.TPad("2","2",0.0,0.0,1.0,0.19))
@@ -271,7 +334,7 @@ for y in years:
                     pads[0].Draw()
                     pads[1].Draw()
                     pads[1].cd()
-                    if maxR>5.0:
+                    if maxR>5.0 and not doPull:
                         pads[1].SetLogy()
                     pads[1].SetTickx()
                     h_axis_ratio.Draw("")
@@ -282,6 +345,29 @@ for y in years:
                     line.SetLineColor(1)
                     line.SetLineWidth(1)
                     line.Draw("SAME")
+                    if doPull:
+                        linep1.SetLineStyle(2)
+                        linep1.SetLineColor(1)
+                        linep1.SetLineWidth(1)
+                        linep2.SetLineStyle(2)
+                        linep2.SetLineColor(1)
+                        linep2.SetLineWidth(1)
+                        linem1.SetLineStyle(2)
+                        linem1.SetLineColor(1)
+                        linem1.SetLineWidth(1)
+                        linem2.SetLineStyle(2)
+                        linem2.SetLineColor(1)
+                        linem2.SetLineWidth(1)
+                        if minR<-2.0:
+                            linem1.Draw("SAME")
+                            linem2.Draw("SAME")
+                        elif minR<-1.0:
+                            linem1.Draw("SAME")
+                        if maxR>2.0:
+                            linep1.Draw("SAME")
+                            linep2.Draw("SAME")
+                        elif maxR>1.0:
+                            linep1.Draw("SAME")
                     pads[1].Modified();
                     pads[1].Update();
                 else:
@@ -319,12 +405,14 @@ for y in years:
                 hs.Draw("hist,same")
 
                 legend = getLegend(binidx,g_data,pn,hp,hs,s,float(m))
-                drawLabels()
+                year="all"
+                drawLabels(year,lumi,useData)
                 legend.Draw("same")
                 pads[0].Update()
                 pads[0].RedrawAxis()
                 
                 can.SaveAs("%s/fitBG_M%s%s.png"%(outDir,m,catExtB))
+                can.SaveAs("%s/fitBG_M%s%s.pdf"%(outDir,m,catExtB))
 
                 # Close input file with workspace                
                 f.Close()

@@ -7,7 +7,8 @@ today= date.today().strftime("%b-%d-%Y")
 
 wsname = "wfit"
 thisDir = os.environ.get("PWD")
-inDir  = "%s/cpp/fitResults/"%thisDir
+#inDir  = "%s/cpp/fitResults_fullUnbliding_Oct-07-2022/"%thisDir
+inDir  = "%s/cpp/fitResults_fullRange/"%thisDir
 
 fnfitParamsForShapeUnc = "%s/utils/signalFitParameters_muonResolutionUnc.root"%thisDir
 ffitParamsForShapeUnc = ROOT.TFile.Open(fnfitParamsForShapeUnc,"READ")
@@ -17,7 +18,10 @@ maxMforSpline = 2000.0
 useCategorizedSignal = False
 useCategorizedBackground = True
 
-useData = False;
+useData = True
+intLumi = 137.61
+useSignalMC = False
+doPartiaUnblinding = False
 ext = "data"
 if not useData:
     ext = "BGMC"
@@ -66,7 +70,7 @@ if useOnlyExponential or useOnlyPowerLaw or useOnlyBernstein:
     useSinglePDF = True
 
 dNames = []
-dNames.append("d_mllinclusive_nBTag1p_MuDetAll")
+#dNames.append("d_mllinclusive_nBTag1p_MuDetAll")
 dNames.append("d_mllinclusive_nBTag1_MuDetAll")
 dNames.append("d_mllinclusive_nBTag2p_MuDetAll")
 ###dNames.append("d_mllinclusive_nBTag1p_BB")
@@ -98,20 +102,34 @@ if noModel:
     sigModels = ["Y3"]
 
 sigMasses = []
-sigMasses.append("250")
-sigMasses.append("400")
-sigMasses.append("550")
-sigMasses.append("700")
-sigMasses.append("850")
-sigMasses.append("1000")
-sigMasses.append("1250")
-sigMasses.append("1500")
-sigMasses.append("2000")
+if useSignalMC:
+    #sigMasses.append("250")
+    sigMasses.append("400")
+    sigMasses.append("550")
+    sigMasses.append("700")
+    sigMasses.append("850")
+    sigMasses.append("1000")
+    sigMasses.append("1250")
+    sigMasses.append("1500")
+    sigMasses.append("2000")
+else:
+    mF = 350.0
+    #mL = 2000.0
+    mL = 350.0
+    sigMasses.append("%.0f"%mF)
+    tm = mF
+    while tm < mL:
+      if tm<400.0: tm=tm+5.0
+      elif tm<700.0: tm=tm+10.0
+      elif tm<1000.0: tm=tm+15.0
+      elif tm<1500.0: tm=tm+25.0
+      else: tm=tm+50.0
+      sigMasses.append("%.0f"%tm)
 
 f2l = [0.0]
 nSigTot = 1.0
 if noModel:
-    f2l = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]
+    f2l = [0.0, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.99, 1.0]
 
 mean = 0.0
 sigma = 0.0
@@ -139,10 +157,12 @@ for y in years:
                 w = f.Get(wsname)
                 # Retrieve signal normalization
                 nSig = w.var("signalNorm%s"%catExtS).getValV()
+                nSig = nSig*intLumi
+                if doPartiaUnblinding:
+                    nSig = 0.1*nSig
                 # Retrieve signal mean and std. deviation
-                if binidx==0 or useCategorizedSignal:
-                    mean = w.var("mean%s"%catExtS).getValV()
-                    sigma = w.var("sigma%s"%catExtS).getValV()
+                mean = w.var("mean%s"%catExtS).getValV()
+                sigma = w.var("sigma%s"%catExtS).getValV()
                 # Retrieve MC stat. uncertainty from RooDataSet
                 mcstatunc = 1.0/ROOT.TMath.Sqrt(w.var("signalRawNorm%s"%catExtS).getValV())
                 # Retrive BG normalization:
@@ -203,8 +223,10 @@ for y in years:
                             nSig = nSigTot*f
                         if binidx > 0:
                             cname = "_f2b%d"%(f*100)
-
-                    card = open("%s/card%s_ch%d_%s_M%s_%s.txt"%(outDir,cname,binidx,s,m,y),"w")
+                    cardn = "%s/card%s_ch%d_%s_M%s_%s.txt"%(outDir,cname,binidx,s,m,y)
+                    if noModel:
+                        cardn = "%s/card%s_ch%d_nomodel_M%s_%s.txt"%(outDir,cname,binidx,m,y)
+                    card = open("%s"%cardn,"w")
                     card.write("imax *\n")
                     card.write("jmax *\n")
                     card.write("kmax *\n")
@@ -240,19 +262,19 @@ for y in years:
                         card.write("rate %.3f 1\n"%(nSig))
                     card.write("------------\n")  
                     # Systematics
-                    card.write("lumi lnN 1.016 -\n") # Integrated luminosity uncertainty on signal (fully correlated)
-                    card.write("sig_triggersf lnN %.3f -\n"%(1.0+triggersyst)) # Systematic uncertainty on signal from trigger (fully correlated)
-                    card.write("sig_muonsf lnN %.3f -\n"%(1.0+muonsfsyst)) # Systematic uncertainty on signal from muon RECO, ID, isolation (fully correlated)
-                    card.write("sig_muonsel lnN %.3f -\n"%(1.0+muonselsyst)) # Systematic uncertainty on signal from muon additional selection (fully correlated)
-                    card.write("sig_btagsf lnN %.3f -\n"%(1.0+btagsyst)) # Systematic uncertainty on signal from b-tagging (fully correlated)
-                    card.write("sig_jec_ch%d lnN %.3f -\n"%(binidx,1.0+jecsyst)) # Systematic uncertainty on signal from JES (uncorrelated)
-                    if not noModel:
-                        card.write("sig_mcstat_ch%d lnN %.3f -\n"%(binidx,1.0+mcstatunc)) # MC stat. uncertainty (uncorrelated)
+                    card.write("lumi_13TeV lnN 1.016 -\n") # Integrated luminosity uncertainty on signal (fully correlated)
+                    card.write("CMS_eff_trigger lnN %.3f -\n"%(1.0+triggersyst)) # Systematic uncertainty on signal from trigger (fully correlated)
+                    card.write("CMS_eff_muonid lnN %.3f -\n"%(1.0+muonsfsyst)) # Systematic uncertainty on signal from muon RECO, ID, isolation (fully correlated)
+                    card.write("CMS_eff_muonsel lnN %.3f -\n"%(1.0+muonselsyst)) # Systematic uncertainty on signal from muon additional selection (fully correlated)
+                    card.write("CMS_eff_btag lnN %.3f -\n"%(1.0+btagsyst)) # Systematic uncertainty on signal from b-tagging (fully correlated)
+                    card.write("CMS_scale_jet_ch%d lnN %.3f -\n"%(binidx,1.0+jecsyst)) # Systematic uncertainty on signal from JES (uncorrelated)
+                    #if not noModel:
+                    card.write("mcstat_ch%d lnN %.3f -\n"%(binidx,1.0+mcstatunc)) # MC stat. uncertainty (uncorrelated)
                     if meanFloat:
                         card.write("mean param %.3f -%.3f/+%.3f\n"%(mean,0.5*sigma,0.5*sigma)) # Shape systematic on dimuon mass mean value
                     elif fullMeanFloat:
                         card.write("mean param %.3f %.3f\n"%(mean,sigma)) # Shape systematic on dimuon mass mean value
-                    elif meanvar/float(m)>0.001:
+                    elif meanvar/float(m)>0.0005:
                         card.write("mean param %.3f %.3f\n"%(mean,meanvar))
                     if doMuonResolution:
                         card.write("sigma param %.3f %.3f\n"%(sigma,sigmavar))                        
@@ -265,7 +287,10 @@ for y in years:
                 
                     # text2workspace for individual cards:
                     os.chdir(outDir)
-                    os.system("text2workspace.py card%s_ch%d_%s_M%s_%s.txt -m %s"%(cname,binidx,s,m,y,m))
+                    if noModel:
+                        os.system("text2workspace.py card%s_ch%d_nomodel_M%s_%s.txt -m %s"%(cname,binidx,m,y,m))
+                    else:
+                        os.system("text2workspace.py card%s_ch%d_%s_M%s_%s.txt -m %s"%(cname,binidx,s,m,y,m))                        
                     os.chdir(thisDir)
 
             # Combine cards:
@@ -275,7 +300,10 @@ for y in years:
                     cname = ""
                     if noModel and binidx > 0:
                         cname = "_f2b%d"%(f*100)
-                    os.system("combineCards.py -S card%s_ch1_%s_M%s_%s.txt card%s_ch2_%s_M%s_%s.txt > card%s_combined_%s_M%s_%s.txt"%(cname,s,m,y,cname,s,m,y,cname,s,m,y))
-                    os.system("text2workspace.py card%s_combined_%s_M%s_%s.txt -m %s"%(cname,s,m,y,m))
+                    if noModel:
+                        os.system("combineCards.py -S card%s_ch1_nomodel_M%s_%s.txt card%s_ch2_nomodel_M%s_%s.txt > card%s_combined_nomodel_M%s_%s.txt"%(cname,m,y,cname,m,y,cname,m,y))
+                        os.system("text2workspace.py card%s_combined_nomodel_M%s_%s.txt -m %s"%(cname,m,y,m))
+                    else:
+                        os.system("combineCards.py -S card%s_ch1_%s_M%s_%s.txt card%s_ch2_%s_M%s_%s.txt > card%s_combined_%s_M%s_%s.txt"%(cname,s,m,y,cname,s,m,y,cname,s,m,y))
+                        os.system("text2workspace.py card%s_combined_%s_M%s_%s.txt -m %s"%(cname,s,m,y,m))
                 os.chdir(thisDir)
-

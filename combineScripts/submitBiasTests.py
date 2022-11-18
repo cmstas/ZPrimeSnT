@@ -8,19 +8,24 @@ today= date.today().strftime("%b-%d-%Y")
 
 ### if date ("MMM-DD-YYYY") is not specified, use today's date
 inDate = today
-if len(argv)>1:
-    inDate=argv[1]
-
+outDate = today
+if len(sys.argv)>1:
+    inDate=sys.argv[1]
+    outDate=inDate
+    if len(sys.argv)>2:
+        outDate=sys.argv[2]
 wsname = "wfit"
 thisDir = os.environ.get("PWD")
 inDir  = "%s/datacards_all_%s/"%(thisDir,inDate)
 
-limDir = "%s/limits_all_%s/"%(thisDir,inDate)
+limDir = "%s/limits_asymptotic_%s/"%(thisDir,inDate)
 
 biasCombination = True
 biasPerChannel = True
 biasPerPDF = True
+biasSummary = True
 checkIndividualPDFs = False
+plotEnvelope = False
 
 useCategorizedSignal = False
 useCategorizedBackground = True
@@ -28,7 +33,7 @@ useCategorizedBackground = True
 rs = [0,1,2]
 #rs.append(3)
 
-outDir = "%s/limits_all_%s_checks/"%(thisDir,inDate)
+outDir = "%s/limits_all_%s_checks/"%(thisDir,outDate)
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
@@ -53,11 +58,9 @@ sigModels.append("Y3")
 #sigModels.append("B3mL2")
 
 sigMasses = []
-sigMasses.append("250")
-sigMasses.append("400")
-sigMasses.append("550")
+sigMasses.append("350")
+sigMasses.append("500")
 sigMasses.append("700")
-sigMasses.append("850")
 sigMasses.append("1000")
 sigMasses.append("1250")
 sigMasses.append("1500")
@@ -67,7 +70,14 @@ mean = 0.0
 sigma = 0.0
 for y in years:
     for s in sigModels:
+        meanfit  = dict()
+        sigmafit = dict()
+        namefit  = dict()
         for m in sigMasses:
+            meanfit[m]  = dict()
+            sigmafit[m] = dict()
+            namefit[m]  = dict()
+            #
             nBGAll = 0
             nBG1b = 0
             nBG2b = 0
@@ -84,6 +94,9 @@ for y in years:
                     break
                 flim.close()
             for d in dNames:
+                meanfit[m][d]  = dict()
+                sigmafit[m][d] = dict()
+                namefit[m][d]  = dict()
                 finame = "%s/%s_%s_M%s_%s_workspace.root"%(inDir,d,s,m,y)
                 binidx=-1
                 if "nBTag1p" in finame:
@@ -104,6 +117,7 @@ for y in years:
                 w = f.Get(wsname)
                 # Retrieve signal normalization
                 nSig = w.var("signalNorm%s"%catExtS).getValV()
+                nSig = nSig*137.61
                 if binidx==1:
                     nS1b = nSig
                 if binidx==2:
@@ -154,14 +168,18 @@ for y in years:
                 ### Evaluate -2dLL for envelope
                 extra = ""
                 #extra = extra+" --X-rtd TMCSO_PseudoAsimov=10000"
-                os.system("combine -M MultiDimFit -d %s -P r --algo grid --saveNLL --forceRecreateNLL -n _%s_envelope%s -m %s --rMin -1 --rMax 3 --setParameterRanges r=-0.3,3 --X-rtd REMOVE_CONSTANT_ZERO_POINT=1 --setParameters myIndex=-1 --expectSignal 0 -t -1 --points 90 --cminDefaultMinimizerStrategy 0 --toysFrequentist --bypassFrequentist --robustFit 1 --X-rtd MINIMIZER_freezeDisassociatedParams %s"%(card,s,catExtB,m,extra))
+                if plotEnvelope:
+                    os.system("combine -M MultiDimFit -d %s -P r --algo grid --saveNLL --forceRecreateNLL -n _%s_envelope%s -m %s --rMin -1 --rMax 3 --setParameterRanges r=-0.3,3 --X-rtd REMOVE_CONSTANT_ZERO_POINT=1 --setParameters myIndex=-1 --expectSignal 0 -t -1 --points 90 --cminDefaultMinimizerStrategy 0 --toysFrequentist --bypassFrequentist --robustFit 1 --X-rtd MINIMIZER_freezeDisassociatedParams %s"%(card,s,catExtB,m,extra))
                 fnmultidim = []
                 for rn,r in enumerate(rs):
+                    meanfit[m][d][r]  = []
+                    sigmafit[m][d][r] = []
+                    namefit[m][d][r]  = []
                     fnfitdiag = []
                     for p in range(nPDF):
                 
                         ### Eveluate -2dLL per PDF
-                        if rn==0:
+                        if rn==0 and plotEnvelope:
                             os.system("combine -M MultiDimFit -d %s -P r --algo grid --saveNLL --forceRecreateNLL --freezeParameters pdf_index%s --setParameters pdf_index%s=%d -n _%s_index%d%s -m %s --rMin -1 --rMax 3 --setParameterRanges r=-0.3,3 --X-rtd REMOVE_CONSTANT_ZERO_POINT=1 --expectSignal 0 -t -1 --points 90 --cminDefaultMinimizerStrategy 0 --toysFrequentist --bypassFrequentist --robustFit 1 --X-rtd MINIMIZER_freezeDisassociatedParams %s"%(card,catExtB,catExtB,p,s,p,catExtB,m,extra))
                             fnmultidim.append("_%s_index%d%s.MultiDimFit.mH%s"%(s,p,catExtB,m))
 
@@ -174,6 +192,7 @@ for y in years:
                         if float(r)*expLim*nSig+nBG<=10.0 and (float(r)*expLim*nSig+nBG)/mrange<0.1:
                             continue
                         ### Bias, per channel, per PDF
+                        print("PDF index = ", p)
                         os.system("combine %s -M GenerateOnly --setParameters pdf_index%s=%d --toysFrequentist -t 100 --expectSignal %f --saveToys -m %s --freezeParameters pdf_index%s -n _%s_M%s_r%d_index%d%s"%(card,catExtB,p,float(r)*expLim,m,catExtB,s,m,r,p,catExtB))
                         os.system("combine %s -M FitDiagnostics --toysFile higgsCombine_%s_M%s_r%d_index%d%s.GenerateOnly.mH%s.123456.root -t 100 --rMin %f --rMax %f -n _%s_M%s_r%d_envelope_genindex%d%s -m %s %s"%(card,s,m,r,p,catExtB,m,max(-5,float(r)*expLim-5),max(5,float(r)*expLim+5),s,m,r,p,catExtB,m,options))
                         fnfitdiag.append("_%s_M%s_r%d_envelope_genindex%d%s"%(s,m,r,p,catExtB))
@@ -212,7 +231,7 @@ for y in years:
                         fd = ROOT.TFile.Open("fitDiagnostics%s.root"%fdn)
                         td = fd.Get("tree_fit_sb")
                         h = ROOT.TH1D("h","",61,-6.1,6.1)
-                        h.GetXaxis().SetTitle("(r_{measured} - r_{injected})/#sigma_{r}")
+                        h.GetXaxis().SetTitle("(r_{out} - r_{in})/#sigma_{r}")
                         h.GetYaxis().SetTitle("Number of toys")
                         #todraw = "(r-%f)/((rLoErr/rHiErr>3.0 || rHiErr/rLoErr>3.0) ? rErr : (r>%f ? rLoErr : rHiErr))>>h"%(float(r)*expLim,float(r)*expLim)
                         todraw = "(r-%f)/((rLoErr/rHiErr>2.0 || rHiErr/rLoErr>2.0) ? rErr : 0.5*(rLoErr+rHiErr))>>h"%(float(r)*expLim)
@@ -220,6 +239,8 @@ for y in years:
                         fg = ROOT.TF1("fg","gaus",-5.0,5.0)
                         fg.SetLineColor(2)
                         h.Fit(fg,"0L","",-5.0,5.0)
+                        meanfit[m][d][r].append(fg.GetParameter(1))
+                        sigmafit[m][d][r].append(fg.GetParameter(2))
                         can = ROOT.TCanvas("can","",600,600)
                         h.Draw()
                         can.Update()
@@ -236,84 +257,87 @@ for y in years:
                         elif binidx==2:
                             bintext="#geq2"
                         text.DrawLatexNDC(0.15,0.8,"N_{b-tag}%s (%.0f events)"%(bintext,nBG))
-                        text.DrawLatexNDC(0.15,0.75,"r_{injected}=%d (%.1f)"%(r,r*nSig*expLim))
+                        text.DrawLatexNDC(0.15,0.75,"r_{in}=%d (%.1f)"%(r,r*nSig*expLim))
                         if len(fdn.split("_"))>6:
                             genPdfIdx = int(fdn.split("_")[5].replace("genindex",""))
                             text.DrawLatexNDC(0.15,0.7,"Gen. PDF: %s"%(pdfnames[genPdfIdx].lower()))
+                            namefit[m][d][r].append(pdfnames[genPdfIdx].lower())
                         else:
                             text.DrawLatexNDC(0.15,0.7,"Gen. PDF: envelope")
+                            namefit[m][d][r].append("envelope")
                         can.Update()
                         can.SaveAs("%s/bias%s.png"%(outDir,fdn))
 
-                fnmultidim.append("_%s_envelope%s.MultiDimFit.mH%s"%(s,catExtB,m))
+                if plotEnvelope:
+                    fnmultidim.append("_%s_envelope%s.MultiDimFit.mH%s"%(s,catExtB,m))
 
-                ### Plot -2dLL, per channel
-                gs = []
-                miny = +1e9
-                maxy = -1e9
-                legend = ROOT.TLegend(0.65,0.7,0.85,0.87)
-                legend.SetLineColor(0)
-                legend.SetFillColor(0)
-                pdfcolors = dict()
-                pdfcolors["Envelope"]=1
-                pdfcolors["Exponential"]=2
-                pdfcolors["Power-law"]=4
-                pdfcolors["Bernstein"]=6
-                for nf,fdn in enumerate(fnmultidim):
-                    fd = ROOT.TFile.Open("higgsCombine%s.root"%fdn)
-                    td = fd.Get("limit")
-                    xl = []
-                    yl = []
-                    ### Penalty assigned to PDFs with >1 DOF:
-                    #penalty=0.0
-                    #if nf<len(fnmultidim)-1:
-                    #    penalty=0.5*(numpars[nf]-1)
-                    for e in range(td.GetEntries()):
-                        td.GetEntry(e)
-                        if (td.deltaNLL>1e-9 or td.deltaNLL<-1e-9) and td.deltaNLL>-1e9 and td.deltaNLL<1e9:
-                            xl.append(td.r)
-                            yl.append(2*(td.deltaNLL+td.nll+td.nll0))
-                    xv = np.array(xl,"d")
-                    yv = np.array(yl,"d")
-                    gs.append(ROOT.TGraph(len(xl),xv,yv))
-                    gs[nf].SetLineColor(pdfcolors[pdfnames[nf].split("<")[0]])
-                    gs[nf].SetMarkerColor(pdfcolors[pdfnames[nf].split("<")[0]])
-                    gs[nf].SetMarkerStyle(4)
-                    gs[nf].SetMarkerSize(0.5)
-                    if np.amin(yv)<miny:
-                        miny = np.amin(yv)
-                    if np.amax(yv)>maxy:
-                        maxy = np.amax(yv)                    
-                    if nf<len(fnmultidim)-1:
-                        legend.AddEntry(gs[nf],pdfnames[nf],"L")
-                    else:
-                        legend.AddEntry(gs[nf],pdfnames[nf],"P")
-                h = ROOT.TH2D("h","",1,-0.3,3.0,1,miny,miny+1.25*(maxy-miny))
-                h.GetXaxis().SetTitle("r")
-                h.GetYaxis().SetTitle("-2Log(L)+c")
-                h.GetYaxis().SetLabelSize(0.02)
-                ROOT.gStyle.SetOptStat(0)
-                ROOT.gStyle.SetOptFit(0)
-                can = ROOT.TCanvas("can","",600,600)
-                h.Draw()
-                for nf,fdn in enumerate(fnmultidim):
-                    if nf<len(fnmultidim)-1:
-                        gs[nf].Draw("L")
-                    else:
-                        gs[nf].Draw("P")
-                legend.Draw("same")
-                text = ROOT.TLatex()
-                text.SetTextSize(0.03);
-                text.SetTextFont(42);
-                text.DrawLatexNDC(0.15,0.85,"M=%s GeV"%(m))
-                bintext = ""
-                if binidx==1:
-                    bintext="=1"
-                elif binidx==2:
-                    bintext="#geq2"
-                text.DrawLatexNDC(0.15,0.8,"N_{b-tag}%s"%(bintext))
-                can.Update()
-                can.SaveAs("%s/PDFEnvelope_expected_M%s%s.png"%(outDir,m,catExtB))
+                    ### Plot -2dLL, per channel
+                    gs = []
+                    miny = +1e9
+                    maxy = -1e9
+                    legend = ROOT.TLegend(0.65,0.7,0.85,0.87)
+                    legend.SetLineColor(0)
+                    legend.SetFillColor(0)
+                    pdfcolors = dict()
+                    pdfcolors["Envelope"]=1
+                    pdfcolors["Exponential"]=2
+                    pdfcolors["Power-law"]=4
+                    pdfcolors["Bernstein"]=6
+                    for nf,fdn in enumerate(fnmultidim):
+                        fd = ROOT.TFile.Open("higgsCombine%s.root"%fdn)
+                        td = fd.Get("limit")
+                        xl = []
+                        yl = []
+                        ### Penalty assigned to PDFs with >1 DOF:
+                        #penalty=0.0
+                        #if nf<len(fnmultidim)-1:
+                        #    penalty=0.5*(numpars[nf]-1)
+                        for e in range(td.GetEntries()):
+                            td.GetEntry(e)
+                            if (td.deltaNLL>1e-9 or td.deltaNLL<-1e-9) and td.deltaNLL>-1e9 and td.deltaNLL<1e9:
+                                xl.append(td.r)
+                                yl.append(2*(td.deltaNLL+td.nll+td.nll0))
+                        xv = np.array(xl,"d")
+                        yv = np.array(yl,"d")
+                        gs.append(ROOT.TGraph(len(xl),xv,yv))
+                        gs[nf].SetLineColor(pdfcolors[pdfnames[nf].split("<")[0]])
+                        gs[nf].SetMarkerColor(pdfcolors[pdfnames[nf].split("<")[0]])
+                        gs[nf].SetMarkerStyle(4)
+                        gs[nf].SetMarkerSize(0.5)
+                        if np.amin(yv)<miny:
+                            miny = np.amin(yv)
+                        if np.amax(yv)>maxy:
+                            maxy = np.amax(yv)
+                        if nf<len(fnmultidim)-1:
+                            legend.AddEntry(gs[nf],pdfnames[nf],"L")
+                        else:
+                            legend.AddEntry(gs[nf],pdfnames[nf],"P")
+                    h = ROOT.TH2D("h","",1,-0.3,3.0,1,miny,miny+1.25*(maxy-miny))
+                    h.GetXaxis().SetTitle("r")
+                    h.GetYaxis().SetTitle("-2Log(L)+c")
+                    h.GetYaxis().SetLabelSize(0.02)
+                    ROOT.gStyle.SetOptStat(0)
+                    ROOT.gStyle.SetOptFit(0)
+                    can = ROOT.TCanvas("can","",600,600)
+                    h.Draw()
+                    for nf,fdn in enumerate(fnmultidim):
+                        if nf<len(fnmultidim)-1:
+                            gs[nf].Draw("L")
+                        else:
+                            gs[nf].Draw("P")
+                    legend.Draw("same")
+                    text = ROOT.TLatex()
+                    text.SetTextSize(0.03);
+                    text.SetTextFont(42);
+                    text.DrawLatexNDC(0.15,0.85,"M=%s GeV"%(m))
+                    bintext = ""
+                    if binidx==1:
+                        bintext="=1"
+                    elif binidx==2:
+                        bintext="#geq2"
+                    text.DrawLatexNDC(0.15,0.8,"N_{b-tag}%s"%(bintext))
+                    can.Update()
+                    can.SaveAs("%s/PDFEnvelope_expected_M%s%s.png"%(outDir,m,catExtB))
 
             if not biasCombination:
                 continue
@@ -323,7 +347,13 @@ for y in years:
             #options=options+" --X-rtd TMCSO_PseudoAsimov=5000"
             #options=options+"--X-rtd TMCSO_AdaptivePseudoAsimov=1"
 
+            meanfit[m]["combined"] = dict()
+            sigmafit[m]["combined"] = dict()
+            namefit[m]["combined"] = dict()
             for rn,r in enumerate(rs):
+                meanfit[m]["combined"][r] = []
+                sigmafit[m]["combined"][r] = []
+                namefit[m]["combined"][r] = []
                 ### If injected signal is >3x the existing background, do not perform test
                 if float(r)*expLim*(nS1b+nS2b)/nBGAll>3.0:
                     break
@@ -341,7 +371,7 @@ for y in years:
                     fd = ROOT.TFile.Open("fitDiagnostics%s.root"%fdn)
                     td = fd.Get("tree_fit_sb")
                     h = ROOT.TH1D("h","",61,-6.1,6.1)
-                    h.GetXaxis().SetTitle("(r_{measured} - r_{injected})/#sigma_{r}")
+                    h.GetXaxis().SetTitle("(r_{out} - r_{in})/#sigma_{r}")
                     h.GetYaxis().SetTitle("Number of toys")
                     #todraw = "(r-%f)/((rLoErr/rHiErr>3.0 || rHiErr/rLoErr>3.0) ? rErr : (r>%f ? rLoErr : rHiErr))>>h"%(float(r)*expLim,float(r)*expLim)
                     todraw = "(r-%f)/((rLoErr/rHiErr>2.0 || rHiErr/rLoErr>2.0) ? rErr : 0.5*(rLoErr+rHiErr))>>h"%(float(r)*expLim)
@@ -349,6 +379,9 @@ for y in years:
                     fg = ROOT.TF1("fg","gaus",-5.0,5.0)
                     fg.SetLineColor(2)
                     h.Fit(fg,"0L","",-5.0,5.0)
+                    meanfit[m]["combined"][r].append(fg.GetParameter(1))
+                    sigmafit[m]["combined"][r].append(fg.GetParameter(2))
+                    namefit[m]["combined"][r].append("envelope")
                     can = ROOT.TCanvas("can","",600,600)
                     h.Draw()
                     can.Update()
@@ -360,7 +393,108 @@ for y in years:
                     text.SetTextFont(42);
                     text.DrawLatexNDC(0.15,0.85,"%s, M=%s GeV"%(s,m))
                     text.DrawLatexNDC(0.15,0.8,"N_{b-tag}=1+#geq2 (%.0f+%.0f events)"%(nBG1b,nBG2b))
-                    text.DrawLatexNDC(0.15,0.75,"r_{injected}=%d (%.1f+%.1f)"%(r,r*nS1b*expLim,r*nS2b*expLim))
+                    text.DrawLatexNDC(0.15,0.75,"r_{in}=%d (%.1f+%.1f)"%(r,r*nS1b*expLim,r*nS2b*expLim))
                     text.DrawLatexNDC(0.15,0.7,"Gen. PDF: envelope")
                     can.Update()
                     can.SaveAs("%s/bias%s.png"%(outDir,fdn))
+
+
+        ### Plot bias summary
+        ROOT.gStyle.SetOptStat(0)
+        ROOT.gStyle.SetOptFit(0)
+        offset = dict()
+        offset["envelope"]=0.0
+        offset["bernstein"]=5.0
+        offset["power-law"]=10.0
+        offset["exponential"]=15.0
+        plotMasses = ["350","500","700","1000","1500"]
+        dNames.append("combined")
+        colors = dict()
+        colors["envelope"]=6
+        colors["bernstein"]=4
+        colors["power-law"]=3
+        colors["exponential"]=2
+        for r in rs:
+            for d in dNames:
+                g   = dict()
+                npg = dict()
+                doPlot = False
+                leg = ROOT.TLegend(0.55,0.65,0.89,0.89)
+                leg.SetLineColor(0)
+                leg.SetLineStyle(0)
+                leg.SetLineWidth(0)
+                leg.SetFillColor(0)
+                leg.SetFillStyle(0)
+                for m in plotMasses:
+                    if m not in sigMasses:
+                        continue
+                    if m not in meanfit:
+                        continue
+                    if d not in meanfit[m]:
+                        continue
+                    if r not in meanfit[m][d]:
+                        continue
+                    for t in range(len(meanfit[m][d][r])):
+                        if namefit[m][d][r][t] not in g:
+                            g[namefit[m][d][r][t]] = ROOT.TGraphErrors()
+                            npg[namefit[m][d][r][t]] = 0
+                            g[namefit[m][d][r][t]].SetLineColor(colors[namefit[m][d][r][t].split("<")[0]])
+                            g[namefit[m][d][r][t]].SetMarkerColor(colors[namefit[m][d][r][t].split("<")[0]])
+                            g[namefit[m][d][r][t]].SetMarkerStyle(3)
+                            leg.AddEntry(g[namefit[m][d][r][t]],"Gen. PDF: %s"%namefit[m][d][r][t],"PL")
+                            doPlot = True
+                        g[namefit[m][d][r][t]].SetPoint(npg[namefit[m][d][r][t]],float(m)+offset[namefit[m][d][r][t].split("<")[0]],meanfit[m][d][r][t])
+                        g[namefit[m][d][r][t]].SetPointError(npg[namefit[m][d][r][t]],0.0,sigmafit[m][d][r][t])
+                        npg[namefit[m][d][r][t]] = npg[namefit[m][d][r][t]] + 1
+                if not doPlot:
+                    continue
+                can = ROOT.TCanvas("can","",600,600)
+                xmin=200.0
+                xmax=1150.0
+                haxis = ROOT.TH2D("haxis","",100,xmin,xmax,100,-2.5,2.5)
+                haxis.GetXaxis().SetTitle("Dimuon mass [GeV]")
+                haxis.GetYaxis().SetTitle("<(r_{out} - r_{in})/#sigma_{r}>")
+                haxis.GetYaxis().SetLabelSize(0.025)
+                haxis.Draw()
+                l = ROOT.TLine(xmin,0.0,xmax,0.0)
+                l.SetLineColor(1)
+                l.SetLineStyle(2)
+                l.Draw("same")
+                lu = ROOT.TLine(xmin,1.0,xmax,1.0)
+                lu.SetLineColor(1)
+                lu.SetLineStyle(2)
+                lu.Draw("same")
+                ld = ROOT.TLine(xmin,-1.0,xmax,-1.0)
+                ld.SetLineColor(1)
+                ld.SetLineStyle(2)
+                ld.Draw("same")
+                lup5 = ROOT.TLine(xmin,0.5,xmax,0.5)
+                lup5.SetLineColor(1)
+                lup5.SetLineStyle(2)
+                lup5.Draw("same")
+                ldp5 = ROOT.TLine(xmin,-0.5,xmax,-0.5)
+                ldp5.SetLineColor(1)
+                ldp5.SetLineStyle(2)
+                ldp5.Draw("same")
+                for gg in g:
+                    g[gg].Draw("PE,same")
+                leg.Draw("same")
+
+                text = ROOT.TLatex()
+                text.SetTextSize(0.03);
+                text.SetTextFont(42);
+                binidx="ch0"
+                if "nBTag1p" in d:
+                    text.DrawLatexNDC(0.15,0.85,"N_{b-tag}#geq1")
+                elif "nBTag1" in d:
+                    text.DrawLatexNDC(0.15,0.85,"N_{b-tag}=1")
+                    binidx="ch1"
+                elif "nBTag2p" in d:
+                    text.DrawLatexNDC(0.15,0.85,"N_{b-tag}#geq2")
+                    binidx="ch2"
+                else:
+                    text.DrawLatexNDC(0.15,0.85,"N_{b-tag}=1 + N_{b-tag}#geq2")
+                    binidx="combined"
+                text.DrawLatexNDC(0.15,0.80,"r_{in}=%d"%(r))
+                can.Update()
+                can.SaveAs("%s/bias_vs_mass_%s_r%d_%s.png"%(outDir,s,r,binidx))

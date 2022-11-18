@@ -15,7 +15,7 @@ m1sl  = []
 p1sl  = []
 p2sl  = []
 
-fin = open("%s/limits_%s.txt"%(limdir,model),"r")
+fin = open("%s/limits_toys_%s.txt"%(limdir,model),"r")
 for l in fin.readlines():
     if l.startswith("#"):
         continue
@@ -58,12 +58,12 @@ gobs.SetLineStyle(1)
 gobs.SetLineWidth(2)
 
 gexp = ROOT.TGraph(len(massv),massv,expv)
-gexp.SetLineColor(2)
+ogexp.SetLineColor(2)
 gexp.SetLineStyle(1)
 gexp.SetLineWidth(2)
 
 gm1s = ROOT.TGraph(len(massv),massv,m1sv)
-gm1s.SetLineColor(2)
+gm1s.SetLineColor(2)o
 gm1s.SetLineStyle(2)
 gm1s.SetLineWidth(1)
 
@@ -75,7 +75,16 @@ gp1s.SetLineWidth(1)
 leg = ROOT.TLegend(0.15,0.65,0.35,0.85)
 leg.SetLineColor(0)
 leg.SetFillColor(0)
-leg.SetHeader("%s model"%model)
+modelLeg = model
+if model=="Y3":
+    modelLeg="Y_{3}"
+elif model=="DY3":
+    modelLeg="DY_{3}"
+elif model=="DYp3":
+    modelLeg="DY'_{3}"
+elif model=="B3mL2":
+    modelLeg="B_{3}-L_{2}"
+leg.SetHeader("%s model"%modelLeg)
 if drawObserved:
     leg.AddEntry(gobs,"Observed","L")
 leg.AddEntry(gexp,"Expected","L")

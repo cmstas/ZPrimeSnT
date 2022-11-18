@@ -73,7 +73,7 @@ bool doMuDetRegionBins = false;
 bool doProdModeBins = false;
 
 // General flags
-bool removeSpikes = true;
+bool removeSpikes = false;
 bool removeDataDuplicates = true;
 bool removeCorrections = false;
 bool useTuneP = true;
@@ -116,7 +116,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 //  1: Apply central value
 // +2: Apply positive variation
 // -2: Apply negative variation
-  
+
   if ( runBFFSync ) {
     removeCorrections = true;
     doMllBinsForBFF = true;
@@ -196,7 +196,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "Y3_M550"  )    xsec = 0.00122483125*1000; // fb
   else if ( process == "Y3_M700"  )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0006143530*1000; // fb
   else if ( process == "Y3_M850"  )    xsec = 0.0003349177*1000; // fb
-  else if ( process == "Y3_M1000" )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0001919544*1000; // fb
+  else if ( process.Contains("Y3_M1000") )    xsec = (runBFFSync==1) ? 0.1*1000 : 0.0001919544*1000; // fb
   else if ( process == "Y3_M1250" )    xsec = 0.00008172256*1000; // fb
   else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000; // fb
   else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000; // fb
@@ -843,7 +843,9 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   );
 
   // Setting up partial unblinding
-  TRandom3 rnd_data(12345);
+  //TRandom3 rnd_data(12345);
+  TRandom3 rnd_data(54321);
+  //TRandom3 rnd_data(0);
 
   int nEventsTotal = 0;
   int nDuplicates = 0;
@@ -2124,8 +2126,10 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
         }
       }
 
-      if ( selectedPair_M < 175 ) continue;
+      //if ( selectedPair_M < 275.0 ) continue;
+      if ( selectedPair_M < 175.0 ) continue;
       // Fill histos: sel6
+      //label = "m_{#mu#mu}>275 GeV";
       label = "m_{#mu#mu}>175 GeV";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
