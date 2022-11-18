@@ -54,7 +54,7 @@ for m in masses:
         if model != "nomodel":
             fname = "%s/lim_asymptotic_%s_m%.0f.txt"%(limdir,model,m)
         else:
-            fname = "%s/lim_asymptotic_f2b%.0f_m%.0f.txt"%(limdir,model,100.0*f,m)
+            fname = "%s/lim_asymptotic_f2b%.0f_m%.0f.txt"%(limdir,100.0*f,m)
         if not os.path.exists(fname):
             continue
         else:
