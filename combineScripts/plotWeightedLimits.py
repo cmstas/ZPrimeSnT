@@ -208,7 +208,6 @@ pos            = dchi2_for_plot.index(max_D_old)
 max_dchi2 = 0.0
 gzp_gf    = 0.0
 theta_gf  = 0.0
-pos = dchi2_for_plot.index(max_D_old)
 if model=="Y3":
     max_dchi2 = 2*21.31500863005739
     gzp_gf    = 0.42551091

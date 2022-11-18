@@ -549,8 +549,6 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         if "nbtag" in plot.GetName():
             #maxx = 3.0
             maxx = 5.0
-        if "_sel10" in plot.GetName():
-            maxx=2500
         tb = plot.GetXaxis().FindBin(maxx)
         sumc  = 0.0
         sume2 = 0.0
@@ -903,8 +901,6 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if "nbtag" in plotname:
             #maxx=3.0
             maxx=5.0
-        if "_sel10" in plotname:
-            maxx=2500.0
         h_axis.GetXaxis().SetRangeUser(h_axis.GetXaxis().GetBinLowEdge(1),maxx)
         h_axis_ratio.GetXaxis().SetRangeUser(h_axis_ratio.GetXaxis().GetBinLowEdge(1),maxx)
 
