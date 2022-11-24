@@ -110,7 +110,7 @@ using namespace duplicate_removal;
 using namespace RooFit;
 
 
-int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
+int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int PDFUnc=0, int ScaleUnc=0, int PSUnc=0, int runBFFSync=0, const char* outdir="temp_data") {
 // Event weights / scale factors:
 //  0: Do not apply
 //  1: Apply central value
@@ -276,6 +276,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if (doOnlyDYEnriched) doDYEnriched = true;
   if ( writeOutYields_BeforeSel || writeOutYields_AfterSel ) doProdModeBins = true;
 
+  double genEventSumwPDF=0.0, genEventSumwScale=0.0, genEventSumwPS=0.0; 
   if ( isMC )
     factor = xsec*lumi/genEventSumw;
 
@@ -900,8 +901,31 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       bar.progress(nEventsTotal, nEventsChain);
 
       float weight = 1.0;
-      if ( isMC ) 
+      if ( isMC ) {
         weight = nt.genWeight();
+        if ( PDFUnc!=0 ) {
+          vector<float> PDFWeights = nt.LHEPdfWeight();
+          sort(PDFWeights.begin(), PDFWeights.end());
+          float PDFUncValue = (PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.84))-1) - PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.16))-1)) / 2;
+          if ( PDFUnc==2 ) weight *= (1 + PDFUncValue);
+          else if ( PDFUnc==-2 ) weight *= (1 - PDFUncValue);
+          genEventSumwPDF += weight;
+        }
+        if ( ScaleUnc!=0 ) {
+          vector<float> ScaleWeights = { nt.LHEScaleWeight().at(1)/*MUF="1.0" MUR="0.5"*/, nt.LHEScaleWeight().at(6)/*MUF="1.0" MUR="2.0"*/, nt.LHEScaleWeight().at(3)/*MUF="0.5" MUR="1.0"*/, nt.LHEScaleWeight().at(4)/*MUF="2.0" MUR="1.0"*/ };
+          sort(ScaleWeights.begin(), ScaleWeights.end());
+          if ( ScaleUnc==2 ) weight *= ScaleWeights.back();
+          else if ( ScaleUnc==-2 ) weight *= ScaleWeights.at(0);
+          genEventSumwScale += weight;
+        }
+        if ( PSUnc!=0 ) {
+          vector<float> PSWeights = { nt.PSWeight().at(4)/*isr:muRfac=0.5*/, nt.PSWeight().at(5)/*fsr:muRfac=0.5*/, nt.PSWeight().at(6)/*isr:muRfac=2.0*/, nt.PSWeight().at(7)/*fsr:muRfac=2.0*/ };
+          sort(PSWeights.begin(), PSWeights.end());
+          if ( PSUnc==2 ) weight *= PSWeights.back();
+          else if ( PSUnc==-2 ) weight *= PSWeights.at(0);
+          genEventSumwPS += weight;
+        }
+      }
 
       bool Z2q = false; // Two quarks in final state?
       prodModesel[0] = true;
@@ -2976,16 +3000,19 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   if ( removeDataDuplicates && !(isMC) )
     cout << "Number of duplicates found: " << nDuplicates << endl;
 
-  //// Avoid histograms with unphysical negative bin content (due to negative GEN weights)
-  //map<TString, TH1F*>::iterator it;
-  //for ( it = histos.begin(); it != histos.end(); it++ ) {
-  //  for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ ) {
-  //    if ( (it->second)->GetBinContent(b)<0.0) {
-  //	(it->second)->SetBinContent(b,0.0);
-  //	(it->second)->SetBinError(b,0.0);
-  //    }
-  //  }
-  //}
+  map<TString, TH1F*>::iterator it;
+  for ( it = histos.begin(); it != histos.end(); it++ ) {
+    // Avoid histograms with unphysical negative bin content (due to negative GEN weights)
+    //for ( unsigned int b=1; b<(it->second)->GetNbinsX()+1; b++ ) {
+    //  if ( (it->second)->GetBinContent(b)<0.0) {
+    //    (it->second)->SetBinContent(b,0.0);
+    //    (it->second)->SetBinError(b,0.0);
+    //  }
+    //}
+    if ( PDFUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwPDF );
+    if ( ScaleUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwScale );
+    if ( PSUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwPS );
+  }
 
   if ( writeOutYields_BeforeSel ) {
     TString model = ((TObjString *)process.Tokenize("_")->At(0))->String();

@@ -3,7 +3,7 @@ R__LOAD_LIBRARY(../NanoCORE/NANO_CORE.so)
 
 double getSumOfGenEventSumw(TChain *chaux);
 
-void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0)
+void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_data=1, int run_MCbkg=1, int run_signal=1, int run_BFF=0, TString sampleArg="all", int prefireWeight=1, int topPtWeight=1, int PUWeight=1, int muonRecoSF=1, int muonIdSF=1, int muonIsoSF=1, int muonScaleUnc=0, int muonResUnc=0, int triggerSF=1, int bTagSF=1, int JECUnc=0, int JERUnc=0, int UnclEnUnc=0, int PDFUnc=0, int ScaleUnc=0, int PSUnc=0)
 {
   // Event weights / scale factors:
   //  0: Do not apply
@@ -17,6 +17,9 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   //JECUnc: No central value, set to +/-2 to get variations
   //JERUnc: Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
   //UnclEnUnc: No central value, set to +/-2 to get variations
+  //PDFUnc: No central value, set to +/-2 to get variations
+  //ScaleUnc: No central value, set to +/-2 to get variations
+  //PSUnc: No central value, set to +/-2 to get variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017
@@ -311,6 +314,9 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       sigModel.push_back("DYp3");
       sigModel.push_back("B3mL2");
     }
+    else if ( sampleArg.Contains("_CentralCMSLike") ) {
+      sigModel = { "Y3" };
+    }
     else {
       if ( sampleArg.Contains("B3mL2") ) sigModel.push_back("B3mL2");
       else if ( sampleArg.Contains("DYp3") ) sigModel.push_back("DYp3");
@@ -326,25 +332,31 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     {
       for ( unsigned int imass=0; imass<sigMass.size(); imass++ )
       {
-	if ( !(sampleArg.Contains("_bwCutoff")) )
-	{
-	  samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
-	  sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
-	  sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
-                                                                     { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
-                                                                     { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
-                                                                     { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
-	}
-	else
-	{
-	  vector<TString> bwCutoff = { "15", "50", "1000", "15000" };
-	  for ( unsigned int ib=0; ib<bwCutoff.size(); ib++ )
-	  {
-	    samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib]);
-	    sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_bwcutoff_"+bwCutoff[ib]+"_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
-	    sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib], { { "2018", { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2" } } }});
-	  }
-	}
+        if ( sampleArg.Contains("_bwCutoff") )
+        {
+          vector<TString> bwCutoff = { "15", "50", "1000", "15000" };
+          for ( unsigned int ib=0; ib<bwCutoff.size(); ib++ )
+          {
+            samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib]);
+            sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_bwcutoff_"+bwCutoff[ib]+"_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+            sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass]+"_bwCutoff"+bwCutoff[ib], { { "2018", { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2" } } }});
+          }
+        }
+        else if ( sampleArg.Contains("_CentralCMSLike") )
+        {
+          samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
+          sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_CentralCMSLike_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+          sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018", { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } } } });
+        }
+        else
+        {
+          samples.push_back(sigModel[imodel]+"_M"+sigMass[imass]);
+          sample_names.insert({sigModel[imodel]+"_M"+sigMass[imass],"ZPrimeToMuMuSB_M"+sigMass[imass]+"_bestfit_TuneCP5_13TeV_Allanach_"+sigModel[imodel]+"_5f_madgraph_pythia8_NoPSWgts"});
+          sample_prod.insert({sigModel[imodel]+"_M"+sigMass[imass], { { "2018",       { "RunIISummer20UL18MiniAODv2-106X_upgrade2018_realistic_v16_L1v1-v2_private" } },
+                                                                      { "2017",       { "RunIISummer20UL17MiniAODv2-106X_mc2017_realistic_v9-v2_private" } },
+                                                                      { "2016APV",    { "RunIISummer20UL16MiniAODAPVv2-106X_mcRun2_asymptotic_preVFP_v11-v2_private" } },
+                                                                      { "2016nonAPV", { "RunIISummer20UL16MiniAODv2-106X_mcRun2_asymptotic_v17-v2_private" } } } });
+        }
       }
     }
   }
@@ -365,6 +377,9 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     JECUnc=0;
     JERUnc=0;
     UnclEnUnc=0;
+    PDFUnc=0;
+    ScaleUnc=0;
+    PSUnc=0;
 
     // ttbarv7
     if ( sampleArg=="TTv7" || sampleArg=="all" ) {
@@ -419,9 +434,13 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
     {
       TString sample = samples[isample];
       if ( sampleArg.Contains("_bwCutoff") ) {
-	if ( year!="2018" && !(sample.Contains("Y3")) )
-	     continue;
-	baseDir = "/ceph/cms/store/group/zprime/BWCutoff_Y3_M1000_2018/";
+        if ( year!="2018" || !(sample.BeginsWith("Y3")) )
+          continue;
+        baseDir = "/ceph/cms/store/group/zprime/BWCutoff_Y3_M1000_2018/";
+      }
+      if ( sampleArg.Contains("_CentralCMSLike") ) {
+        if ( year!="2018" || !(sample.BeginsWith("Y3")) )
+          continue;
       }
       TString dataformat = "NANOAOD";
       if ( !(sample.Contains("data")) )
@@ -437,6 +456,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/merged/merged.root";
         if ( sample.Contains("_bwCutoff") )
           dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_merged.root";
+        if ( sampleArg.Contains("_CentralCMSLike") )
+          dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"/merged/merged.root";
         if ( runOnSignalBeforeSkim )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";
         ch_temp->Add(dir);
@@ -444,8 +465,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       }
       cout<<"Sample: "<<sample<<endl;
 
-      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
-      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,run_BFF,outdir);
+      if ( sample.Contains("data") ) ScanChain(ch_temp,1.0,year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,PDFUnc,ScaleUnc,PSUnc,run_BFF,outdir);
+      else ScanChain(ch_temp,getSumOfGenEventSumw(chaux_temp),year,sample,prefireWeight,topPtWeight,PUWeight,muonRecoSF,muonIdSF,muonIsoSF,muonScaleUnc,muonResUnc,triggerSF,bTagSF,JECUnc,JERUnc,UnclEnUnc,PDFUnc,ScaleUnc,PSUnc,run_BFF,outdir);
     }
     cout<<endl;
   }
