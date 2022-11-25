@@ -18,8 +18,8 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
   //JERUnc: Use 1 to apply the nominal JER corrections, set to +/-2 to get variations
   //UnclEnUnc: No central value, set to +/-2 to get variations
   //PDFUnc: No central value, set to +/-2 to get variations
-  //ScaleUnc: No central value, set to +/-2 to get variations
-  //PSUnc: No central value, set to +/-2 to get variations
+  //ScaleUnc: No central value, set to +/-2 to get variations, set to +/-3 to get renormalization variations, set to +/-4 to get factorization variations
+  //PSUnc: No central value, set to +/-2 to get variations, set to +/-3 to get ISR variations, set to +/-4 to get FSR variations
 
   // 2016: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2016
   // 2017: https://twiki.cern.ch/twiki/bin/view/CMS/PdmVDatasetsUL2017

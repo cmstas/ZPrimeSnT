@@ -912,17 +912,41 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           genEventSumwPDF += weight;
         }
         if ( ScaleUnc!=0 ) {
+          // NanoAOD doc: LHE scale variation weights (w_var / w_nominal); [0] is MUF="0.5" MUR="0.5"; [1] is MUF="1.0" MUR="0.5"; [2] is MUF="2.0" MUR="0.5"; [3] is MUF="0.5" MUR="1.0"; [4] is MUF="2.0" MUR="1.0"; [5] is MUF="0.5" MUR="2.0"; [6] is MUF="1.0" MUR="2.0"; [7] is MUF="2.0" MUR="2.0"
           vector<float> ScaleWeights = { nt.LHEScaleWeight().at(1)/*MUF="1.0" MUR="0.5"*/, nt.LHEScaleWeight().at(6)/*MUF="1.0" MUR="2.0"*/, nt.LHEScaleWeight().at(3)/*MUF="0.5" MUR="1.0"*/, nt.LHEScaleWeight().at(4)/*MUF="2.0" MUR="1.0"*/ };
-          sort(ScaleWeights.begin(), ScaleWeights.end());
-          if ( ScaleUnc==2 ) weight *= ScaleWeights.back();
-          else if ( ScaleUnc==-2 ) weight *= ScaleWeights.at(0);
+          // Envelope
+          if ( abs(ScaleUnc)==2 ) {
+            sort(ScaleWeights.begin(), ScaleWeights.end());
+            if ( ScaleUnc==2 ) weight *= ScaleWeights.back();
+            else if ( ScaleUnc==-2 ) weight *= ScaleWeights.at(0);
+          }
+          // Renormalization only
+          else if ( ScaleUnc==3 ) weight *= ScaleWeights.at(1); // MUF="1.0" MUR="2.0"
+          else if ( ScaleUnc==-3 ) weight *= ScaleWeights.at(0); // MUF="1.0" MUR="0.5"
+          // Factorization only
+          else if ( ScaleUnc==4 ) weight *= ScaleWeights.at(3); // MUF="2.0" MUR="1.0"
+          else if ( ScaleUnc==-4 ) weight *= ScaleWeights.at(2); // MUF="0.5" MUR="1.0"
           genEventSumwScale += weight;
         }
         if ( PSUnc!=0 ) {
-          vector<float> PSWeights = { nt.PSWeight().at(4)/*isr:muRfac=0.5*/, nt.PSWeight().at(5)/*fsr:muRfac=0.5*/, nt.PSWeight().at(6)/*isr:muRfac=2.0*/, nt.PSWeight().at(7)/*fsr:muRfac=2.0*/ };
-          sort(PSWeights.begin(), PSWeights.end());
-          if ( PSUnc==2 ) weight *= PSWeights.back();
-          else if ( PSUnc==-2 ) weight *= PSWeights.at(0);
+          // Pointrs to some documentation:
+          //   https://twiki.cern.ch/twiki/bin/view/CMS/TopModGen#Event_Generation
+          //   https://github.com/cms-sw/cmssw/blob/0d99e165171e75076b6bc753ec212e11e1bd17ac/PhysicsTools/NanoAOD/plugins/GenWeightsTableProducer.cc#L185-L186
+          //   https://github.com/cms-sw/cmssw/blob/0d99e165171e75076b6bc753ec212e11e1bd17ac/PhysicsTools/NanoAOD/plugins/GenWeightsTableProducer.cc#L531
+          // vector<float> PSWeights = { nt.PSWeight().at(4)/*isr:muRfac=0.5*/, nt.PSWeight().at(5)/*fsr:muRfac=0.5*/, nt.PSWeight().at(6)/*isr:muRfac=2.0*/, nt.PSWeight().at(7)/*fsr:muRfac=2.0*/ }; // Default NanoAOD config
+          vector<float> PSWeights = { nt.PSWeight().at(24)/*isr:muRfac=0.5*/, nt.PSWeight().at(25)/*isr:muRfac=2.0*/, nt.PSWeight().at(2)/*fsr:muRfac=0.5*/, nt.PSWeight().at(3)/*fsr:muRfac=2.0*/ }; // Alternative NanoAOD config --> Our private signal sample production seems to be using this.
+          // Envelope
+          if ( abs(PSUnc)==2 ) {
+            sort(PSWeights.begin(), PSWeights.end());
+            if ( PSUnc==2 ) weight *= PSWeights.back();
+            else if ( PSUnc==-2 ) weight *= PSWeights.at(0);
+          }
+          // ISR only
+          else if ( PSUnc==3 ) weight *= PSWeights.at(1); // isr:muRfac=2.0
+          else if ( PSUnc==-3 ) weight *= PSWeights.at(0); // isr:muRfac=0.5
+          // FSR only
+          else if ( PSUnc==4 ) weight *= PSWeights.at(3); // fsr:muRfac=2.0
+          else if ( PSUnc==-4 ) weight *= PSWeights.at(2); // fsr:muRfac=0.5
           genEventSumwPS += weight;
         }
       }
@@ -3009,10 +3033,13 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
     //    (it->second)->SetBinError(b,0.0);
     //  }
     //}
-    if ( PDFUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwPDF );
+    if ( PDFUnc!=0 )   (it->second)->Scale( genEventSumw / genEventSumwPDF ); 
     if ( ScaleUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwScale );
-    if ( PSUnc!=0 ) (it->second)->Scale( genEventSumw / genEventSumwPS );
+    if ( PSUnc!=0 )    (it->second)->Scale( genEventSumw / genEventSumwPS );
   }
+  if ( PDFUnc!=0 )   std::cout << genEventSumw / genEventSumwPDF << "\n";
+  if ( ScaleUnc!=0 ) std::cout << genEventSumw / genEventSumwScale << "\n";
+  if ( PSUnc!=0 )    std::cout << genEventSumw / genEventSumwPS << "\n";
 
   if ( writeOutYields_BeforeSel ) {
     TString model = ((TObjString *)process.Tokenize("_")->At(0))->String();
