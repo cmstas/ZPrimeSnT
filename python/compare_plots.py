@@ -458,10 +458,11 @@ def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
+inDirOther = []
+legOther = []
+
 #inDirRef = "./cpp/temp_data_bwCutoffDefault/"
 #legRef = "BW cutoff=15k"
-#inDirOther = []
-#legOther = []
 #inDirOther.append("./cpp/temp_data_bwCutoff15/")
 #inDirOther.append("./cpp/temp_data_bwCutoff50/")
 #inDirOther.append("./cpp/temp_data_bwCutoff1000/")
