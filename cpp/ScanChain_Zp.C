@@ -903,14 +903,33 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
       float weight = 1.0;
       if ( isMC ) {
         weight = nt.genWeight();
+        // Internal twiki with instructions: http://www.t2.ucsd.edu/tastwiki/bin/view/CMS/HowToPDFUncertaintiesInNanoAOD
+        // Variation for Hessian sets (used in UL production)
         if ( PDFUnc!=0 ) {
           vector<float> PDFWeights = nt.LHEPdfWeight();
-          sort(PDFWeights.begin(), PDFWeights.end());
-          float PDFUncValue = (PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.84))-1) - PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.16))-1)) / 2;
-          if ( PDFUnc==2 ) weight *= (1 + PDFUncValue);
-          else if ( PDFUnc==-2 ) weight *= (1 - PDFUncValue);
+          float PDFUncValue = 0.0, PDFAlphaSUncValue = 0.0, PDFTotalUncValue = 0.0;
+          // PDF uncertainties saved up till (and including) PDFWeights[100]
+          for ( int i = 0; i<101; i++ ) {
+            PDFUncValue += (PDFWeights[i] - 1) * (PDFWeights[i] - 1);
+          }
+          PDFUncValue = TMath::Sqrt(PDFUncValue);
+          // AlphaS uncertainties saved in PDFWeights[101] and PDFWeights[102]
+          PDFAlphaSUncValue = ( PDFWeights[102] - PDFWeights[101] ) / 2;
+          // Total uncertainty is the sum in quadrature
+          PDFTotalUncValue = TMath::Sqrt( PDFUncValue*PDFUncValue + PDFAlphaSUncValue*PDFAlphaSUncValue );
+          if ( PDFUnc==2 ) weight *= (1 + PDFTotalUncValue);
+          else if ( PDFUnc==-2 ) weight *= (1 - PDFTotalUncValue);
           genEventSumwPDF += weight;
         }
+        // Variation for MC sets
+        //if ( PDFUnc!=0 ) {
+        //  vector<float> PDFWeights = nt.LHEPdfWeight();
+        //  sort(PDFWeights.begin(), PDFWeights.end());
+        //  float PDFUncValue = (PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.84))-1) - PDFWeights.at(int(round(nt.nLHEPdfWeight()*0.16))-1)) / 2;
+        //  if ( PDFUnc==2 ) weight *= (1 + PDFUncValue);
+        //  else if ( PDFUnc==-2 ) weight *= (1 - PDFUncValue);
+        //  genEventSumwPDF += weight;
+        //}
         if ( ScaleUnc!=0 ) {
           // NanoAOD doc: LHE scale variation weights (w_var / w_nominal); [0] is MUF="0.5" MUR="0.5"; [1] is MUF="1.0" MUR="0.5"; [2] is MUF="2.0" MUR="0.5"; [3] is MUF="0.5" MUR="1.0"; [4] is MUF="2.0" MUR="1.0"; [5] is MUF="0.5" MUR="2.0"; [6] is MUF="1.0" MUR="2.0"; [7] is MUF="2.0" MUR="2.0"
           vector<float> ScaleWeights = { nt.LHEScaleWeight().at(1)/*MUF="1.0" MUR="0.5"*/, nt.LHEScaleWeight().at(6)/*MUF="1.0" MUR="2.0"*/, nt.LHEScaleWeight().at(3)/*MUF="0.5" MUR="1.0"*/, nt.LHEScaleWeight().at(4)/*MUF="2.0" MUR="1.0"*/ };
