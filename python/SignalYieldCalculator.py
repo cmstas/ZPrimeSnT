@@ -16,7 +16,7 @@ def getDefaultModelName(model):
    if model is not None and model == "BFF":
       return "BFF_gmu_0p17_dbs_0p04_gb_0p02"
    else:
-      return get_model_name(model)
+      return model
 
 
 class SignalXSContainer:
@@ -52,6 +52,8 @@ class SignalXSContainer:
                self.splines[model][state] = sp
 
    def eval(self, model, state, mass):
+      if model=="B3-L2":
+         model="B3mL2"
       sp = self.splines[model][state]
       xl = sp.GetXmin()
       xh = sp.GetXmax()
@@ -108,6 +110,8 @@ class SignalAccEffContainer:
                   self.uncs[model][state][cat] = [ self.infile.Get(sname.replace("acceff", "errsq_dn_acceff")), self.infile.Get(sname.replace("acceff", "errsq_up_acceff")) ]
 
    def eval(self, model, state, cat, mass):
+      if model=="B3-L2":
+         model="B3mL2"
       sp_nom = self.splines[model][state][cat]
       sp_dn = self.uncs[model][state][cat][0]
       sp_up = self.uncs[model][state][cat][1]
