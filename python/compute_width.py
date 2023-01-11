@@ -1,6 +1,7 @@
 #!/bin/env python3
 
 import argparse
+import re as rgx
 import cmath
 
 def complexconjugate(z):
@@ -12,38 +13,80 @@ def im(z):
 
 
 def get_model_name(model):
+   """
+Rename the model if we specified 'm' instead of '-' in "B3-L2".
+   """
    if model == "B3mL2":
       return "B3-L2"
    else:
       return model
 
-# These are values used in best-fit MC generation
-# Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
 def get_model_reference_pars(model):
+   """
+These are values used in best-fit MC generation
+Model refers to "B3-L2", "Y3", "DY3", "DYp3", or a string that satisfies the regular expression 'BFF_gmu_([0-9,p]*)_dbs_([0-9,p]*)_gb_([0-9,p]*)'.
+   """
    model = get_model_name(model)
+   couplings = dict()
    if model == "B3-L2":
-      return 0.05, 0.1
+      couplings["gzpfit"]=0.05
+      couplings["tsb"]=0.1
    elif model == "Y3":
-      return 0.14, -0.15
+      couplings["gzpfit"]=0.14
+      couplings["tsb"]=-0.15
    elif model == "DY3":
-      return 0.14, 0.13
+      couplings["gzpfit"]=0.14
+      couplings["tsb"]=0.13
    elif model == "DYp3":
-      return 0.08, -0.18
+      couplings["gzpfit"]=0.08
+      couplings["tsb"]=-0.18
+   elif "BFF" in model:
+      couplings["gtautau"] = 0.
+      mm = rgx.search("BFF_gmu_([0-9,p]*)_dbs_([0-9,p]*)_gb_([0-9,p]*)", model)
+      if not mm:
+         raise RuntimeError("get_model_reference_pars: Model {} is not a valid string to search for regular expressions.".format(model))
+      else:
+         couplings["gmumu"] = float(mm.group(1).replace("p","."))
+         couplings["gb"] = float(mm.group(3).replace("p","."))
+         couplings["delsb"] = float(mm.group(2).replace("p","."))
+   elif "GenericLFU" in model:
+      mm = rgx.search("GenericLFU_glep_([0-9,p]*)_gnu_([0-9,p]*)_dbs_([0-9,p]*)_gb_([0-9,p]*)", model)
+      if not mm:
+         raise RuntimeError("get_model_reference_pars: Model {} is not a valid string to search for regular expressions.".format(model))
+      else:
+         couplings["glep"] = float(mm.group(1).replace("p","."))
+         couplings["gnu"] = float(mm.group(2).replace("p","."))
+         couplings["gb"] = float(mm.group(4).replace("p","."))
+         couplings["delsb"] = float(mm.group(3).replace("p","."))
    else:
       raise RuntimeError("get_model_reference_pars: Model {} is invalid.".format(model))
+   return couplings
 
 
-# These are c/p routines from decay.py Zp partial widths
-# MZp is the pole mass of Zprime.
-# gzpfit is gX x 1 TeV / MZp
-# Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
-# tsb is theta_sb. Note that rotation conventions are different between the B3-L2 model vs the others.
-# Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
-# zeromf is a boolean that sets fermion masses except the mass of the top quark to 0.
-# - Normally, the width computation takes into account the beta factors. This option allows one to disregard them.
-# - ...Comes in handy if you actually want cross section ratios.
-def calculate_width(MZp, gzpfit, tsb, model, channel, zeromf):
+def calculate_width(MZp, couplings, model, channel, zeromf):
+   """
+These are c/p routines from decay.py Zp partial widths
+MZp is the pole mass of Zprime.
+Model refers to "B3-L2", "Y3", "DY3", "DYp3", or a string that contains "BFF" or "GenericLFU".
+For the Allanach models, the couplings dictionary should contain "gzpfit" and "tsb".
+- gzpfit is gX x 1 TeV / MZp
+- tsb is theta_sb. Note that rotation conventions are different between the B3-L2 model vs the others.
+For the BFF models, couplings should contain "gtautau", "gmumu", "gb", and "delsb".
+- gtautau and gmumu are the couplings of Z' to tautau and mumu pairs, respectively.
+- gb sets the Z'bb coupling, but also scales Z'sb.
+- delsb sets the ratio of Z'sb to Z'bb couplings.
+For the generic lepton flavor-universal model, couplings should contain "glep", "gnu", "gb", and "delsb".
+- glep and gnu are the couplings of Z' to charged lepton and neutrino pairs, respectively.
+- gb sets the Z'bb coupling, but also scales Z'sb.
+- delsb sets the ratio of Z'sb to Z'bb couplings.
+zeromf is a boolean that sets fermion masses except the mass of the top quark to 0.
+- Normally, the width computation takes into account the beta factors. This option allows one to disregard them.
+  ...Comes in handy if you actually want cross section ratios, where fermion masses are typically set to zero.
+   """
    model = get_model_name(model)
+
+   gzpfit = (couplings["gzpfit"] if "gzpfit" in couplings else 0.)
+   tsb = (couplings["tsb"] if "tsb" in couplings else 0.)
 
    ZERO = 0
    aEWM1 = 127.9
@@ -432,6 +475,40 @@ def calculate_width(MZp, gzpfit, tsb, model, channel, zeromf):
          width_map['WW']=(((-12*cw**2*ee**2*MW**2*sz**2)/sw**2-(17*cw**2*ee**2*MZp**2*sz**2)/sw**2+(4*cw**2*ee**2*MZp**4*sz**2)/(MW**2*sw**2)+(cw**2*ee**2*MZp**6*sz**2)/(4.*MW**4*sw**2))*cmath.sqrt(-4*MW**2*MZp**2+MZp**4))/(48.*cmath.pi*abs(MZp)**3)
          width_map['HZ']=(((15*cz**2*ee**4*sz**2*vev**2)/4.-(3*cz**2*ee**4*MH**2*sz**2*vev**2)/(4.*MZ**2)-(3*cz**2*ee**4*MH**2*sz**2*vev**2)/(4.*MZp**2)+(3*cz**2*ee**4*MH**4*sz**2*vev**2)/(8.*MZ**2*MZp**2)+(3*cz**2*ee**4*MZ**2*sz**2*vev**2)/(8.*MZp**2)+(3*cz**2*ee**4*MZp**2*sz**2*vev**2)/(8.*MZ**2)+(5*cw**4*cz**2*ee**4*sz**2*vev**2)/(8.*sw**4)-(cw**4*cz**2*ee**4*MH**2*sz**2*vev**2)/(8.*MZ**2*sw**4)-(cw**4*cz**2*ee**4*MH**2*sz**2*vev**2)/(8.*MZp**2*sw**4)+(cw**4*cz**2*ee**4*MH**4*sz**2*vev**2)/(16.*MZ**2*MZp**2*sw**4)+(cw**4*cz**2*ee**4*MZ**2*sz**2*vev**2)/(16.*MZp**2*sw**4)+(cw**4*cz**2*ee**4*MZp**2*sz**2*vev**2)/(16.*MZ**2*sw**4)+(5*cw**2*cz**2*ee**4*sz**2*vev**2)/(2.*sw**2)-(cw**2*cz**2*ee**4*MH**2*sz**2*vev**2)/(2.*MZ**2*sw**2)-(cw**2*cz**2*ee**4*MH**2*sz**2*vev**2)/(2.*MZp**2*sw**2)+(cw**2*cz**2*ee**4*MH**4*sz**2*vev**2)/(4.*MZ**2*MZp**2*sw**2)+(cw**2*cz**2*ee**4*MZ**2*sz**2*vev**2)/(4.*MZp**2*sw**2)+(cw**2*cz**2*ee**4*MZp**2*sz**2*vev**2)/(4.*MZ**2*sw**2)+(5*cz**2*ee**4*sw**2*sz**2*vev**2)/(2.*cw**2)-(cz**2*ee**4*MH**2*sw**2*sz**2*vev**2)/(2.*cw**2*MZ**2)-(cz**2*ee**4*MH**2*sw**2*sz**2*vev**2)/(2.*cw**2*MZp**2)+(cz**2*ee**4*MH**4*sw**2*sz**2*vev**2)/(4.*cw**2*MZ**2*MZp**2)+(cz**2*ee**4*MZ**2*sw**2*sz**2*vev**2)/(4.*cw**2*MZp**2)+(cz**2*ee**4*MZp**2*sw**2*sz**2*vev**2)/(4.*cw**2*MZ**2)+(5*cz**2*ee**4*sw**4*sz**2*vev**2)/(8.*cw**4)-(cz**2*ee**4*MH**2*sw**4*sz**2*vev**2)/(8.*cw**4*MZ**2)-(cz**2*ee**4*MH**2*sw**4*sz**2*vev**2)/(8.*cw**4*MZp**2)+(cz**2*ee**4*MH**4*sw**4*sz**2*vev**2)/(16.*cw**4*MZ**2*MZp**2)+(cz**2*ee**4*MZ**2*sw**4*sz**2*vev**2)/(16.*cw**4*MZp**2)+(cz**2*ee**4*MZp**2*sw**4*sz**2*vev**2)/(16.*cw**4*MZ**2))*cmath.sqrt(MH**4-2*MH**2*MZ**2+MZ**4-2*MH**2*MZp**2-2*MZ**2*MZp**2+MZp**4))/(48.*cmath.pi*abs(MZp)**3)
 
+   elif "BFF" in model:
+      gb = couplings["gb"]
+      delbs = couplings["delsb"]
+      gmu = couplings["gmumu"]
+      gtau = couplings["gtautau"]
+
+      # Here, couplings are left-handed for quarks and neutrinos, and vector-like for leptons.
+      width_map['tt~']=((-6*gb**2*MT**2 + 6*gb**2*MZp**2)*cmath.sqrt(-4*MT**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['sb~']=((-3*delbs**2*gb**2*MB**2 - 3*delbs**2*gb**2*MS**2 - (3*delbs**2*gb**2*MB**4)/MZp**2 + (6*delbs**2*gb**2*MB**2*MS**2)/MZp**2 - (3*delbs**2*gb**2*MS**4)/MZp**2 + 6*delbs**2*gb**2*MZp**2)*cmath.sqrt(MB**4 - 2*MB**2*MS**2 + MS**4 - 2*MB**2*MZp**2 - 2*MS**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['bs~']=((-3*delbs**2*gb**2*MB**2 - 3*delbs**2*gb**2*MS**2 - (3*delbs**2*gb**2*MB**4)/MZp**2 + (6*delbs**2*gb**2*MB**2*MS**2)/MZp**2 - (3*delbs**2*gb**2*MS**4)/MZp**2 + 6*delbs**2*gb**2*MZp**2)*cmath.sqrt(MB**4 - 2*MB**2*MS**2 + MS**4 - 2*MB**2*MZp**2 - 2*MS**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['bb~']=((-6*gb**2*MB**2 + 6*gb**2*MZp**2)*cmath.sqrt(-4*MB**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['mu-mu+']=((8*gmu**2*MMU**2 + 4*gmu**2*MZp**2)*cmath.sqrt(-4*MMU**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['tau-tau+']=((8*gtau**2*MTA**2 + 4*gtau**2*MZp**2)*cmath.sqrt(-4*MTA**2*MZp**2 + MZp**4))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['numunumu~']=(gmu**2*MZp**4)/(24.*cmath.pi*abs(MZp)**3)
+      width_map['nutaunutau~']=(gtau**2*MZp**4)/(24.*cmath.pi*abs(MZp)**3)
+
+   elif "GenericLFU" in model:
+      gb = couplings["gb"]
+      delbs = couplings["delsb"]
+      glep = couplings["glep"]
+      gnu = couplings["gnu"]
+
+      # This is modified from the BFF model.
+      # Compared to that, we assume all couplings are left-handed.
+      width_map['sb~']=(3.*delbs**2*gb**2*(2.*MZp**2-(MB**2+MS**2+(MB**2-MS**2)**2/MZp**2))*cmath.sqrt((MZp**2-(MB-MS)**2)*(MZp**2-(MB+MS)**2)))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['bs~']=(3.*delbs**2*gb**2*(2.*MZp**2-(MB**2+MS**2+(MB**2-MS**2)**2/MZp**2))*cmath.sqrt((MZp**2-(MB-MS)**2)*(MZp**2-(MB+MS)**2)))/(48.*cmath.pi*abs(MZp)**3)
+      width_map['bb~']=((-3*gb**2*MB**2 + 3*gb**2*MZp**2)*cmath.sqrt(-4*MB**2*MZp**2 + MZp**4))/(24.*cmath.pi*abs(MZp)**3)
+      width_map['e-e+']=((2*glep**2*Me**2 + glep**2*MZp**2)*cmath.sqrt(-4*Me**2*MZp**2 + MZp**4))/(24.*cmath.pi*abs(MZp)**3)
+      width_map['mu-mu+']=((2*glep**2*MMU**2 + glep**2*MZp**2)*cmath.sqrt(-4*MMU**2*MZp**2 + MZp**4))/(24.*cmath.pi*abs(MZp)**3)
+      width_map['tau-tau+']=((2*glep**2*MTA**2 + glep**2*MZp**2)*cmath.sqrt(-4*MTA**2*MZp**2 + MZp**4))/(24.*cmath.pi*abs(MZp)**3)
+      width_map['nuenue~']=(gnu**2*MZp**4)/(24.*cmath.pi*abs(MZp)**3)
+      width_map['numunumu~']=(gnu**2*MZp**4)/(24.*cmath.pi*abs(MZp)**3)
+      width_map['nutaunutau~']=(gnu**2*MZp**4)/(24.*cmath.pi*abs(MZp)**3)
+
    else:
       raise RuntimeError("calculate_width: Model {} is invalid.".format(model))
 
@@ -449,18 +526,38 @@ def calculate_width(MZp, gzpfit, tsb, model, channel, zeromf):
       raise RuntimeError("calculate_width: The only supported channels are {}, or Zp for the total width.".format(", ".join(klist)))
 
 
-# weight for xsec*BR is the same as ratio of the product of partial widths that correspond to production, decay, and the BW.
-# If BW can be ignored (because of how large resolution is), one could encode this weighting into Combine as a physics model.
-# minv is the invariant mass of Zprime.
-# MZp is the pole mass of Zprime.
-# gzpfit is gX x 1 TeV / MZp
-# Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
-# tsb is theta_sb. Note that rotation conventions are different between the B3-L2 model vs the others.
-# Model refers to "B3-L2", "Y3", "DY3", or "DYp3".
-# prod is 6 for ss, 8 for sb, and 10 for bb couplings to Zp.
-# If useIntMass is false, the full BW is computed using minv. Otherwise, minv is ignored, and an average weight over the entire mass is computed.
-# - This is a valid approximation if resolution effects are larger than the total Zprime width.
-def calculate_Zpmumu_weight(minv, MZp, gzpfit, tsb, model, prod, useIntMass = False):
+def calculate_Zpmumu_weight(
+   minv, MZp,
+   couplings, model,
+   prod, useIntMass = False,
+   couplings_old = None,
+   model_old = None
+   ):
+   """
+weight for xsec*BR is the same as ratio of the product of partial widths that correspond to production, decay, and the BW.
+minv is the invariant mass of Zprime.
+MZp is the pole mass of Zprime.
+If BW can be ignored (because of how large resolution is), one could encode this weighting into Combine as a physics model.
+Model refers to "B3-L2", "Y3", "DY3", "DYp3", or a string that contains "BFF" or "GenericLFU".
+For the Allanach models, the couplings dictionary should contain "gzpfit" and "tsb".
+- gzpfit is gX x 1 TeV / MZp
+- tsb is theta_sb. Note that rotation conventions are different between the B3-L2 model vs the others.
+For the BFF models, couplings should contain "gtautau", "gmumu", "gb", and "delsb".
+- gtautau and gmumu are the couplings of Z' to tautau and mumu pairs, respectively.
+- gb sets the Z'bb coupling, but also scales Z'sb.
+- delsb sets the ratio of Z'sb to Z'bb couplings.
+For the generic lepton flavor-universal model, couplings should contain "glep", "gnu", "gb", and "delsb".
+- glep and gnu are the couplings of Z' to charged lepton and neutrino pairs, respectively.
+- gb sets the Z'bb coupling, but also scales Z'sb.
+- delsb sets the ratio of Z'sb to Z'bb couplings.
+prod is 6 for ss, 8 for sb, and 10 for bb couplings to Zp.
+- In BFF models, it is possible to reweight NLO BSM-only channels that involve double Z'sb couplings by setting prod=64.
+If useIntMass is false, the full BW is computed using minv. Otherwise, minv is ignored, and an average weight over the entire mass is computed.
+- This is a valid approximation if resolution effects are larger than the total Zprime width.
+The parameters model_old and couplings_old refer to the denominator of reweighting.
+- By default, they are set to None, meaning model_old=model, and couplings_old is taken from get_model_reference_pars.
+- If model_old is not None and couplings_old is None, couplings_old is taken as get_model_reference_pars(model_old), evaluating the model string.
+   """
    pchannels = []
    dkchannel = "mu-mu+"
    twchannel = "Zp"
@@ -468,57 +565,97 @@ def calculate_Zpmumu_weight(minv, MZp, gzpfit, tsb, model, prod, useIntMass = Fa
       pchannels.append("ss~")
    elif prod == 8:
       pchannels.extend(["sb~","bs~"])
+   elif prod == 64:
+      pchannels.append("sb~")
+      if "BFF" not in model:
+         raise RuntimeError("calculate_Zpmumu_weight: prod=64 is only supported in the BFF model.")
    elif prod == 10:
       pchannels.append("bb~")
    else:
-      raise RuntimeError("calculate_Zpmumu_weight: Only supported prod options are 6 (ss), 8 (sb), or 10 (bb).")
+      raise RuntimeError("calculate_Zpmumu_weight: Only supported prod options are 6 (ss), 8 (sb), or 10 (bb) in all models, or 64 in the BFF model.")
 
    xsec = 0
-   dkwidth = calculate_width(MZp, gzpfit, tsb, model, dkchannel, False)
-   totalwidth = calculate_width(MZp, gzpfit, tsb, model, "Zp", False)
+   dkwidth = calculate_width(MZp, couplings, model, dkchannel, False)
+   totalwidth = calculate_width(MZp, couplings, model, "Zp", False)
    breit = totalwidth**(-1) if useIntMass else ((minv**2 - MZp**2)**2 + (MZp*totalwidth)**2)**(-1)
    for pchannel in pchannels:
-      xsec = xsec + calculate_width(MZp, gzpfit, tsb, model, pchannel, True)
+      xsec = xsec + calculate_width(MZp, couplings, model, pchannel, True)
+   if prod == 64:
+      xsec = xsec*xsec
 
-   gzpfit_old, tsb_old = get_model_reference_pars(model)
+   if model_old is None:
+      model_old = model
+   if couplings_old is None:
+      couplings_old = get_model_reference_pars(model_old)
    xsec_old = 0
-   dkwidth_old = calculate_width(MZp, gzpfit_old, tsb_old, model, dkchannel, False)
-   totalwidth_old = calculate_width(MZp, gzpfit_old, tsb_old, model, "Zp", False)
+   dkwidth_old = calculate_width(MZp, couplings_old, model_old, dkchannel, False)
+   totalwidth_old = calculate_width(MZp, couplings_old, model_old, "Zp", False)
    breit_old = totalwidth_old**(-1) if useIntMass else ((minv**2 - MZp**2)**2 + (MZp*totalwidth_old)**2)**(-1)
    for pchannel in pchannels:
-      xsec_old = xsec_old + calculate_width(MZp, gzpfit_old, tsb_old, model, pchannel, True)
+      xsec_old = xsec_old + calculate_width(MZp, couplings_old, model_old, pchannel, True)
+   if prod == 64:
+      xsec_old = xsec_old*xsec_old
 
    return (xsec * dkwidth * breit)/(xsec_old * dkwidth_old * breit_old)
 
 
 
-# The main program: Only calculates the width, as the Python file name suggests.
-# If you want to obtaine event weights, use the xsc_mode option (and optionally, invM).
-# You could also import the functions directly.
 if __name__ == "__main__":
+   """
+The main program: Only calculates the width, as the Python file name suggests.
+If you want to obtaine event weights, use the xsc_mode option (and optionally, invM).
+You could also import the functions directly.
+   """
    parser = argparse.ArgumentParser()
    parser.add_argument("--MZp", type=float, help="Pole mass of ZPrime", required=True)
-   parser.add_argument("--gzpfit", type=float, help="g_Zp x 1 TeV/m_Zp", required=True)
-   parser.add_argument("--t23", type=float, help="theta_sb", required=True)
-   parser.add_argument("--useBaselineModelParams", action='store_true', help="Ignore gzpfit and t23 values and use the model parameters hardcoded in this script. Default: False")
-   parser.add_argument("--model", type=str, help="Possible options are Y3, DY3, DYp3, or B3-L2", required=True)
+   parser.add_argument("--gzpfit", type=float, help="g_Zp x 1 TeV/m_Zp in Allanach models", required=False, default=None)
+   parser.add_argument("--t23", type=float, help="theta_sb in Allanach models", required=False, default=None)
+   parser.add_argument("--model", type=str, help="Possible options are Y3, DY3, DYp3, or B3-L2 for the Allanach models, or a string that satisfies the regular expressions 'BFF_gmu_([0-9,p]*)_dbs_([0-9,p]*)_gb_([0-9,p]*)' or 'GenericLFU_glep_([0-9,p]*)_gnu_([0-9,p]*)_dbs_([0-9,p]*)_gb_([0-9,p]*)'", required=True)
+   parser.add_argument("--glep_LFU", type=float, help="g_lep for charged leptons in a generic lepton flavor-universal (LFU) model", required=False, default=None)
+   parser.add_argument("--gnu_LFU", type=float, help="g_nu for neutrinos in a generic LFU model", required=False, default=None)
+   parser.add_argument("--gmumu", type=float, help="g_mumu in BFF models", required=False, default=None)
+   parser.add_argument("--gtautau", type=float, help="g_tautau in BFF models", required=False, default=None)
+   parser.add_argument("--gb", type=float, help="g_b in BFF and generic LFU models", required=False, default=None)
+   parser.add_argument("--delsb", type=float, help="del_sb in BFF and generic LFU models", required=False, default=None)
+   parser.add_argument("--useBaselineModelParams", action='store_true', help="Ignore model parameter inputs and use the model parameters hardcoded in this script. Default: False")
    parser.add_argument("--zeromf", action='store_true', help="Set light fermion (any fermion except the top) masses to zero. Default: False")
    parser.add_argument("--channel", type=str, help="Possible options are Zp for the total width, or other decay modes for their partial widths (e.g. mu-mu+, bs~, sb~, bb~ etc.). Ignored if xsec_mode is used. Default: Zp", required=False, default='Zp')
-   parser.add_argument("--xsec_mode", type=int, help="By default, this program calculates the width. If you want to calculate event weights, set this option to 6 (ss), 8 (sb), or 10 (bb).", default=0)
+   parser.add_argument("--xsec_mode", type=int, help="By default, this program calculates the width. If you want to calculate event weights, set this option to 6 (ss), 8 (sb), or 10 (bb). Set this option to 64 for NLO BSM reweighting in (sb)^2 channels in the BFF model.", default=0)
    parser.add_argument("--invM", type=float, help="Invariant mass of ZPrime when xsec_mode is enabled. If you do not specify this option, the BW scale is averaged as 1/Gamma, which is a valid approximation for narrow resonances that could be used in a Combine physics model.", required=False)
 
    args = parser.parse_args()
    args.model = get_model_name(args.model)
-   if args.model in ["Y3","DY3","DYp3","B3-L2"]:
+   isAllanachModel = (args.model in ["Y3","DY3","DYp3","B3-L2"])
+   isBFFModel = ("BFF" in args.model)
+   isGenericLFUModel = ("GenericLFU" in args.model)
+   if isAllanachModel or isBFFModel or isGenericLFUModel:
+      couplings = dict()
       if args.useBaselineModelParams:
-         args.gzpfit, args.t23 = get_model_reference_pars(args.model)
+         couplings = get_model_reference_pars(args.model)
+      else:
+         if isAllanachModel:
+            couplings["gzpfit"] = args.gzpfit
+            couplings["t23"] = args.t23
+         elif isBFFModel:
+            couplings["gmumu"] = args.gmumu
+            couplings["gtautau"] = args.gtautau
+            couplings["gb"] = args.gb
+            couplings["delsb"] = args.delsb
+         else:
+            couplings["glep"] = args.glep_LFU
+            couplings["gnu"] = args.gnu_LFU
+            couplings["gb"] = args.gb
+            couplings["delsb"] = args.delsb
+      for cc in couplings:
+         if couplings[cc] is None:
+            raise RuntimeError("Not all couplings relevant for the model are set properly.")
 
       if args.xsec_mode == 0:
-         print("{}".format(calculate_width(args.MZp, args.gzpfit, args.t23, args.model, args.channel, args.zeromf)))
+         print("{}".format(calculate_width(args.MZp, couplings, args.model, args.channel, args.zeromf)))
       else:
          invM = args.MZp
          if args.invM is not None:
             invM = args.invM
-         print("{}".format(calculate_Zpmumu_weight(invM, args.MZp, args.gzpfit, args.t23, args.model, args.xsec_mode, (args.invM is None))))
+         print("{}".format(calculate_Zpmumu_weight(invM, args.MZp, couplings, args.model, args.xsec_mode, (args.invM is None))))
    else:
       raise RuntimeError("Model {} is invalid.".format(args.model))
