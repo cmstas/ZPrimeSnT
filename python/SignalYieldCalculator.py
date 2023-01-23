@@ -1,11 +1,22 @@
 #!/bin/env python3
 
 import argparse
+
 import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+
 import math
 
+from compute_width import get_model_name
 from compute_width import get_model_reference_pars
 from compute_width import calculate_Zpmumu_weight
+
+
+def getDefaultModelName(model):
+   if model is not None and model == "BFF":
+      return "BFF_gmu_0p17_dbs_0p04_gb_0p02"
+   else:
+      return model
 
 
 class SignalXSContainer:
@@ -15,7 +26,7 @@ class SignalXSContainer:
    and evaluate as
    obj.eval(model,state,mass)
    where
-   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF"
    - state = "ss", "sb", "bb"
    - mass = Mass of Zprime
    Returns the cross section at nominal parameter values.
@@ -29,16 +40,20 @@ class SignalXSContainer:
       elif self.infile.IsZombie():
          raise RuntimeError("SignalXSContainer could not open file {}!".format(fname))
 
-      models = ["Y3","DY3","DYp3","B3mL2"]
-      states = ["ss","sb","bb"]
+      models = ["Y3","DY3","DYp3","B3mL2","BFF"]
+      states = ["ss","sb","bb","double_sb"]
       self.splines = dict()
       for model in models:
          self.splines[model] = dict()
          for state in states:
-            sname = "spline_{}_xsec_{}".format(model,state)
-            self.splines[model][state] = self.infile.Get(sname)
+            sname = "spline_{}_xsec_{}".format(getDefaultModelName(model),state)
+            sp = self.infile.Get(sname)
+            if sp and sp is not None:
+               self.splines[model][state] = sp
 
    def eval(self, model, state, mass):
+      if model=="B3-L2":
+         model="B3mL2"
       sp = self.splines[model][state]
       xl = sp.GetXmin()
       xh = sp.GetXmax()
@@ -55,7 +70,7 @@ class SignalAccEffContainer:
    and evaluate as
    obj.eval(model,state,cat,mass)
    where
-   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF", or "GenericLFU"
    - state = "ss", "sb", "bb"
    - cat = "Nb_eq_1", "Nb_geq_2"
    - mass = Mass of Zprime
@@ -70,8 +85,8 @@ class SignalAccEffContainer:
       elif self.infile.IsZombie():
          raise RuntimeError("SignalAccEffContainer could not open file {}!".format(fname))
 
-      models = ["Y3","DY3","DYp3","B3mL2"]
-      states = ["ss","sb","bb"]
+      models = ["Y3","DY3","DYp3","B3mL2","BFF"]
+      states = ["ss","sb","bb","double_sb"]
       cats = ["Nb_eq_1","Nb_geq_2"]
       self.splines = dict()
       self.uncs = dict()
@@ -84,11 +99,19 @@ class SignalAccEffContainer:
             for cat in cats:
                # Acceptances are averaged, so there is no need to pass the model
                # Arguments include the model just so that we can support such functionality if we need to distinguish them in the future.
-               sname = "spline_avg_acceff_{}_{}_{}".format(state,cat,"Run2")
-               self.splines[model][state][cat] = self.infile.Get(sname)
-               self.uncs[model][state][cat] = [ self.infile.Get(sname.replace("acceff", "errsq_dn_acceff")), self.infile.Get(sname.replace("acceff", "errsq_up_acceff")) ]
+               sname = None
+               if model != "BFF":
+                  sname = "spline_avg_acceff_{}_{}_{}".format(state,cat,"Run2")
+               else:
+                  sname = "spline_{}_acceff_{}_{}_{}".format(getDefaultModelName(model),state,cat,"Run2")
+               sp = self.infile.Get(sname)
+               if sp and sp is not None:
+                  self.splines[model][state][cat] = sp
+                  self.uncs[model][state][cat] = [ self.infile.Get(sname.replace("acceff", "errsq_dn_acceff")), self.infile.Get(sname.replace("acceff", "errsq_up_acceff")) ]
 
    def eval(self, model, state, cat, mass):
+      if model=="B3-L2":
+         model="B3mL2"
       sp_nom = self.splines[model][state][cat]
       sp_dn = self.uncs[model][state][cat][0]
       sp_up = self.uncs[model][state][cat][1]
@@ -106,16 +129,18 @@ class SignalAccEffContainer:
 class SignalYieldCalculator:
    """
    Construct as
-   obj = SignalYieldCalculator([optional: luminosity factor (default=1), and ROOT file names for xsec, and acceptance*eficiency interpolation])
-   and evaluate as
-   obj.eval(model,state,cat,gzpfit,tsb,mass)
+   obj = SignalYieldCalculator([optional: luminosity factor (default=1),
+   and ROOT file names for xsec, and acceptance*eficiency interpolation]).
+   Evaluate the class using
+   obj.eval(state, cat, mass, model, couplings, model_old, couplings_old)
    where
-   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (in the future)
-   - state = "ss", "sb", "bb"
+   - state = "ss", "sb", or "bb" in all models, or "double_sb" in the BFF model only
    - cat = "Nb_eq_1", "Nb_geq_2"
-   - gzpfit = gX/mZp*1 TeV
-   - tsb = theta_sb
    - mass = Mass of Zprime
+   - model = "Y3", "DY3", "DYp3", "B3mL2", "BFF", "GenericLFU"
+   - couplings = Appropriate dictionary of couplings for model.
+   - model_old = "Y3", "DY3", "DYp3", "B3mL2", "BFF" (but "BFF" is not actually run, so don't use it!)
+   - couplings_old = Appropriate dictionary of couplings for model_old, or None for the defaults in sample generation (the user should most likely keep this parameter as None).
    Returns a triplet of nominal yield, lower acc*eff. unc., higher acc*eff. unc.
    """
    def __init__(self,lumi=1.,fname_xs=None,fname_acceff=None):
@@ -123,20 +148,44 @@ class SignalYieldCalculator:
       self.acceff = SignalAccEffContainer(fname_acceff)
       self.lumi = float(lumi)
 
-   def eval(self, model, state, cat, gzpfit, tsb, mass):
+   def eval(self, state, cat, mass, model, couplings, model_old=None, couplings_old=None):
       prod=-1
       if state=="ss":
          prod=6
       elif state=="sb":
          prod=8
+      elif state=="double_sb":
+         prod=64
       elif state=="bb":
          prod=10
       else:
          return 0
-      xswgt = calculate_Zpmumu_weight(minv=mass,MZp=mass,gzpfit=gzpfit,tsb=tsb,model=model,prod=prod,useIntMass=True)
-      ynom = self.lumi * self.xs.eval(model, state, mass)
-      acc = self.acceff.eval(model, state, cat, mass)
+
+      if model is None:
+         raise ValueError("SignalYieldCalculator::eval: model cannot be None.")
+      if model_old is None:
+         model_old = model
+      if model_old=="GenericLFU":
+         raise ValueError("SignalYieldCalculator::eval: model_old cannot be {}.".format(model_old))
+
+      xswgt = calculate_Zpmumu_weight(
+         minv=mass,
+         MZp=mass,
+         couplings=couplings,
+         model=getDefaultModelName(model),
+         prod=prod,useIntMass=True,
+         couplings_old=couplings_old,
+         model_old=getDefaultModelName(model_old)
+         )
+
+      ynom = self.lumi * self.xs.eval(getDefaultModelName(model_old), state, mass)
+      acc = self.acceff.eval(getDefaultModelName(model_old), state, cat, mass)
       res=[]
       for aa in acc:
          res.append(xswgt*ynom*aa)
+      if res[0]<0.:
+         res[0]=0.
+         res[1]=0.
+      if res[0]+res[1]<0.:
+         res[1]=-res[0]
       return res[0],res[1],res[2]

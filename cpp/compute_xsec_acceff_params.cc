@@ -581,8 +581,12 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
         if (hypo_mass_count_pairs_map[is][ic].find(strhypo)==hypo_mass_count_pairs_map[is][ic].end()) hypo_mass_count_pairs_map[is][ic][strhypo] = std::vector<std::pair<double, double>>();
 
         if (count[is][ic]>0){
-          HelperFunctions::addByLowest(hypo_mass_yield_pairs_map[is][ic][strhypo], static_cast<double>(mass), yield[is][ic]/lumi/mass_model_xsec_map[mass][strhypo].at(is));
-          HelperFunctions::addByLowest(hypo_mass_count_pairs_map[is][ic][strhypo], static_cast<double>(mass), count[is][ic]);
+          double tmpacceff = yield[is][ic]/lumi/mass_model_xsec_map[mass][strhypo].at(is);
+          if (tmpacceff>=2e-6){
+            cout << strhypo << ", " << mass << tmpacceff << endl;
+            HelperFunctions::addByLowest(hypo_mass_yield_pairs_map[is][ic][strhypo], static_cast<double>(mass), tmpacceff);
+            HelperFunctions::addByLowest(hypo_mass_count_pairs_map[is][ic][strhypo], static_cast<double>(mass), count[is][ic]);
+          }
         }
       }
     }
@@ -1050,11 +1054,20 @@ void make_plots(TString const& cinput_xs_params, TString const& cinput_acceff_pa
         std::vector<TGraph*> grs_plottable; grs_plottable.reserve(grs.size());
         for (auto const& obj:grs){
           TString sname = obj->GetName();
+          cout << sname << ": " << endl;
           if (sname.Contains(Form("acceff_%s_%s", state.data(), cat.second.data())) && !sname.Contains("avg") && !sname.Contains("errsq")){
             set_plottable_attributes(obj);
+            obj->SetMarkerStyle(29); // Since xsec graphs do not have error bars, make sure to put a visible shape.
+            obj->SetMarkerSize(1.5);
             grs_plottable.push_back(obj);
             for (int ip=0; ip<obj->GetN(); ip++){
               ymax = std::max(ymax, obj->GetY()[ip]+obj->GetEYhigh()[ip]);
+              cout << obj->GetX()[ip] << ", " << obj->GetY()[ip] << endl;
+            }
+          }
+          else if (sname.Contains(Form("acceff_%s_%s", state.data(), cat.second.data())) && sname.Contains("avg") && !sname.Contains("errsq")){
+            for (int ip=0; ip<obj->GetN(); ip++){
+              cout << obj->GetX()[ip] << ", " << obj->GetY()[ip] << " ?=" << splines_plottable.front()->Eval(obj->GetX()[ip]) << endl;
             }
           }
         }
