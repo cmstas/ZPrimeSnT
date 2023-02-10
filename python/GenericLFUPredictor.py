@@ -7,9 +7,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 import math
 
-from compute_width import get_model_name
-from compute_width import get_model_reference_pars
-from compute_width import calculate_Zpmumu_weight
+from compute_width import calculate_width
 from SignalYieldCalculator import SignalYieldCalculator
 
 
@@ -24,7 +22,7 @@ class GenericLFUPredictor:
    - f2b_Nexcl_pairs = List of (f2b, N_excluded) pairs (list of lists)
    - delsb = delta_sb parameter value in the GenericLFU model
    - nsteps = Number of points
-   Returns a list of nsteps (glep, gb) pairs.
+   Returns a list of nsteps (glep, gb, total width) pairs.
    """
 
    def __init__(self):
@@ -66,7 +64,10 @@ class GenericLFUPredictor:
          Ntot = N1bb+N1sb+N2bb+N2sb
          if Ntot==0.: continue
          scale = math.sqrt(Npred/Ntot)
-         res.append([couplings["glep"]*scale, couplings["gb"]*scale])
+         couplings["glep"]=couplings["glep"]*scale
+         couplings["gb"]=couplings["gb"]*scale
+         gzp = calculate_width(mass, couplings, "GenericLFU", "Zp", False)
+         res.append([couplings["glep"], couplings["gb"], gzp])
 
       res.sort()
       return res
