@@ -21,6 +21,7 @@ class GenericLFUPredictor:
    - mass = Mass of Zprime
    - f2b_Nexcl_pairs = List of (f2b, N_excluded) pairs (list of lists)
    - delsb = delta_sb parameter value in the GenericLFU model
+   - mult_gnu = Multiplier of gnu in the GenericLFU model
    - nsteps = Number of points
    Returns a list of nsteps (glep, gb, total width) pairs.
    """
@@ -28,10 +29,11 @@ class GenericLFUPredictor:
    def __init__(self):
       self.yields = SignalYieldCalculator()
 
-   def calculate(self, mass, f2b_Nexcl_pairs, delsb=0., nsteps=100):
+   def calculate(self, mass, f2b_Nexcl_pairs, delsb=0., mult_gnu=1., nsteps=100):
       couplings=dict()
-      couplings["glep"]=couplings["gnu"]=couplings["gb"]=1.
+      couplings["glep"]=couplings["gb"]=1.
       couplings["delsb"]=delsb
+      couplings["gnu"]=couplings["glep"]*mult_gnu
       # Since delsb determines f2b, we compute that only once.
       f2b_Nexcl_pairs.sort()
       N1bb=self.yields.eval("bb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
@@ -55,8 +57,9 @@ class GenericLFUPredictor:
       inc=1./float(nfracs)
       for ir in range(0, nfracs+1):
          flep = inc*float(ir)
-         couplings["glep"]=couplings["gnu"]=math.sqrt(flep);
+         couplings["glep"]=math.sqrt(flep);
          couplings["gb"]=math.sqrt(1.-flep)
+         couplings["gnu"]=couplings["glep"]*mult_gnu
          N1bb=self.yields.eval("bb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
          N1sb=self.yields.eval("sb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
          N2bb=self.yields.eval("bb","Nb_geq_2",mass,"GenericLFU",couplings,"B3mL2")[0]
@@ -66,6 +69,7 @@ class GenericLFUPredictor:
          scale = math.sqrt(Npred/Ntot)
          couplings["glep"]=couplings["glep"]*scale
          couplings["gb"]=couplings["gb"]*scale
+         couplings["gnu"]=couplings["glep"]*mult_gnu
          gzp = calculate_width(mass, couplings, "GenericLFU", "Zp", False)
          res.append([couplings["glep"], couplings["gb"], gzp])
 
