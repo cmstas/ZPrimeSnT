@@ -14,9 +14,9 @@ from SignalYieldCalculator import SignalYieldCalculator
 class GenericLFUPredictor:
    """
    Construct as
-   obj = GenericLFUPredictor(),
+   obj = GenericLFUPredictor(lumi),
    Evaluate the class using
-   obj.calculate(mass, f2b_Nexcl_pairs, delsb)
+   obj.calculate(mass, f2b_Nexcl_pairs, delsb, mult_gnu, nsteps)
    where
    - mass = Mass of Zprime
    - f2b_Nexcl_pairs = List of (f2b, N_excluded) pairs (list of lists)
@@ -26,8 +26,8 @@ class GenericLFUPredictor:
    Returns a list of nsteps (glep, gb, total width) pairs.
    """
 
-   def __init__(self):
-      self.yields = SignalYieldCalculator()
+   def __init__(self,lumi):
+      self.yields = SignalYieldCalculator(lumi)
 
    def calculate(self, mass, f2b_Nexcl_pairs, delsb=0., mult_gnu=1., nsteps=100):
       couplings=dict()
