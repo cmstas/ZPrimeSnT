@@ -458,18 +458,20 @@ def draw_plot(sampleDictRef, sampleDictOther, refLegendEntry, otherLegendEntry, 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(1)
 
-#inDirRef = "./cpp/nominal/"
-#legRef = "Nominal"
-inDirRef = "./cpp/temp_data_bwCutoffDefault/"
-legRef = "BW cutoff=15k"
 inDirOther = []
 legOther = []
-inDirOther.append("./cpp/temp_data_bwCutoff15/")
-inDirOther.append("./cpp/temp_data_bwCutoff50/")
-inDirOther.append("./cpp/temp_data_bwCutoff1000/")
-legOther.append("BW cutoff=15")
-legOther.append("BW cutoff=50")
-legOther.append("BW cutoff=1k")
+
+#inDirRef = "./cpp/temp_data_bwCutoffDefault/"
+#legRef = "BW cutoff=15k"
+#inDirOther.append("./cpp/temp_data_bwCutoff15/")
+#inDirOther.append("./cpp/temp_data_bwCutoff50/")
+#inDirOther.append("./cpp/temp_data_bwCutoff1000/")
+#legOther.append("BW cutoff=15")
+#legOther.append("BW cutoff=50")
+#legOther.append("BW cutoff=1k")
+
+#inDirRef = "./cpp/nominal/"
+#legRef = "Nominal"
 #inDirOther.append("./cpp/temp_data_JECUp/")
 #inDirOther.append("./cpp/temp_data_JECDn/")
 #legOther.append("JES up")
@@ -505,6 +507,31 @@ legOther.append("BW cutoff=1k")
 #legOther.append("Trigger SF up")
 #legOther.append("Trigger SF down")
 
+inDirRef = "/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_UncDefault/"
+legRef = "Nominal"
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_ScaleRUncUpCorr/")
+legOther.append("ScaleRUncUpCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_ScaleRUncDownCorr/")
+legOther.append("ScaleRUncDownCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_ScaleFUncUpCorr/")
+legOther.append("ScaleFUncUpCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_ScaleFUncDownCorr/")
+legOther.append("ScaleFUncDownCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_ScaleFUncDownCorr/")
+legOther.append("ScaleFUncDownCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltUncUpCorr/")
+legOther.append("PSAltUncUpCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltUncDownCorr/")
+legOther.append("PSAltUncDownCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltISRUncUpCorr/")
+legOther.append("PSAltISRUncUpCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltISRUncDownCorr/")
+legOther.append("PSAltISRUncDownCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltFSRUncUpCorr/")
+legOther.append("PSAltFSRUncUpCorr")
+inDirOther.append("/ceph/cms/store/user/evourlio/ZPrimeSnTOutput/temp_data_PSAltFSRUncDownCorr/")
+legOther.append("PSAltFSRUncDownCorr")
+
 xsecNom = (0.192745833333+0.190323076923+0.192126315789+0.192622380952)/4.0
 xsecRef  = 0.196012990937
 xsecOther = [0.191542168675, 0.194979001019, 0.196013407258]
@@ -537,10 +564,10 @@ samplesRef = []
 #samplesRef.append("B3mL2_M200")
 #samplesRef.append("B3mL2_M700")
 #samplesRef.append("B3mL2_M1500")
-##samplesRef.append("Y3_M200")
-#samplesRef.append("Y3_M700")
-#samplesRef.append("Y3_M1500")
-samplesRef.append("Y3_M1000")
+samplesRef.append("Y3_M200")
+samplesRef.append("Y3_M700")
+samplesRef.append("Y3_M1500")
+#samplesRef.append("Y3_M1000")
 #
 samplesOther = samplesRef
 
