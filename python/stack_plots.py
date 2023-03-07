@@ -1251,7 +1251,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if args.cumulative:
         extension = extension+"_cumulative"
     
-    canvas.SaveAs(args.outDir + plotname + extension + ".pdf" if args.pdf else ".png")
+    canvas.SaveAs(args.outDir + plotname + extension + (".pdf" if args.pdf else ".png"))
 
 
 
