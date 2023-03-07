@@ -71,6 +71,7 @@ bool doDYEnriched = false;
 bool doOnlyDYEnriched = false; // Turns doDYEnriched on
 bool doMuDetRegionBins = false;
 bool doProdModeBins = false;
+bool doProdModeBinsForAcceptance = true;
 
 // General flags
 bool removeSpikes = false;
@@ -200,6 +201,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "Y3_M1250" )    xsec = 0.00008172256*1000; // fb
   else if ( process == "Y3_M1500" )    xsec = 0.0000363696*1000; // fb
   else if ( process == "Y3_M2000" )    xsec = 0.0000082510*1000; // fb
+  else if ( process == "Y3_M2500" )    xsec = 0.0000022565149*1000; // fb
+  else if ( process == "Y3_M3000" )    xsec = 0.00000085724965558*1000; // fb
 
   else if ( process == "DY3_M100"  )   xsec = 0.0337049425*1000; // fb
   else if ( process == "DY3_M200"  )   xsec = 0.0127905600*1000; // fb
@@ -212,6 +215,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "DY3_M1250" )   xsec = 0.00013043808*1000; // fb
   else if ( process == "DY3_M1500" )   xsec = 0.0000595791*1000; // fb
   else if ( process == "DY3_M2000" )   xsec = 0.0000154994*1000; // fb
+  else if ( process == "DY3_M2500" )   xsec = 0.00000539745722079*1000; // fb
+  else if ( process == "DY3_M3000" )   xsec = 0.000003060573*1000; // fb
 
   else if ( process == "DYp3_M100"  )  xsec = 0.0313425200*1000; // fb
   else if ( process == "DYp3_M200"  )  xsec = 0.0091705403*1000; // fb
@@ -224,6 +229,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "DYp3_M1250" )  xsec = 0.00008302484*1000; // fb
   else if ( process == "DYp3_M1500" )  xsec = 0.0000367774*1000; // fb
   else if ( process == "DYp3_M2000" )  xsec = 0.0000082788*1000; // fb
+  else if ( process == "DYp3_M2500" )  xsec = 0.00000227446496727*1000; // fb
+  else if ( process == "DYp3_M3000" )  xsec = 0.000000823041887024*1000; // fb
 
   else if ( process == "B3mL2_M100"  ) xsec = 0.2895163696*1000; // fb
   else if ( process == "B3mL2_M200"  ) xsec = 0.1236243250*1000; // fb
@@ -236,6 +243,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   else if ( process == "B3mL2_M1250" ) xsec = 0.000981572*1000; // fb
   else if ( process == "B3mL2_M1500" ) xsec = 0.0004383351*1000; // fb
   else if ( process == "B3mL2_M2000" ) xsec = 0.0001029249*1000; // fb
+  else if ( process == "B3mL2_M2500" ) xsec = 0.0000305804019841*1000; // fb
+  else if ( process == "B3mL2_M3000" ) xsec = 0.000013060591*1000; // fb
 
   else if ( process == "BFF_M250" )        xsec = 0.1*1000; // fb
   else if ( process == "BFF_M350" )        xsec = 0.1*1000; // fb
@@ -369,6 +378,11 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
   // Define RooDataSet's for fit
   RooRealVar mfit("mfit", "mfit", 175.0, 6500.0);
   RooRealVar roow("roow", "roow", -10000.0, 10000.0);
+  RooCategory catZp("couplingZp", "Zp coupling category");
+  catZp.defineType("Zpall", 0);
+  catZp.defineType("Zpss",  1);
+  catZp.defineType("Zpbs",  2);
+  catZp.defineType("Zpbb",  3);
   map<TString, RooDataSet> roods;
   for ( unsigned int imll=0; imll < mllbin.size(); imll++ ) {
     for ( unsigned int inb=0; inb < nbtag.size(); inb++ ) {
@@ -377,7 +391,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
           TString dname = TString("d_") + mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
           TString slice = mllbin[imll] + TString("_") + nbtag[inb] + TString("_") + MuDetRegion[iMuDet] + prodMode[iprodMode];
           if ( fillRooDataSet )
-            roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow),WeightVar("roow"))});
+            roods.insert({slice, RooDataSet(dname,dname,RooArgSet(mfit,roow,catZp),WeightVar("roow"))});
         }
       }
     }
@@ -972,7 +986,8 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 
       bool Z2q = false; // Two quarks in final state?
       prodModesel[0] = true;
-      if ( doProdModeBins ) {
+      catZp.setLabel("Zpall");
+      if ( doProdModeBins || doProdModeBinsForAcceptance ) {
         if ( process.Contains("Y3") || process.Contains("DY3") || process.Contains("DYp3") || process.Contains("B3mL2") ) {
           int s = 0; // How many s quarks?
           if (nt.nLHEPart()==6) Z2q=true;
@@ -980,26 +995,37 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
             if (abs(nt.LHEPart_pdgId().at(LHEPart)) == 3) s++;
           }
           if (s==2) {
-            prodModesel[1] = true;
-            prodModesel[2] = false;
-            prodModesel[3] = false;
+	    catZp.setLabel("Zpss");
+	    if ( doProdModeBins ) {
+	      prodModesel[1] = true;
+	      prodModesel[2] = false;
+	      prodModesel[3] = false;
+	    }
           }
           else if (s==1) {
-            prodModesel[1] = false;
-            prodModesel[2] = true;
-            prodModesel[3] = false;
+	    catZp.setLabel("Zpbs");
+	    if ( doProdModeBins ) {
+	      prodModesel[1] = false;
+	      prodModesel[2] = true;
+	      prodModesel[3] = false;
+	    }
           }
           else {
-            prodModesel[1] = false;
-            prodModesel[2] = false;
-            prodModesel[3] = true;
+	    catZp.setLabel("Zpbb");
+	    if ( doProdModeBins ) {
+	      prodModesel[1] = false;
+	      prodModesel[2] = false;
+	      prodModesel[3] = true;
+	    }
           }
         }
         else {
-          prodModesel[1] = true;
-          prodModesel[2] = true;
-          prodModesel[3] = true;
-        }
+	  if ( doProdModeBins ) {
+	    prodModesel[1] = true;
+	    prodModesel[2] = true;
+	    prodModesel[3] = true;
+	  }
+	}
       }
 
       if ( writeOutYields_BeforeSel ) {
@@ -1326,7 +1352,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
 	    if ( triggerSF==2 ) tvariation = "up";
 	    else if ( triggerSF==-2 ) tvariation = "down";
 	    float minPt  = 52.0;
-	    float maxEta = 2.4; 
+	    float maxEta = 2.4;
 	    for ( int n = 0; n < nt.nTrigObj(); n++ ) {
 	      if ( abs(nt.TrigObj_id().at(n)) != 13 ) continue;
 	      if ( !(nt.TrigObj_filterBits().at(n) & 8) ) continue;
@@ -1490,7 +1516,6 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
  	else
  	  weight *= triggerWeight;
       }
-
       label = "HLT";
       slicedlabel = label;
       h_cutflow->Fill(icutflow,weight*factor);
@@ -2896,7 +2921,7 @@ int ScanChain(TChain *ch, double genEventSumw, TString year, TString process, in
                   if ( fillRooDataSet ) {
                     mfit.setVal(selectedPair_M);
                     roow.setVal(weight*factor);
-                    roods[slice].add(RooArgSet(mfit,roow),roow.getVal());
+                    roods[slice].add(RooArgSet(mfit,roow,catZp),roow.getVal());
                   }
                 }
                 slicedcutflows[slice]->GetXaxis()->SetBinLabel(icutflow + 1, slicedlabel);

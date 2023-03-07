@@ -324,9 +324,10 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
       else if ( sampleArg.Contains("Y3") ) sigModel.push_back("Y3");
       else cout << "Invalid signal model!\n";
     }
-    vector<TString> sigMass = { /*"100",*/ "200", "250", "400", "550", "700", "850", "1000", "1250", "1500", "2000" };
-    if ( sampleArg.Contains("_low" ) ) sigMass = { "200", "250", "400", "550", "700" };
-    if ( sampleArg.Contains("_high" ) ) sigMass = { "850", "1000", "1250", "1500", "2000" };
+    vector<TString> sigMass = { /*"100",*/ "200", "250", "400", "550", "700", "850", "1000", "1250", "1500", "2000", "2500", "3000" };
+    if ( sampleArg.Contains("_low" ) ) sigMass = { "200", "250", "400", "550", "700", "850" };
+    if ( sampleArg.Contains("_high" ) ) sigMass = { "1000", "1250", "1500", "2000", "2500", "3000" };
+    if ( sampleArg.Contains("_veryhigh" ) ) sigMass = { "2500" };
     if ( sampleArg.Contains("_bwCutoff" ) ) sigMass = { "1000" };
     for ( unsigned int imodel=0; imodel<sigModel.size(); imodel++ )
     {
@@ -458,10 +459,14 @@ void doAll_Zp(const char* outdir="temp_data", TString yearArg="all", int run_dat
           dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_merged.root";
         if ( sampleArg.Contains("_CentralCMSLike") )
           dir = baseDir+"/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_"+dataformat+"/merged/merged.root";
+	if ( sample.Contains("M2500") || sample.Contains("M3000") ) {
+	  sample_prod[sample][year][d].ReplaceAll("_private","");
+	  dir = "/ceph/cms/store/group/zprime/privateMC/"+sample_names[sample]+"_"+sample_prod[sample][year][d]+"_merged.root";
+	}
         if ( runOnSignalBeforeSkim )
           dir = baseDir+"/"+sample_names[sample]+"/"+sample_prod[sample][year][d]+"/"+dataformat+"/output*.root";
         ch_temp->Add(dir);
-        chaux_temp->Add(dir);
+	chaux_temp->Add(dir);
       }
       cout<<"Sample: "<<sample<<endl;
 

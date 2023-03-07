@@ -39,7 +39,7 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> > LorentzVector
 #define NFSRPHOTON_MAX 9 // for FsrPhoton_* collection
 #define NLOWPTELECTRON_MAX 18 // for LowPtElectron_* collection
 #define NOTHERPV_MAX 12 // for OtherPV_* collection
-#define NTRIGOBJ_MAX 130 // for TrigObj_* collection
+#define NTRIGOBJ_MAX 150 // for TrigObj_* collection
 #define NSUBJET_MAX 33 // for SubJet_* collection
 #define NSUBGENJETAK8_MAX 42 // for SubGenJetAK8_* collection
 #define NGENVISTAU_MAX 12 // for GenVisTau_* collection
