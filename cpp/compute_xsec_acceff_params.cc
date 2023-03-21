@@ -43,12 +43,16 @@ or xsec_[coupling state]_final entries from the model-averaged computations. The
 - The output is 'xsec_interpolation["" or "_ModelAveraged"].root', with TSpline3 objects named as 'spline_[model]_xsec_[ss,sb, or bb]'.
 TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
 
-=> void parametrize_acceff(TString const& period, TString const& cinput_xs, TString const& cinput_yields):
+=> void parametrize_acceff(TString const& period, TString const& cinput_xs, TString const& cinput_yields, bool apply_width_corr, TString cinput_sigma):
 - This is the main function that parametrizes the acceptance*efficiency over all models.
 - 'period' is the data period, which can be '2016_APV', '2016_NonAPV', '2017', '2018', 'Run2' (=2016-2018). It is needed to divide out the luminosity from the yields.
 - 'cinput_xs' is the path to the csv file for cross sections.
 - 'cinput_yields' is the path to the csv file for yields.
 This input external to these functions and must contain the following columns: model, M, N1ss_w, N1bs_w, N1bb_w, N2ss_w, N2bs_w, N2bb_w, N1ss_r, N1bs_r, N1bb_r, N2ss_r, N2bs_r, N2bb_r.
+- 'apply_width_corr' is a parameter that controls the application of correction for the non-zero Gamma_Z' values of the different models. The default is 'true'.
+Note that the correction parameters are hardcoded in this function.
+- 'cinput_sigma' is the path to the mass resolution file, used when apply_width_corr=true.
+- 'min_mass' is a parameter to introduce a mass cut. The default is -1, but it could be passed as 275 GeV for example.
 - The output is 'acceff_interpolation_[period].root', with TSpline3 objects named as 'spline_[model or avg]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]'.
 TGraph objects with the same name except 'spline'->'gr' are also provided to compare splines to the nodes.
 - In addition, for spline_avg* cases, the splines of squared uncertainties are also provided as 'spline_avg_errsq_[dn or up]_acceff_[ss, sb, or bb]_[Nb_eq_1 or Nb_geq_2]_[period]'.
@@ -503,8 +507,17 @@ void parametrize_xsec(TString const& cinput, bool useModelAveraged=false){
   foutput->Close();
 }
 
-void parametrize_acceff(TString const& period, TString const& cinput_xs, TString const& cinput_yields){
+void parametrize_acceff(
+  TString const& period, TString const& cinput_xs, TString const& cinput_yields,
+  bool apply_width_corr = true, TString cinput_sigma = "../utils/signalFitParameters_default.root",
+  double min_mass = -1
+){
   TDirectory* curdir = gDirectory;
+
+  TString const script_compute_width = "${CMSSW_BASE}/src/ZPrimeSnT/python/compute_width.py";
+
+  constexpr double width_corr_A = -0.61179;
+  constexpr double width_corr_dA = 0.495652;
 
   auto const states = get_states();
   unsigned int const nstates = states.size();
@@ -519,6 +532,14 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
   else if (period=="2018") lumi=59.83;
   else if (period=="Run2") lumi=19.5+16.8+41.48+59.83;
   else assert(0);
+
+  TFile* finput_sigma = nullptr;
+  TSpline3* sp_sigma = nullptr;
+  if (apply_width_corr){
+    finput_sigma = TFile::Open(cinput_sigma, "read");
+    sp_sigma = (TSpline3*) finput_sigma->Get("splines");
+    curdir->cd();
+  }
 
   typedef std::unordered_map<std::string, std::vector<std::pair<double, double>> > hmycp_map_t;
   std::vector<std::vector<hmycp_map_t>> hypo_mass_yield_pairs_map(nstates, std::vector<hmycp_map_t>(ncats, hmycp_map_t()));
@@ -582,10 +603,23 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
 
         if (count[is][ic]>0){
           double tmpacceff = yield[is][ic]/lumi/mass_model_xsec_map[mass][strhypo].at(is);
+          double dmass = static_cast<double>(mass);
           if (tmpacceff>=2e-6){
-            cout << strhypo << ", " << mass << tmpacceff << endl;
-            HelperFunctions::addByLowest(hypo_mass_yield_pairs_map[is][ic][strhypo], static_cast<double>(mass), tmpacceff);
-            HelperFunctions::addByLowest(hypo_mass_count_pairs_map[is][ic][strhypo], static_cast<double>(mass), count[is][ic]);
+            bool doAdd = true;
+            if (min_mass>0. && dmass<min_mass){
+              for (auto const& pp:hypo_mass_yield_pairs_map[is][ic][strhypo]){
+                if (pp.first == min_mass){
+                  doAdd = false;
+                  break;
+                }
+              }
+              dmass = min_mass;
+              tmpacceff = 1e-6;
+            }
+            if (doAdd){
+              HelperFunctions::addByLowest(hypo_mass_yield_pairs_map[is][ic][strhypo], dmass, tmpacceff);
+              HelperFunctions::addByLowest(hypo_mass_count_pairs_map[is][ic][strhypo], dmass, count[is][ic]);
+            }
           }
         }
       }
@@ -601,7 +635,42 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
 
       std::vector<double> masses_all;
 
+      std::unordered_map<std::string, std::vector<std::pair<double, double>>> hypo_exterrmult_dn_up_pairs_map;
       for (auto const& strhypo:hypos){
+        std::vector<std::pair<double, double>> exterrmult_dn_up_pairs(hypo_mass_yield_pairs_map[is][ic][strhypo].size(), std::pair<double, double>(1, 1));
+        if (apply_width_corr){
+          for (unsigned int ip=0; ip<hypo_mass_yield_pairs_map[is][ic][strhypo].size(); ip++){
+            double const& mass = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip).first;
+            double& val = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip).second;
+            auto& pp = exterrmult_dn_up_pairs.at(ip);
+
+            double val_width_corr = 1;
+            double err_up_width_corr = 0;
+            double err_dn_width_corr = 0;
+
+            double const vsigma = sp_sigma->Eval(mass);
+            double Gamma = 0;
+            {
+              TString tmpfile = Form("tmp_%s_%.0f.txt", strhypo.data(), mass);
+              TString strCmdCore = Form("python %s --model %s --MZp %.0f --useBaselineModelParams", script_compute_width.Data(), strhypo.data(), mass);
+              HostHelpers::ExecuteCommand((strCmdCore + " --channel \"Zp\" >> " + tmpfile).Data());
+              ifstream ftmp(tmpfile.Data()); ftmp >> Gamma;
+              ftmp.close();
+              HostHelpers::ExecuteCommand((TString("rm ") + tmpfile).Data());
+            }
+            double const g_over_s = Gamma / vsigma;
+            val_width_corr = 1./(1. + width_corr_A * g_over_s);
+            err_up_width_corr = 1./(1. + (width_corr_A - width_corr_dA) * g_over_s) - val_width_corr;
+            err_dn_width_corr = 1./(1. + (width_corr_A + width_corr_dA) * g_over_s) - val_width_corr;
+            if (err_up_width_corr<err_dn_width_corr) std::swap(err_up_width_corr, err_dn_width_corr);
+
+            val *= val_width_corr;
+            pp.first = err_dn_width_corr/val_width_corr;
+            pp.second = err_up_width_corr/val_width_corr;
+          }
+        }
+        hypo_exterrmult_dn_up_pairs_map[strhypo] = exterrmult_dn_up_pairs;
+
         sp_tmp = HelperFunctions::convertPointsToSpline3(hypo_mass_yield_pairs_map[is][ic][strhypo], false, true);
         if (sp_tmp){
           sp_tmp->SetName(Form("spline_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), cats.at(ic).second.data(), period.Data()));
@@ -609,14 +678,21 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
 
           std::vector<std::pair<double, double>> errs_dn; errs_dn.reserve(hypo_mass_yield_pairs_map[is][ic][strhypo].size());
           std::vector<std::pair<double, double>> errs_up; errs_up.reserve(hypo_mass_yield_pairs_map[is][ic][strhypo].size());
+          IVYout << "Acceptance for " << strhypo << ", cat. " << static_cast<int>(ic) << ", fs " << static_cast<int>(is) << ": " << endl;
           for (unsigned int ip=0; ip<hypo_mass_yield_pairs_map[is][ic][strhypo].size(); ip++){
+            double mass = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip).first;
             double val = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip).second;
             double count = hypo_mass_count_pairs_map[is][ic][strhypo].at(ip).second*0.5; // FIXME: We reduce counts to account for weight distributions, which is typical Neff reduction in standard MC.
             double val_dn=val, val_up=val;
             StatisticsHelpers::getPoissonCountingConfidenceInterval_Frequentist(count, 0.684, val_dn, val_up); val_dn *= val/count; val_up *= val/count;
 
-            errs_dn.emplace_back(0., std::abs(val_dn-val));
-            errs_up.emplace_back(0., val_up-val);
+            auto const& exterrmult_dn_up_pair = exterrmult_dn_up_pairs.at(ip);
+
+            double const err_dn = -std::sqrt(std::pow(val_dn - val, 2) + std::pow(exterrmult_dn_up_pair.first*val, 2));
+            double const err_up = std::sqrt(std::pow(val_up - val, 2) + std::pow(exterrmult_dn_up_pair.second*val, 2));
+            IVYout << mass << " GeV: " << val << " +" << err_up << " / " << err_dn << " (( " << exterrmult_dn_up_pair << " ))" << endl;
+            errs_dn.emplace_back(0., std::abs(err_dn));
+            errs_up.emplace_back(0., (err_up));
           }
 
           gr_tmp = HelperFunctions::makeGraphAsymErrFromPair(hypo_mass_yield_pairs_map[is][ic][strhypo], errs_dn, errs_up, Form("gr_%s_acceff_%s_%s_%s", strhypo.data(), state.data(), cats.at(ic).second.data(), period.Data()));
@@ -634,10 +710,11 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
       acceff_hypos_errup.assign(masses_all.size(), std::vector<double>());
       for (auto const& strhypo:hypos){
         unsigned int npoints = hypo_mass_yield_pairs_map[is][ic][strhypo].size();
+        auto const& exterrmult_dn_up_pairs = hypo_exterrmult_dn_up_pairs_map.find(strhypo)->second;
         for (unsigned int ip=0; ip<npoints; ip++){
           auto const& pp = hypo_mass_yield_pairs_map[is][ic][strhypo].at(ip);
           auto const& mass = pp.first;
-          auto const& val = pp.second;
+          auto val = pp.second;
           auto const& count = hypo_mass_count_pairs_map[is][ic][strhypo].at(ip).second*0.5; // FIXME: We reduce counts to account for weight distributions, which is typical Neff reduction in standard MC.
 
           double val_dn=val, val_up=val;
@@ -649,9 +726,12 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
             jp++;
           }
 
+          auto const& exterrmult_dn_up_pair = exterrmult_dn_up_pairs.at(ip);
+          double const err_dn = std::sqrt(std::pow(val_dn - val, 2) + std::pow(exterrmult_dn_up_pair.first*val, 2));
+          double const err_up = std::sqrt(std::pow(val_up - val, 2) + std::pow(exterrmult_dn_up_pair.second*val, 2));
           acceff_hypos_nominal.at(jp).push_back(val);
-          acceff_hypos_errdn.at(jp).push_back(val-val_dn);
-          acceff_hypos_errup.at(jp).push_back(val_up-val);
+          acceff_hypos_errdn.at(jp).push_back(err_dn);
+          acceff_hypos_errup.at(jp).push_back(err_up);
         }
       }
 
@@ -736,6 +816,8 @@ void parametrize_acceff(TString const& period, TString const& cinput_xs, TString
     }
   }
   foutput->Close();
+
+  if (finput_sigma) finput_sigma->Close();
 }
 
 
