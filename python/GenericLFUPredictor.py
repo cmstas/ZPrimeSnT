@@ -34,6 +34,8 @@ class GenericLFUPredictor:
       self.widthcorr_coeff = 0.61179
 
    def calculate(self, mass, f2b_Nexcl_pairs, mreso, max_width_mult=0.5, delsb=0., mult_gnu=1., nsteps=100):
+      res = []
+
       couplings=dict()
       couplings["glep"]=couplings["gb"]=1.
       couplings["delsb"]=delsb
@@ -79,7 +81,7 @@ class GenericLFUPredictor:
       GZpminB = mreso / (2.*self.widthcorr_coeff)
       GZpminDelta = GZpminB**2 - 4.*Npred/N0*mreso/self.widthcorr_coeff
       if GZpminDelta<=0.:
-         raise RuntimeError("No exclusions found.")
+         return res # No exclusions
       GZpmin = GZpminB - math.sqrt(GZpminDelta)
       GZpsup = GZpminB + math.sqrt(GZpminDelta)
       GZpmax = GZpsup
@@ -107,7 +109,6 @@ class GenericLFUPredictor:
          GZp_ff_pairs.append(GZp_ff_pairs_backward[len(GZp_ff_pairs_backward)-1-ip])
 
       # Translate GZp, ff pairs to gl, gb.
-      res = []
       for GZp_ff_pair in GZp_ff_pairs:
          GZp = GZp_ff_pair[0]
          ff = GZp_ff_pair[1]
