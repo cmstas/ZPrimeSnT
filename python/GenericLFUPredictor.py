@@ -21,16 +21,19 @@ class GenericLFUPredictor:
    where
    - mass = Mass of Zprime
    - f2b_Nexcl_pairs = List of (f2b, N_excluded) pairs (list of lists)
+   - mreso = Resolution at 'mass'
+   - max_width_mult = Multiplier on 'mreso' to define the validity range
    - delsb = delta_sb parameter value in the GenericLFU model
    - mult_gnu = Multiplier of gnu in the GenericLFU model
    - nsteps = Number of points
    Returns a list of nsteps (glep, gb, total width) pairs.
    """
 
-   def __init__(self,lumi):
-      self.yields = SignalYieldCalculator(lumi)
+   def __init__(self,lumi,fname_xs=None,fname_acceff=None):
+      self.yields = SignalYieldCalculator(lumi,fname_xs,fname_acceff)
+      self.widthcorr_coeff = 0.61179
 
-   def calculate(self, mass, f2b_Nexcl_pairs, delsb=0., mult_gnu=1., nsteps=100, max_width=-1.):
+   def calculate(self, mass, f2b_Nexcl_pairs, mreso, max_width_mult=0.5, delsb=0., mult_gnu=1., nsteps=100):
       couplings=dict()
       couplings["glep"]=couplings["gb"]=1.
       couplings["delsb"]=delsb
@@ -44,7 +47,7 @@ class GenericLFUPredictor:
       Ntot = N1bb+N1sb+N2bb+N2sb
       f2b = (N2bb+N2sb)/Ntot
       res = []
-      Npred = -1.
+      Npred = -1. # This is the excluded value.
       for i in range(0,len(f2b_Nexcl_pairs)-1):
          n1 = f2b_Nexcl_pairs[i][1]
          n2 = f2b_Nexcl_pairs[i+1][1]
@@ -54,85 +57,63 @@ class GenericLFUPredictor:
             Npred = n1 + (n2-n1)/(f2-f1)*(f2b-f1)
             break
 
-      nfracs=nsteps if max_width<0. else 6
-      inc=1./float(nfracs)
-      for ir in range(0, nfracs+1):
-         flep = inc*float(ir)
-         couplings["glep"]=math.sqrt(flep);
-         couplings["gb"]=math.sqrt(1.-flep)
-         couplings["gnu"]=couplings["glep"]*mult_gnu
-         N1bb=self.yields.eval("bb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
-         N1sb=self.yields.eval("sb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
-         N2bb=self.yields.eval("bb","Nb_geq_2",mass,"GenericLFU",couplings,"B3mL2")[0]
-         N2sb=self.yields.eval("sb","Nb_geq_2",mass,"GenericLFU",couplings,"B3mL2")[0]
-         Ntot = N1bb+N1sb+N2bb+N2sb
-         if Ntot==0.: continue
-         scale = math.sqrt(Npred/Ntot)
-         couplings["glep"]=couplings["glep"]*scale
-         couplings["gb"]=couplings["gb"]*scale
-         couplings["gnu"]=couplings["glep"]*mult_gnu
-         gzp = calculate_width(mass, couplings, "GenericLFU", "Zp", False)
-         res.append([couplings["glep"], couplings["gb"], gzp])
+      # Obtain GL, GB, N0
+      couplings["glep"]=1.
+      couplings["gb"]=0.
+      couplings["gnu"]=couplings["glep"]*mult_gnu
+      GL = calculate_width(mass, couplings, "GenericLFU", "Zp", False)
+      couplings["glep"]=0.
+      couplings["gb"]=1.
+      couplings["gnu"]=couplings["glep"]*mult_gnu
+      GB = calculate_width(mass, couplings, "GenericLFU", "Zp", False)
+      couplings["glep"]=1.
+      couplings["gb"]=1.
+      couplings["gnu"]=couplings["glep"]*mult_gnu
+      N1bb=self.yields.eval("bb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
+      N1sb=self.yields.eval("sb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[0]
+      N2bb=self.yields.eval("bb","Nb_geq_2",mass,"GenericLFU",couplings,"B3mL2")[0]
+      N2sb=self.yields.eval("sb","Nb_geq_2",mass,"GenericLFU",couplings,"B3mL2")[0]
+      N0 = (N1bb+N1sb+N2bb+N2sb)*(GL+GB)/(GL*GB)
 
-      mm = np.array(
-        [
-           [ res[0][0]**2, res[0][1]**2 ],
-           [ res[1][0]**2, res[1][1]**2 ]
-        ]
-      )
-      fr = np.array(
-         [
-            res[0][0]**2 * res[0][1]**2,
-            res[1][0]**2 * res[1][1]**2
-         ]
-      )
-      gammar = np.array(
-         [
-            res[0][2],
-            res[1][2]
-         ]
-      )
-      minv=np.linalg.inv(mm)
-      gcoefs = [ 0., 0. ]
-      gammacoefs = [ 0., 0. ]
-      for ii in range(2):
-         for jj in range(2):
-            gcoefs[ii] = gcoefs[ii] + minv[ii][jj]*fr[jj]
-            gammacoefs[ii] = gammacoefs[ii] + minv[ii][jj]*gammar[jj]
+      # Calculate bounds feasibility
+      GZpminB = mreso / (2.*self.widthcorr_coeff)
+      GZpminDelta = GZpminB**2 - 4.*Npred/N0*mreso/self.widthcorr_coeff
+      if GZpminDelta<=0.:
+         raise RuntimeError("No exclusions found.")
+      GZpmin = GZpminB - math.sqrt(GZpminDelta)
+      GZpsup = GZpminB + math.sqrt(GZpminDelta)
+      GZpmax = GZpsup
+      if max_width_mult>0.:
+         GZpmax = min(GZpmax, mreso*max_width_mult)
 
-      #allOk=True
-      #for rr in res:
-         #qq=gcoefs[0]*rr[0]**2 - rr[0]**2*rr[1]**2 + gcoefs[1]*rr[1]**2
-         #qg=gammacoefs[0]*rr[0]**2 - rr[2] + gammacoefs[1]*rr[1]**2
-         #if abs(qq)>1e-5:
-            #allOk=False
-            #print("Quotient for gl={}, gb={}: {} / {}".format(rr[0], rr[1], qq))
-         #if abs(qg)>1e-5:
-            #allOk=False
-            #print("Quotient g for gl={}, gb={}: {} / {}".format(rr[0], rr[1], qg))
-      #print("All OK? {}".format(allOk))
+      GZp_ff_pairs = []
+      GZp_ff_pairs_backward = []
+      for ip in range(0, nsteps+1):
+         GZp = GZpmax - (GZpmax - GZpmin)/float(nsteps)*float(ip)
+         if GZp == GZpmin or GZp == GZpsup:
+            GZp_ff_pairs.append([GZp, 0.5])
+         else:
+            ffC = Npred / (N0 * GZp * (1. - self.widthcorr_coeff/mreso*GZp))
+            ffA = 1.
+            ffB = -1.
+            ffDelta = ffB**2 - 4.*ffA*ffC
+            if ffDelta<=0.:
+               continue
+            ffmin = (-ffB - math.sqrt(ffDelta))/(2.*ffA)
+            ffmax = (-ffB + math.sqrt(ffDelta))/(2.*ffA)
+            GZp_ff_pairs.append([GZp, ffmin])
+            GZp_ff_pairs_backward.append([GZp, ffmax])
+      for ip in range(0, len(GZp_ff_pairs_backward)):
+         GZp_ff_pairs.append(GZp_ff_pairs_backward[len(GZp_ff_pairs_backward)-1-ip])
 
-      if max_width>0.:
-         res = []
-         aa = gammacoefs[0] / gammacoefs[1]
-         bb = gcoefs[0] - (max_width+gammacoefs[0]*gcoefs[1])/gammacoefs[1]
-         cc = max_width*gcoefs[1]/gammacoefs[1]
+      # Translate GZp, ff pairs to gl, gb.
+      res = []
+      for GZp_ff_pair in GZp_ff_pairs:
+         GZp = GZp_ff_pair[0]
+         ff = GZp_ff_pair[1]
+         print(len(res), GZp, ff)
+         vgl = math.sqrt((1.-ff)*GZp/GL)
+         vgb = math.sqrt(ff*GZp/GB)
+         res.append([vgl, vgb, GZp])
 
-         glfirst = math.sqrt((-bb - math.sqrt(bb**2 - 4*aa*cc))/(2*aa))
-         gbfirst = -gcoefs[0]*glfirst**2 / (gcoefs[1] - glfirst**2)
-         glsecond = math.sqrt((-bb + math.sqrt(bb**2 - 4*aa*cc))/(2*aa))
-         gbsecond = -gcoefs[0]*glsecond**2 / (gcoefs[1] - glsecond**2)
-
-         ffirst = (gbfirst**2)/(glfirst**2 + gbfirst**2)
-         fsecond = (gbsecond**2)/(glsecond**2 + gbsecond**2)
-
-         inc=(fsecond - ffirst)/float(nsteps)
-         for ir in range(0, nsteps+1):
-            vf = ffirst + inc*float(ir)
-            vgl = math.sqrt(((gcoefs[1]-gcoefs[0])*vf+gcoefs[0])/vf)
-            vgb = math.sqrt(vgl**2/(1.-vf)*vf)
-            vgg = gammacoefs[0]*vgl**2 + gammacoefs[1]*vgb**2
-            res.append([vgl, vgb, vgg])
-
-      res.sort()
       return res
