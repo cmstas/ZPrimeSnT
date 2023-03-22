@@ -111,7 +111,6 @@ class GenericLFUPredictor:
       for GZp_ff_pair in GZp_ff_pairs:
          GZp = GZp_ff_pair[0]
          ff = GZp_ff_pair[1]
-         print(len(res), GZp, ff)
          vgl = math.sqrt((1.-ff)*GZp/GL)
          vgb = math.sqrt(ff*GZp/GB)
          res.append([vgl, vgb, GZp])
