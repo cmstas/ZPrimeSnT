@@ -6,10 +6,14 @@ import argparse
 import os
 from datetime import date    
 import plotUtils
+from SignalYieldCalculator import SignalYieldCalculator as SYC
 
 user = os.environ.get("USER")
 today= date.today().strftime("%b-%d-%Y")
 
+# Setup to get the xsec of the GenericLFU model
+syc = SYC(fname_xs=os.environ.get("CMSSW_BASE")+"/../data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root",fname_acceff=os.environ.get("CMSSW_BASE")+"/../data/acceff_interpolation_Run2.root")
+couplings=dict(); couplings["glep"]=couplings["gnu"]=couplings["gb"]=0.05; couplings["delsb"]=0.
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument("--inDir", default="./cpp/temp_data/", help="Choose input directory. Default: './cpp/temp_data/'")
@@ -17,9 +21,12 @@ parser.add_argument("--outDir", default="/home/users/"+os.environ.get("USER")+"/
 parser.add_argument("--data", default=False, action="store_true", help="Plot data")
 parser.add_argument("--dataOnly", default=False, action="store_true", help="Plot only data, no MC bkg")
 parser.add_argument("--partialUnblinding", default=False, action="store_true", help="Plot 10% of data")
+parser.add_argument("--genericLFU", default=False, action="store_true", help="Use the Generic LFU model, instead of the Allanach ones")
 parser.add_argument("--noSignal", default=False, action="store_true", help="Do not plot signals")
 parser.add_argument("--signalMass", default=[], nargs="+", help="Signal mass points to plot. Default: All")
 parser.add_argument("--signalScale", default=True, help="Scale signal up for display")
+parser.add_argument("--noRatio", default=False, action="store_true", help="Don't draw ratio panel")
+parser.add_argument("--removeSpikes", default=False, action="store_true", help="Remove spikes")
 parser.add_argument("--shape", default=False, action="store_true", help="Shape normalization")
 parser.add_argument("--cumulative", default=False, action="store_true", help="Cumulative distributions")
 parser.add_argument("--extendedLegend", default=False, action="store_true", help="Write integrals in TLegend")
@@ -44,7 +51,7 @@ if args.dataOnly:
     args.data = True
 
 if len(args.signalMass)==0: 
-    args.signalMass = [200,400,700,1000,1500,2000]
+    args.signalMass = [400,700,1000,1500,2000]
 
 if "antisel10" in args.selections:
     args.signalMass = [200,400,700]
@@ -139,7 +146,7 @@ if args.data:
     samples.append("data")
 # Signal MC
 if not args.noSignal:
-  samples.append("Y3")
+  #samples.append("Y3")
   #samples.append("DY3")
   #samples.append("DYp3")
   samples.append("B3mL2")
@@ -202,8 +209,8 @@ sampleLineColor=dict()
 sampleLineColor["data"]     = ROOT.kBlack
 sampleLineColor["Y3"]       = ROOT.kViolet
 sampleLineColor["DY3"]      = ROOT.kMagenta
-sampleLineColor["DYp3"]     = ROOT.kRed
-sampleLineColor["B3mL2"]    = ROOT.kCyan
+sampleLineColor["DYp3"]     = ROOT.kCyan
+sampleLineColor["B3mL2"]    = ROOT.kRed
 sampleLineColor["DYbb"]     = None
 sampleLineColor["ZToMuMu"]  = None
 sampleLineColor["ttbar"]    = None
@@ -279,7 +286,7 @@ sampleLegend["data"]     = "Data"
 sampleLegend["Y3"]       = "Y_{3}"+(" signal MC" if args.noSelPrint else "")
 sampleLegend["DY3"]      = "DY_{3}"+(" signal MC" if args.noSelPrint else "")
 sampleLegend["DYp3"]     = "DY'_{3}"+(" signal MC" if args.noSelPrint else "")
-sampleLegend["B3mL2"]    = "B_{3}-L_{2}"+(" signal MC" if args.noSelPrint else "")
+sampleLegend["B3mL2"]    = ("B_{3}-L_{2}"+(" signal MC" if args.noSelPrint else "")) if not args.genericLFU else ("Basic LFU"+(" model" if args.noSelPrint else ""))
 sampleLegend["DYbb"]     = "DY(#mu#mu)+bb"
 sampleLegend["ZToMuMu"]  = "DY(#mu#mu)"
 sampleLegend["ttbar"]    = "t#bar{t}"
@@ -561,6 +568,13 @@ def customize_plot(sample, plot, fillColor, lineColor, lineWidth, markerStyle, m
         plot.SetBinContent(tb,sumc)
         plot.SetBinError(tb,ROOT.TMath.Sqrt(sume2))
 
+    if args.removeSpikes:
+        if sample!="data" and not "met_pt" in plot.GetName():
+            for b in range(1, plot.GetNbinsX()+1):
+                if plot.GetBinContent(b)>0 and plot.GetBinError(b)/plot.GetBinContent(b)>0.75:
+                    plot.SetBinContent(b,0.0)
+                    plot.SetBinError(b,0.0)
+
     return plot
 
 
@@ -586,10 +600,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     legoffset = 0.0
     if args.extendedLegend:
         legoffset=0.03
-    latexSel = ROOT. TLatex()
+    latexSel = ROOT.TLatex()
     latexSel.SetTextAlign(11)
     latexSel.SetTextFont(42)
-    latexSel.SetTextSize(0.03 if args.noSelPrint else 0.02-0.1*legoffset)
+    latexSel.SetTextSize(0.04 if args.noSelPrint else 0.02-0.1*legoffset)
     latexSel.SetNDC(True)
 
     if testLumiRatio>0.0:
@@ -747,6 +761,17 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
 
     # Signal Scaling
+    if args.genericLFU:
+        for sample in curPlots.keys():
+            if "B3mL2" in sample:
+                model = sample.split("_")[0]
+                mass = int(sample.split("_")[1].lstrip("M"))
+                B3mL2_mass_xsec = { 100 : 0.2895163696*1000, 200 : 0.1236243250*1000, 250 : 0.08624186*1000, 400 : 0.0307822425*1000, 550 : 0.01395786*1000, 700 : 0.0071884160*1000, 850 : 0.0039685095*1000, 1000 : 0.0022984062*1000, 1250 : 0.000981572*1000, 1500 : 0.0004383351*1000, 2000 : 0.0001029249*1000 }
+                # Calculate the total cross-section for the GenericLFU model with given mass and with given couplings (top of this file) based on the B3-L2 model. The category="Nb_eq_1" argument is incosequential for this calculation.
+                xsec_GenericLFU_total = syc.eval("bb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[3] + syc.eval("sb","Nb_eq_1",mass,"GenericLFU",couplings,"B3mL2")[3]
+                B3mL2ToGenericLFUSF = xsec_GenericLFU_total / B3mL2_mass_xsec[mass]
+                curPlots[sample].Scale(B3mL2ToGenericLFUSF)
+
     signalXSecScale = { }
     if (not logY) and args.signalScale and not args.shape:
         for sample in curPlots.keys():
@@ -775,12 +800,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     # Plot legends, ranges
     legendXOffsetNoSelPrint = 0.18 if args.noSelPrint else 0.0
     legendYOffsetNoSelPrint = 0.1 if (args.dataOnly and args.noSignal) else 0.0
-    if args.data:
-        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.91,0.91)
+    if not args.noRatio:
+        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.5+legendYOffsetNoSelPrint,0.91,0.91)
         if args.dataOnly:
             legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.7+legendYOffsetNoSelPrint,0.89,0.89)
     else:
-        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.89,0.89)
+        legend = ROOT.TLegend(0.7-legendXOffsetNoSelPrint,0.5+legendYOffsetNoSelPrint,0.89,0.89)
     if args.extendedLegend:
         if args.data:
             legend = ROOT.TLegend(0.6-legendXOffsetNoSelPrint,0.6+legendYOffsetNoSelPrint,0.91,0.91)
@@ -906,7 +931,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
 
     doRatio=False
     if plotData:
-        if not args.dataOnly:
+        if not args.dataOnly and not args.noRatio:
             doRatio=True
 
         #plotUtils.ConvertToPoissonGraph(curPlots["data"], g_data, drawZeros=True, drawXerr=False)
@@ -925,7 +950,8 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         g_ratio.SetLineWidth(1)
 
     if not plotData and args.shape and doSignalMCRatio:
-        doRatio=True
+        if not args.noRatio:
+            doRatio=True
 
         for i,sample in enumerate(plotDict.keys()):
             # Signal
@@ -1149,12 +1175,12 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         expoffset=0
     if doRatio:
         latex.DrawLatex(0.95, 0.93+expoffset, yearenergy);
-        latexCMS.DrawLatex(0.11,0.93+expoffset,"CMS");
-        latexCMSExtra.DrawLatex(0.19,0.93+expoffset, cmsExtra);
+        latexCMS.DrawLatex(0.13,0.88+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.13,0.835+expoffset, cmsExtra);
     else:
         latex.DrawLatex(0.90, 0.91+expoffset, yearenergy);
-        latexCMS.DrawLatex(0.11,0.91+expoffset,"CMS");
-        latexCMSExtra.DrawLatex(0.20,0.91+expoffset, cmsExtra);
+        latexCMS.DrawLatex(0.13,0.86+expoffset,"CMS");
+        latexCMSExtra.DrawLatex(0.13,0.815+expoffset, cmsExtra);
 
 
     # Draw selection
@@ -1194,10 +1220,10 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
         if args.noSelPrint:
             if nsel[whichsel]>=8:
                 ts = ts+1
-                if args.data:
-                    latexSel.DrawLatex((0.20 if args.dataOnly else 0.19)+3*legoffset, (0.87 if args.dataOnly else 0.88)-ts*(0.03-legoffset), nbbin[whichnb])
+                if args.noRatio:
+                    latexSel.DrawLatex((0.20 if args.dataOnly else 0.13)+3*legoffset, (0.87 if args.dataOnly else 0.79)-ts*(0.03-legoffset), nbbin[whichnb])
                 else:
-                    latexSel.DrawLatex(0.21+3*legoffset, 0.86-ts*(0.03-legoffset), nbbin[whichnb])
+                    latexSel.DrawLatex(0.13, 0.80-ts*(0.03-legoffset), nbbin[whichnb])
         else:
             for s in range(0,nsel[whichsel]+1):
                 if 'inclusive' not in whichmll and s==8:
@@ -1251,7 +1277,7 @@ def draw_plot(sampleDict, plotname, logY=True, logX=False, plotData=False, doRat
     if args.cumulative:
         extension = extension+"_cumulative"
     
-    canvas.SaveAs(args.outDir + plotname + extension + ".pdf" if args.pdf else ".png")
+    canvas.SaveAs(args.outDir + plotname + extension + (".pdf" if args.pdf else ".png"))
 
 
 
