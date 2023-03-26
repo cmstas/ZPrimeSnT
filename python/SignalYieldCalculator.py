@@ -178,7 +178,8 @@ class SignalYieldCalculator:
          model_old=getDefaultModelName(model_old)
          )
 
-      ynom = self.lumi * self.xs.eval(getDefaultModelName(model_old), state, mass)
+      xsec = self.xs.eval(getDefaultModelName(model_old), state, mass)
+      ynom = self.lumi * xsec
       acc = self.acceff.eval(getDefaultModelName(model_old), state, cat, mass)
       res=[]
       for aa in acc:
@@ -188,4 +189,4 @@ class SignalYieldCalculator:
          res[1]=0.
       if res[0]+res[1]<0.:
          res[1]=-res[0]
-      return res[0],res[1],res[2]
+      return res[0],res[1],res[2], xsec*xswgt
