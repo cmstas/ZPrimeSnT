@@ -17,7 +17,7 @@ class GenericLFUPredictor:
    Construct as
    obj = GenericLFUPredictor(lumi),
    Evaluate the class using
-   obj.calculate(mass, f2b_Nexcl_pairs, delsb, mult_gnu, nsteps)
+   obj.calculate(mass, f2b_Nexcl_pairs, delsb, mult_gnu, nsteps, couplings_plot))
    where
    - mass = Mass of Zprime
    - f2b_Nexcl_pairs = List of (f2b, N_excluded) pairs (list of lists)
@@ -26,14 +26,15 @@ class GenericLFUPredictor:
    - delsb = delta_sb parameter value in the GenericLFU model
    - mult_gnu = Multiplier of gnu in the GenericLFU model
    - nsteps = Number of points
-   Returns a list of nsteps (glep, gb, total width) pairs.
+   - couplings_plot = Set of couplings to be used in the signal example included in the paper plots
+   Returns a [list of nsteps (glep, gb, total width) pairs, corrected yields for signal with couplings_plot].
    """
 
    def __init__(self,lumi,fname_xs=None,fname_acceff=None):
       self.yields = SignalYieldCalculator(lumi,fname_xs,fname_acceff)
       self.widthcorr_coeff = 0.61179
 
-   def calculate(self, mass, f2b_Nexcl_pairs, mreso, max_width_mult=0.5, delsb=0., mult_gnu=1., nsteps=100):
+   def calculate(self, mass, f2b_Nexcl_pairs, mreso, max_width_mult=0.5, delsb=0., mult_gnu=1., nsteps=100, couplings_plot={ "glep" : 0.5, "gb" : 0.5, "gnu" : 0.5 }):
       res = []
 
       couplings=dict()
@@ -114,6 +115,8 @@ class GenericLFUPredictor:
          ff = GZp_ff_pair[1]
          vgl = math.sqrt((1.-ff)*GZp/GL)
          vgb = math.sqrt(ff*GZp/GB)
+         # Inverting the two equations above to solve for GZp(vgl,vgb) gives:
+         # GZp = vgl*GL + vgb*GB
          res.append([vgl, vgb, GZp])
 
-      return res
+      return res, N0*(1. - self.widthcorr_coeff/mreso*(couplings_plot["glep"]*GL + couplings_plot["gb"]*GB))
