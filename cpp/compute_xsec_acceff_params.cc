@@ -107,7 +107,7 @@ void compute_initial_xsec(TString const& sample, TString coutput_main=".", TStri
 
   TString const coutput = coutput_main + "/xsec_collected_initial.csv";
   TString const coutput_origin = coutput_main + "/xsec_collected_origin.csv";
-  TString const script_compute_width = "${CMSSW_BASE}/src/ZPrimeSnT/python/compute_width.py";
+  TString const script_compute_width = "${CMSSW_BASE}/../python/compute_width.py";
 
   std::vector<TString> sample_opts;
   HelperFunctions::splitOptionRecursive(sample, sample_opts, '_', false);
@@ -269,7 +269,7 @@ void calculate_final_xsec(TString coutput_main="."){
   std::vector<int> masses;
   std::unordered_map<int, std::unordered_map<std::string, std::vector<double>> > mass_model_xsec_map;
   {
-    TString const script_compute_width = "${CMSSW_BASE}/src/ZPrimeSnT/python/compute_width.py";
+    TString const script_compute_width = "${CMSSW_BASE}/../python/compute_width.py";
     TString const cinput = coutput_main + "/xsec_collected_initial.csv";
     IvyCSVReader csv(cinput.Data());
     for (unsigned int irow=0; irow<csv.getNRows(); irow++){
@@ -514,7 +514,7 @@ void parametrize_acceff(
 ){
   TDirectory* curdir = gDirectory;
 
-  TString const script_compute_width = "${CMSSW_BASE}/src/ZPrimeSnT/python/compute_width.py";
+  TString const script_compute_width = "${CMSSW_BASE}/../python/compute_width.py";
 
   constexpr double width_corr_A = -0.61179;
   constexpr double width_corr_dA = 0.495652;

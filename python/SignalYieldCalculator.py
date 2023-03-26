@@ -33,7 +33,7 @@ class SignalXSContainer:
    """
    def __init__(self,fname=None):
       if fname is None:
-         fname="${CMSSW_BASE}/src/ZPrimeSnT/data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root"
+         fname="${CMSSW_BASE}/../data/xsec_interpolation_ZPrimeToMuMuSB_bestfit_13TeV_Allanach.root"
       self.infile = ROOT.TFile.Open(fname, "read")
       if self.infile is None:
          raise RuntimeError("SignalXSContainer file {} is None!".format(fname))
@@ -78,7 +78,7 @@ class SignalAccEffContainer:
    """
    def __init__(self,fname=None):
       if fname is None:
-         fname="${CMSSW_BASE}/src/ZPrimeSnT/data/acceff_interpolation_Run2.root"
+         fname="${CMSSW_BASE}/../data/acceff_interpolation_Run2.root"
       self.infile = ROOT.TFile.Open(fname, "read")
       if self.infile is None:
          raise RuntimeError("SignalAccEffContainer file {} is None!".format(fname))
